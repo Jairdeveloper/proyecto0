@@ -20,7 +20,7 @@
 SCRIPT_NAME="recpl.sh"
 LOG_FILE="${LOG_FILE:-/tmp/recpl_loop.log}"
 RECPL_STATE_DIR="/tmp/recpl_state_$$"
-VERSION="1.0.0"
+VERSION="1.1.0"
 
 SCRIPT_DIR="$(dirname "$0")"
 
@@ -56,7 +56,11 @@ Un bot que procesa lenguaje natural como un compilador (Aho, Dragon Book).
 
 USO:
   ./recpl.sh                        # modo interactivo
-  echo "instruccion" | ./recpl.sh   # modo batch
+  ./recpl.sh -c "instruccion"       # modo comando (una instruccion)
+  ./recpl.sh --command "instruccion"
+  ./recpl.sh -f archivo.txt         # modo archivo (lee instrucciones)
+  ./recpl.sh --file archivo.txt
+  echo "instruccion" | ./recpl.sh   # modo batch (stdin pipe)
   ./recpl.sh --help                 # esta ayuda
   ./recpl.sh --version              # version
 
@@ -69,6 +73,12 @@ EJEMPLOS:
 COMANDOS ESPECIALES:
   quit, salir, exit, q  → termina el bucle
   help                  → muestra esta ayuda
+
+BANDERAS:
+  -c, --command TEXTO  Ejecuta una instruccion y termina
+  -f, --file ARCHIVO   Ejecuta las instrucciones del archivo y termina
+  -h, --help           Muestra esta ayuda
+  -v, --version        Muestra la version
 HELP
 }
 
@@ -114,6 +124,41 @@ process_instruction() {
     "$SCRIPT_DIR/backend/synthesis.sh" 2>/dev/null <<EOF
 $ir
 EOF
+}
+
+# --- Modo comando (-c) ---
+command_mode() {
+    instruction="$1"
+    init_state
+    process_instruction "$instruction"
+    cleanup
+}
+
+# --- Modo archivo (-f) ---
+file_mode() {
+    filepath="$1"
+
+    if [ ! -f "$filepath" ]; then
+        echo "Error: archivo no encontrado: $filepath" >&2
+        exit 1
+    fi
+
+    if [ ! -r "$filepath" ]; then
+        echo "Error: archivo sin permisos de lectura: $filepath" >&2
+        exit 1
+    fi
+
+    init_state
+
+    while IFS= read -r line <&3; do
+        [ -z "$line" ] && continue
+        case "$line" in
+            quit|salir|exit|q) break ;;
+            *) process_instruction "$line" ;;
+        esac
+    done 3< "$filepath"
+
+    cleanup
 }
 
 # --- Modo batch (stdin) ---
@@ -171,6 +216,26 @@ interactive_mode() {
 # --- Main ---
 main() {
     trap 'cleanup; exit 0' INT TERM
+
+    # Parsear flags que consumen argumento
+    case "${1:-}" in
+        -c|--command)
+            if [ -z "${2:-}" ]; then
+                echo "Error: -c/--command requiere un argumento" >&2
+                exit 1
+            fi
+            command_mode "$2"
+            exit $?
+            ;;
+        -f|--file)
+            if [ -z "${2:-}" ]; then
+                echo "Error: -f/--file requiere un argumento" >&2
+                exit 1
+            fi
+            file_mode "$2"
+            exit $?
+            ;;
+    esac
 
     case "$1" in
         --help|-h)

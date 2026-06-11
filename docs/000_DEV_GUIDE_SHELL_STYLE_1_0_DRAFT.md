@@ -1,5 +1,5 @@
 ---
-id: 044
+id: 000
 area: dev
 type: GUIDE
 module: shell-style
@@ -11,7 +11,7 @@ tags:
   - convention
   - posix
   - workflow
-summary: "Guia de estilo para scripts Shell en @tienda/api. Define convenciones de nomenclatura, estructura de archivos, manejo de errores, logging y patrones de diseño para mantener scripts legibles, mantenibles y consistentes."
+summary: "Guia de estilo para scripts Shell en @Proyecto0. Define convenciones de nomenclatura, estructura de archivos, manejo de errores, logging y patrones de diseño para mantener scripts legibles, mantenibles y consistentes."
 keywords:
   - shell
   - sh

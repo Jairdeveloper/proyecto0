@@ -1,5 +1,5 @@
 CC      ?= gcc
-CFLAGS  ?= -std=c11 -Wall -Wextra -Wpedantic -Werror
+CFLAGS  ?= -std=c11 -D_POSIX_C_SOURCE=200809L -Wall -Wextra -Wpedantic -Werror
 OPT     ?= -O2
 DEBUG   ?= -g -DDEBUG
 LIBS    := -lm

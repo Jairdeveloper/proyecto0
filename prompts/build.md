@@ -233,7 +233,15 @@ Recibe cómo de orquestador 1
 devuelve prompt
 
 
-Analiza el proyecto y crea un archivo .md para proponer funcionalidad/mejoras y hacerlo mas completo de acuerdo a las siguientes especificaciones. :/home/john/proyects/proyect0/docs/003_DOC_PROP_DOC_PROCESSOR_1.0_DRAFT.md, /home/john/proyects/proyect0/docs/004_SPEC_DEV_DOC_PROCESSOR_1_0_DRAFT.md
-Se espera la siguiente propuesta de mejora hacer :
-- Soporte para más tech stack
-- UI web donde se le ingrese el prompt y esta genere los artefactos/archivos necesarios
+Analiza el proyecto y escribe un archivo .md para proponer funcionalidad/mejoras y hacerlo mas completo de acuerdo a las siguientes especificaciones. :/home/john/proyects/proyect0/docs/003_DOC_PROP_DOC_PROCESSOR_1.0_DRAFT.md, /home/john/proyects/proyect0/docs/004_SPEC_DEV_DOC_PROCESSOR_1_0_DRAFT.md evalua la propuesta como una continuacion de /home/john/proyects/proyect0/docs/014_PROP_DEV_COMPILER_BOT_NLP_INTENT_1_0_DRAFT.md
+Se espera la siguiente propuesta :
+- El bot debera ser capaz de entender y realizar tareas como seguir el siguiente tutorial y realizar las acciones que estan descritas en el, leer archivo: /home/john/proyects/proyect0/misc/tutorial.md.
+
+Let me write the market analysis report following the naming convention.
+
+publico objetivo :
+Manufactura electronica
+de esos usarian una herramienta tipo compiler-compiler = 15,000
+sinergia
+como envolverias el "tutorial" proyecto descrito en el siguiente archivo /home/john/proyects/proyect0/template/tutorial.md en un marco generico para inicializar, configurar, planeara, codificar, etc..., un proyecto de desarrollo de software. Escribe un archivo .md con tu respuesta. Utiliza tu conocimiento y estadares de la industria para escribir tu respuesta.
+lifecycle

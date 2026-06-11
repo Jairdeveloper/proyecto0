@@ -11,10 +11,20 @@ typedef struct {
     int    need_comma;
 } JSONBuilder;
 
+/**
+ * Create a JSON builder with at least `initial_cap` bytes of buffer.
+ * Caller must call jb_free() to release memory.
+ */
 JSONBuilder *jb_create(size_t initial_cap);
-void         jb_free(JSONBuilder *jb);
-void         jb_clear(JSONBuilder *jb);
-const char  *jb_string(JSONBuilder *jb);
+
+/** Free the builder and its internal buffer. */
+void jb_free(JSONBuilder *jb);
+
+/** Reset builder state (reuse buffer). */
+void jb_clear(JSONBuilder *jb);
+
+/** Get the built JSON string. Valid until next mutation or free. */
+const char *jb_string(JSONBuilder *jb);
 
 void jb_begin_object(JSONBuilder *jb);
 void jb_end_object(JSONBuilder *jb);

@@ -15,12 +15,31 @@ typedef struct {
     int      count;
 } HashTable;
 
+/**
+ * Create a hash table with at least `capacity` buckets.
+ * The caller owns the table and must call ht_free().
+ */
 HashTable *ht_create(int capacity);
-void       ht_free(HashTable *ht);
-void       ht_insert(HashTable *ht, const char *key, void *value);
-void      *ht_lookup(HashTable *ht, const char *key);
-int        ht_contains(HashTable *ht, const char *key);
-void       ht_delete(HashTable *ht, const char *key);
-void      **ht_values(HashTable *ht, int *out_count);
+
+/** Free all memory used by the hash table. */
+void ht_free(HashTable *ht);
+
+/** Insert key->value pair. Replaces existing value if key exists. */
+void ht_insert(HashTable *ht, const char *key, void *value);
+
+/** Lookup value by key. Returns NULL if not found. */
+void *ht_lookup(HashTable *ht, const char *key);
+
+/** Returns 1 if key exists, 0 otherwise. */
+int ht_contains(HashTable *ht, const char *key);
+
+/** Remove key from table. No-op if key doesn't exist. */
+void ht_delete(HashTable *ht, const char *key);
+
+/**
+ * Collect all values into a malloc'd array.
+ * Caller must free() the returned array.
+ */
+void **ht_values(HashTable *ht, int *out_count);
 
 #endif
