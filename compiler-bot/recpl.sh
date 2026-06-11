@@ -124,6 +124,43 @@ $result
 EOF
 }
 
+# ============================================================================
+# SECTION: Funciones composite (comparten estado con el llamante)
+# ============================================================================
+
+# --- Ejecutar una instruccion inline compartiendo estado ---
+# Uso: composite_exec "crea modulo pagos en nestjs"
+# Equivalente a: process_instruction pero con nombre explicito
+composite_exec() {
+    instruction="$1"
+    process_instruction "$instruction"
+}
+
+# --- Ejecutar instrucciones desde un archivo compartiendo estado ---
+# Uso: composite_file "ruta/archivo.txt"
+# NOTA: No hace init/cleanup — el llamante gestiona el estado
+composite_file() {
+    filepath="$1"
+
+    if [ ! -f "$filepath" ]; then
+        echo "Error: archivo no encontrado: $filepath"
+        return 1
+    fi
+
+    if [ ! -r "$filepath" ]; then
+        echo "Error: archivo sin permisos de lectura: $filepath"
+        return 1
+    fi
+
+    while IFS= read -r line <&3; do
+        [ -z "$line" ] && continue
+        case "$line" in
+            quit|salir|exit|q) break ;;
+            *) process_instruction "$line" ;;
+        esac
+    done 3< "$filepath"
+}
+
 # --- Modo comando (-c) ---
 command_mode() {
     instruction="$1"
@@ -147,15 +184,7 @@ file_mode() {
     fi
 
     init_state
-
-    while IFS= read -r line <&3; do
-        [ -z "$line" ] && continue
-        case "$line" in
-            quit|salir|exit|q) break ;;
-            *) process_instruction "$line" ;;
-        esac
-    done 3< "$filepath"
-
+    composite_file "$filepath"
     cleanup
 }
 

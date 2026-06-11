@@ -20,12 +20,12 @@ keywords:
 
 # Indice de Documentacion
 
-> 37 documentos organizados por area tematica.
+> 38 documentos organizados por area tematica.
 > Secuencia de creacion: NNN ascendente.
 
 ## Area: dev
 
-Desarrollo. 27 documentos (GUIDE 9, PLAN 2, PROP 8, REP 6, SPEC 2).
+Desarrollo. 28 documentos (GUIDE 9, PLAN 2, PROP 8, REP 7, SPEC 2).
 
 | NNN | Tipo | Modulo | Resumen |
 |-----|------|--------|---------|
@@ -56,6 +56,7 @@ Desarrollo. 27 documentos (GUIDE 9, PLAN 2, PROP 8, REP 6, SPEC 2).
 | 033 | REP | compiler-bot | Reporte de implementacion de la FASE-L2 del plan 031: fachada LLM y mapper IR... |
 | 034 | REP | compiler-bot | Reporte de implementacion de la FASE-L3 del plan 031: router inteligente e integ... |
 | 035 | REP | compiler-bot | Reporte de implementacion de la FASE-L4 del plan 031: tests, documentacion y hard... |
+| 036 | REP | compiler-bot | Reporte de implementacion de la Fase 1 del patron composite: funciones composite_... |
 
 ## Area: mgt
 
@@ -144,4 +145,5 @@ Legacy. 2 documentos (GUIDE 2).
 | 033 | `033_REP_DEV_COMPILER_BOT_LLM_FASE_L2_1_0_DRAFT.md` | dev | REP |
 | 034 | `034_REP_DEV_COMPILER_BOT_LLM_FASE_L3_1_0_DRAFT.md` | dev | REP |
 | 035 | `035_REP_DEV_COMPILER_BOT_LLM_FASE_L4_1_0_DRAFT.md` | dev | REP |
+| 036 | `036_REP_DEV_COMPILER_BOT_COMPOSITE_FASE1_1_0_DRAFT.md` | dev | REP |
 | ALGP003 | `ALGP003_CONVENCION_DOCUMENTACION_v1_0_DRAFT.md` | algorithms | ALGP |
