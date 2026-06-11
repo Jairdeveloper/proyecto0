@@ -1,3 +1,32 @@
+---
+id: 002
+area: legacy
+type: GUIDE
+module: spellcheck
+version: 1.0
+status: DRAFT
+tags:
+  - legacy
+  - reference
+  - spellcheck
+  - awk
+  - spelling
+  - o-reilly
+summary: "Documentacion original del programa spellcheck.awk por O'Reilly. Corrector ortografico interactivo basado en awk que ofrece correcciones contextuales. Codigo de referencia para el proyecto."
+keywords:
+  - spellcheck
+  - awk
+  - spelling
+  - reference
+  - legacy
+  - o-reilly
+changelog:
+  - version: 1.0
+    date: 2026-06-11
+    author: workflow-agent
+    description: Frontmatter YAML agregado
+---
+
 The UNIX spell program does an adequate job of catching spelling errors in a document. For most 
 people, however, it only does half the job. It doesn't help you correct the misspelled words. First-time 
 users of spell find themselves jotting down the misspelled words and then using the text editor to 

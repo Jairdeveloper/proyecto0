@@ -142,7 +142,7 @@ Los documentos de especificacion y plan de accion estan en `docs/`:
 
 ## Convenciones
 
-Todos los scripts siguen `docs/000_DEV_GUIDE_SHELL_STYLE_1_0_DRAFT.md`:
+Todos los scripts siguen `docs/000_GUIDE_DEV_SHELL_STYLE_1_0_DRAFT.md`:
 - No `set -e`, no `eval`
 - Variables siempre double-quoted
 - Indentacion 4 espacios

@@ -1,3 +1,32 @@
+---
+id: 001
+area: legacy
+type: GUIDE
+module: masterindex
+version: 1.0
+status: DRAFT
+tags:
+  - legacy
+  - reference
+  - masterindex
+  - indexing
+  - troff
+  - dougherty
+summary: "Documentacion original del programa masterindex por Dale Dougherty. Programa de indexacion para indices de un solo volumen y multivolumen. Codigo de referencia para el proyecto."
+keywords:
+  - masterindex
+  - indexing
+  - troff
+  - reference
+  - legacy
+  - dougherty
+changelog:
+  - version: 1.0
+    date: 2026-06-11
+    author: workflow-agent
+    description: Frontmatter YAML agregado
+---
+
 C.3 Documentation for masterindex
 This documentation, and the notes that follow, are by Dale Dougherty.
 C.3.1 masterindex

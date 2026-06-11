@@ -1,3 +1,34 @@
+---
+id: 005
+area: dev
+type: SPEC
+module: compiler-theory
+version: 1.0
+status: ACTIVE
+tags:
+  - spec
+  - compiler-theory
+  - godel
+  - turing
+  - automata
+  - dragon-book
+  - lambda-calculus
+summary: "Especificacion de teoria de compiladores: Godel, Turing, automatas, lambda calculus, teoria de lenguajes formales, y el Dragon Book (Aho, Sethi, Ullman). Base teorica para el pipeline RECPL."
+keywords:
+  - compiler-theory
+  - godel
+  - turing
+  - automata
+  - lambda-calculus
+  - dragon-book
+  - formal-languages
+changelog:
+  - version: 1.0
+    date: 2026-06-11
+    author: workflow-agent
+    description: Frontmatter YAML agregado
+---
+
 Un Poco de Historia#
 La década de los 30#
 El origen de los modelos abstractos de la computación nacen justamente en esta década. Existen tres modelos computables equivalentes que fueron propuestos en el mismo año, 1937.
@@ -71,7 +102,7 @@ Y tomando luego al número 3 como argumento, se obtiene:
 
 Los tes modelos son equivalentes, vale decir que todos describen en concepto de computabilidad desde distintas torres axiomática.
 La década de los 40#
-Hacia los años 40 con el advenimiento de la primera computadora con programa almacenado, de la mano de John Von Neumann, hizo necesario escribir secuencias de código o programas en lenguaje de máquina.
+Hacia los años 40 con el advenimiento de la primera computadora con programa almacenado, de la maño de John Von Neumann, hizo necesario escribir secuencias de código o programas en lenguaje de máquina.
     C7 06 0000 0002
 Así para mover un valor literal 2 a una dirección de memoria se debía escribir la secuencia anterior de comandos, esto hacia imposible que se pudieran escribir programas rápidamente y de forma poco tediosa. Por ello nace el llamado lenguaje ensamblador , en el cual los códigos de instrucción se reemplazaron por 3 letras que representa una instrucción mnemotécnica y por direcciones de memoria que podían se dadas en forma simbólica.
     MOV X,2
@@ -347,7 +378,7 @@ Alfabeto
 Alfabeto es un conjunto finito de símbolos. Se denomina con una letra griega Σ.
 Σ1={0,1} → alfabeto binario
 Σ2={a,b} → alfabeto formado por las letras a y b
-Σ3={I,V,X,L,C,D,M} → alfabeto formados por los símbolos de los números romanos
+Σ3={I,V,X,L,C,D,M} → alfabeto formados por los símbolos de los números romaños
 ASCII → es un alfabeto, cumple con la definición
 UTF-8 → es un alfabeto también.
 Cadena
@@ -504,7 +535,7 @@ Autómatas Finitos Deterministas
 
 El lenguaje aceptado por M, se escribe como L(M), se define como el conjunto de cadenas de caracteres c1c2….cn con cada ci ∈ Σ, tal que existen estados S1=T(s1,c1), S2=T(s2,c2)…. Sn=T(sn,cn) con Ss un elemento de A, es decir un estado de aceptación.
 
-S x Σ se refiere al producto cartesiano
+S x Σ se refiere al producto cartesiaño
 
 La función T registra transiciones de estado: T(s,c)=s'
 
@@ -686,7 +717,7 @@ para implementar un analizador gráfico a partir de un automata, en primer lugar
         } 
         }
     }
-Dado que esto último se debe realizar por cada tipo de token, el programar a mano un analizador léxico de un lenguaje de programación se torna una cuestión muy compleja. Por ello normalmente se utilizan Generadores de Analizadores Léxicos
+Dado que esto último se debe realizar por cada tipo de token, el programar a maño un analizador léxico de un lenguaje de programación se torna una cuestión muy compleja. Por ello normalmente se utilizan Generadores de Analizadores Léxicos
 
 Generadores de Analizadores Sintácticos
 Generadores de Analizadores Sintácticos#
@@ -801,7 +832,7 @@ statement: identifier '+' identifier {$$ = $1 + $3; }
 statement: identifier '-' identifier {$$ = $1 - $3; }
 Representan la semántica de la producción.
 
-Manos a la Obra
+Maños a la Obra
 
 En este ejemplo se desarrolla una calculadora muy básica
 
@@ -891,7 +922,7 @@ Las gramáticas con atributos
 
 Estas últimas son más útiles para los lenguajes que obedecen el principio de la semántica dirigida por sintaxis, la cual asegura que el contenido semántico de un programa se encuentra estrechamente relacionado con su sintaxis. Todos los lenguajes modernos tienen esta propiedad.
 
-Normalmente quien escribe un compilador casi siempre debe construir una gramática con atributos a mano a partir del manual del lenguaje, ya que rara vez la da el diseñador del lenguaje.
+Normalmente quien escribe un compilador casi siempre debe construir una gramática con atributos a maño a partir del manual del lenguaje, ya que rara vez la da el diseñador del lenguaje.
 
 Los algoritmos para la implementación del análisis semántico tampoco son tan claramente expresables como los algoritmos de análisis sintáctico.
 

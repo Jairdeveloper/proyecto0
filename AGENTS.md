@@ -32,19 +32,17 @@ Both are **reference code** — adapt (don't rewrite) their patterns.
 
 | File | Content |
 |---|---|
-| `001_DOC_GUIDE_MASTERINDEX_1.0_DRAFT.md` | Original masterindex docs (Dale Dougherty) |
-| `002_DOC_GUIDE_SPELLCHECK_1.0_DRAFT.md` | Original spellcheck.awk docs (O'Reilly) |
-| `003_DOC_PROP_DOC_PROCESSOR_1.0_DRAFT.md` | Implementation proposal for doc-processor tools |
+| `001_GUIDE_DOC_MASTERINDEX_1.0_DRAFT.md` | Original masterindex docs (Dale Dougherty) |
+| `002_GUIDE_DOC_SPELLCHECK_1.0_DRAFT.md` | Original spellcheck.awk docs (O'Reilly) |
+| `003_PROP_DOC_DOC_PROCESSOR_1.0_DRAFT.md` | Implementation proposal for doc-processor tools |
 | `ALGP003_CONVENCION_DOCUMENTACION_v1_0_DRAFT.md` | Proposed doc naming convention |
 
 ### Doc naming convention
 
 Format: `[NNN]_[TIPOSEMANTICO]_[AREASEMANTICA]_[MODULO]_[VERSION]_[ESTADO].md`
-Example: `000_GUIDE_DEV_SHELL_STYLE_1_0_DRAFT.md` (was `000_DEV_GUIDE_SHELL_STYLE_1_0_DRAFT.md`).
+Example: `000_GUIDE_DEV_SHELL_STYLE_1_0_DRAFT.md`.
 
 TIPO (GUIDE, PROP, etc.) precedes AREA (DEV, DOC, etc.).
-Existing files still use the old order (`[AREA]_[TIPO]`) — rename when editing.
-
 All `.md` files must have YAML frontmatter: `id, area, type, module, version, status, tags, summary, keywords, changelog`.
 
 ### Planned stack (from `prompts/build.txt`) *IGNORAR*
