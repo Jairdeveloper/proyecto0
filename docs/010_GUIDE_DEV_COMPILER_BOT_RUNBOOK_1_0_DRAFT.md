@@ -486,3 +486,102 @@ estructuran la instruccion.
   para revertir. Usar `rm -rf modules/` manualmente.
 - **Case folding via preprocesador.** El lexer es case-sensitive. Siempre usar
   el preprocesador antes del lexer (el LOOP lo hace automaticamente).
+
+---
+
+## 9. Modo LLM (Integracion con IA)
+
+El RECPL Compiler Bot puede usar LLMs (Claude, OpenAI) para procesar
+instrucciones que el pipeline deterministico no entiende.
+
+### 9.1 Cuando se usa el LLM
+
+| Situacion | Sin LLM | Con LLM |
+|-----------|---------|---------|
+| "crea modulo pagos en nestjs" | OK (deterministico) | OK (deterministico, mas rapido) |
+| "necesito un sistema de pagos" | ERROR | OK (LLM entiende la intencion) |
+| "que modulos tengo?" | ERROR | OK (responde como texto) |
+| "agregale auth al modulo pagos" | ERROR | OK (requiere contexto) |
+| "como se configura nestjs?" | ERROR | OK (responde guia) |
+
+En modo `auto` (default), el LLM solo se usa cuando:
+- La instruccion tiene mas de 10 palabras
+- El lexer no reconoce las palabras clave
+- El parser falla al analizar la gramatica
+
+### 9.2 Configuracion
+
+```sh
+# 1. Configurar API key (Claude o OpenAI)
+export ANTHROPIC_API_KEY="sk-ant-..."
+# o
+export OPENAI_API_KEY="sk-..."
+
+# 2. Opcional: seleccionar proveedor
+export RECPL_LLM_PROVIDER="claude"    # o "openai"
+export RECPL_LLM_MODE="auto"          # o "llm" o "deterministic"
+```
+
+### 9.3 Modos de uso
+
+```sh
+# Modo interactivo hibrido (auto: deterministico, fallback a LLM)
+./compiler-bot/recpl.sh
+
+# Forzar modo LLM para todas las instrucciones
+./compiler-bot/recpl.sh --llm
+
+# Modo comando con LLM
+./compiler-bot/recpl.sh --llm -c "crea un modulo de pagos en NestJS"
+
+# Modo comando con proveedor especifico
+./compiler-bot/recpl.sh --provider openai -c "explica que es un modulo"
+
+# Solo deterministico (sin LLM, sin API key)
+./compiler-bot/recpl.sh
+```
+
+### 9.4 Variables de Entorno
+
+| Variable | Default | Descripcion |
+|----------|---------|-------------|
+| `RECPL_LLM_MODE` | `auto` | `auto`, `llm`, o `deterministic` |
+| `RECPL_LLM_PROVIDER` | `claude` | `claude` o `openai` |
+| `ANTHROPIC_API_KEY` | — | API key para Claude (obligatorio si provider=claude) |
+| `OPENAI_API_KEY` | — | API key para OpenAI (obligatorio si provider=openai) |
+
+### 9.5 Flags CLI
+
+| Flag | Efecto |
+|------|--------|
+| `--llm` | Fuerza modo LLM para todas las instrucciones |
+| `--provider claude\|openai` | Selecciona el proveedor LLM |
+
+Los flags se pueden combinar:
+```sh
+./compiler-bot/recpl.sh --llm -c "crea un modulo de pagos en NestJS"
+./compiler-bot/recpl.sh --provider claude -f instrucciones.txt
+```
+
+### 9.6 Arquitectura
+
+La integracion LLM sigue el patron Adapter: cada proveedor (Claude,
+OpenAI) tiene un adapter que normaliza las diferencias de API a un
+formato interno comun. Un router inteligente decide que camino
+(deterministico o LLM) es el apropiado para cada instruccion.
+
+```
+INPUT → preprocessor → router ─┬─ deterministic (lexer→parser→semantic→IR)
+                                └─ LLM (classifier → provider → mapper → IR)
+                                ↓
+                           synthesis → scaffold → OUTPUT
+```
+
+### 9.7 Costos
+
+- **Pipeline deterministico:** ~50ms, sin costo
+- **LLM (Claude Sonnet):** ~1-3s, ~$0.005/instruccion
+- **LLM (OpenAI GPT-4o):** ~1-3s, ~$0.004/instruccion
+
+En modo `auto`, ~80% de las instrucciones se procesan con el pipeline
+deterministico (gratis). El LLM solo se usa para ~20% de los casos.

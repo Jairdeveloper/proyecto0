@@ -76,10 +76,17 @@ scripts="
   ${BOT_DIR}/frontend/lexer.sh
   ${BOT_DIR}/frontend/parser.sh
   ${BOT_DIR}/frontend/semantic.sh
+  ${BOT_DIR}/frontend/router.sh
+  ${BOT_DIR}/frontend/llm_classifier.sh
   ${BOT_DIR}/middleend/ir_generator.sh
+  ${BOT_DIR}/middleend/llm_ir_mapper.sh
   ${BOT_DIR}/backend/synthesis.sh
   ${BOT_DIR}/backend/scaffold.sh
+  ${BOT_DIR}/providers/provider_common.sh
+  ${BOT_DIR}/providers/claude.sh
+  ${BOT_DIR}/providers/openai.sh
   ${BOT_DIR}/recpl.sh
+  ${TESTS_DIR}/test_router.sh
 "
 
 for script in $scripts; do
@@ -218,6 +225,28 @@ echo '{"tipo":"Comando","accion":"CREATE","objetivo":{"tipo":"module","entidades
 echo '{"tipo":"Comando","accion":"READ","objetivo":{"tipo":"entity","entidades":["persist"]},"tech":null}' | RECPL_STATE_DIR="$state_dir" "${BOT_DIR}/frontend/semantic.sh" 2>/dev/null
 assert_exit "persist: READ after CREATE" $? 0
 rm -rf "$state_dir"
+
+echo
+
+# === Test 11: Router (deterministic path) ===
+echo "--- Test 11: Router ---"
+
+result=$(RECPL_LLM_MODE=deterministic \
+    RECPL_STATE_DIR="/tmp/recpl_test_router_$$" \
+    "${BOT_DIR}/frontend/router.sh" "crea modulo pagos en nestjs" 2>/dev/null)
+assert_contains "router: scaffold action" "$result" "scaffold"
+assert_contains "router: module type" "$result" "module"
+assert_contains "router: nombre pagos" "$result" "pagos"
+
+result=$(RECPL_LLM_MODE=llm \
+    RECPL_STATE_DIR="/tmp/recpl_test_router_$$" \
+    "${BOT_DIR}/frontend/router.sh" "test" 2>/dev/null)
+assert_contains "router: LLM mode error" "$result" "error"
+
+result=$("${BOT_DIR}/frontend/router.sh" "" 2>/dev/null)
+assert_contains "router: empty input error" "$result" "error"
+
+rm -rf "/tmp/recpl_test_router_$$"
 
 echo
 

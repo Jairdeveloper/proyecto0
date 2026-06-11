@@ -20,7 +20,7 @@
 SCRIPT_NAME="recpl.sh"
 LOG_FILE="${LOG_FILE:-/tmp/recpl_loop.log}"
 RECPL_STATE_DIR="/tmp/recpl_state_$$"
-VERSION="1.1.0"
+VERSION="1.2.0"
 
 SCRIPT_DIR="$(dirname "$0")"
 
@@ -75,10 +75,18 @@ COMANDOS ESPECIALES:
   help                  → muestra esta ayuda
 
 BANDERAS:
-  -c, --command TEXTO  Ejecuta una instruccion y termina
-  -f, --file ARCHIVO   Ejecuta las instrucciones del archivo y termina
-  -h, --help           Muestra esta ayuda
-  -v, --version        Muestra la version
+  -c, --command TEXTO      Ejecuta una instruccion y termina
+  -f, --file ARCHIVO       Ejecuta las instrucciones del archivo y termina
+  --llm                    Fuerza modo LLM para todas las instrucciones
+  --provider claude|openai Selecciona el proveedor LLM (default: claude)
+  -h, --help               Muestra esta ayuda
+  -v, --version            Muestra la version
+
+VARIABLES DE ENTORNO:
+  RECPL_LLM_MODE           auto|llm|deterministic (default: auto)
+  RECPL_LLM_PROVIDER       claude|openai (default: claude)
+  ANTHROPIC_API_KEY        Key para Claude (requerido si provider=claude)
+  OPENAI_API_KEY           Key para OpenAI (requerido si provider=openai)
 HELP
 }
 
@@ -86,43 +94,33 @@ HELP
 process_instruction() {
     raw_input="$1"
 
-    # Preprocesar
-    preprocessed=$(FRONTEND_DIR="$SCRIPT_DIR/frontend" "$SCRIPT_DIR/frontend/preprocessor.sh" "$raw_input" 2>/dev/null)
-    if [ $? -ne 0 ] || [ -z "$preprocessed" ]; then
-        preprocessed="$raw_input"
-    fi
+    # Preprocesar (siempre)
+    preprocessed=$(FRONTEND_DIR="$SCRIPT_DIR/frontend" \
+        "$SCRIPT_DIR/frontend/preprocessor.sh" "$raw_input" 2>/dev/null)
+    [ -z "$preprocessed" ] && preprocessed="$raw_input"
 
-    # Lexer
-    tokens=$(FRONTEND_DIR="$SCRIPT_DIR/frontend" "$SCRIPT_DIR/frontend/lexer.sh" "$preprocessed" 2>/dev/null)
-    if [ $? -ne 0 ] || [ -z "$tokens" ]; then
-        echo "{\"tipo_respuesta\":\"error\",\"mensaje\":\"Error lexico al procesar: $raw_input\",\"payload\":null}"
+    # Router decide el camino (deterministico o LLM)
+    result=$(RECPL_LLM_MODE="${RECPL_LLM_MODE:-auto}" \
+        RECPL_LLM_PROVIDER="${RECPL_LLM_PROVIDER:-claude}" \
+        RECPL_STATE_DIR="$RECPL_STATE_DIR" \
+        "$SCRIPT_DIR/frontend/router.sh" "$preprocessed" 2>/dev/null)
+
+    if [ $? -ne 0 ] || [ -z "$result" ]; then
+        echo "{\"tipo_respuesta\":\"error\",\"mensaje\":\"Error al procesar: $raw_input\",\"payload\":null}"
         return
     fi
 
-    # Parser
-    ast=$(echo "$tokens" | "$SCRIPT_DIR/frontend/parser.sh" 2>/dev/null)
-    if [ $? -ne 0 ] || [ -z "$ast" ]; then
-        echo "{\"tipo_respuesta\":\"error\",\"mensaje\":\"Error sintactico al procesar: $raw_input\",\"payload\":null}"
+    # Si el resultado es un respond o clarify, mostrarlo directamente
+    accion=$(echo "$result" | jq -r '.accion // ""')
+    if [ "$accion" = "respond" ] || [ "$accion" = "clarify" ]; then
+        mensaje=$(echo "$result" | jq -r '.mensaje // ""')
+        echo "{\"tipo_respuesta\":\"$accion\",\"mensaje\":\"$mensaje\",\"payload\":null}"
         return
     fi
 
-    # Semantic (with persistent state)
-    validated=$(echo "$ast" | RECPL_STATE_DIR="$RECPL_STATE_DIR" "$SCRIPT_DIR/frontend/semantic.sh" 2>/dev/null)
-    if [ $? -ne 0 ] || [ -z "$validated" ]; then
-        echo "{\"tipo_respuesta\":\"error\",\"mensaje\":\"Error semantico al procesar: $raw_input\",\"payload\":null}"
-        return
-    fi
-
-    # IR generator
-    ir=$(echo "$validated" | "$SCRIPT_DIR/middleend/ir_generator.sh" 2>/dev/null)
-    if [ $? -ne 0 ] || [ -z "$ir" ]; then
-        echo "{\"tipo_respuesta\":\"error\",\"mensaje\":\"Error generando IR\",\"payload\":null}"
-        return
-    fi
-
-    # Synthesis (PRINT)
+    # Si es una accion de scaffolding, pasar a synthesis
     "$SCRIPT_DIR/backend/synthesis.sh" 2>/dev/null <<EOF
-$ir
+$result
 EOF
 }
 
@@ -216,6 +214,27 @@ interactive_mode() {
 # --- Main ---
 main() {
     trap 'cleanup; exit 0' INT TERM
+
+    # Parsear flags --llm y --provider (pueden combinarse con -c/-f)
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            --llm)
+                export RECPL_LLM_MODE="llm"
+                shift
+                ;;
+            --provider)
+                if [ -z "${2:-}" ]; then
+                    echo "Error: --provider requiere un argumento (claude|openai)" >&2
+                    exit 1
+                fi
+                export RECPL_LLM_PROVIDER="$2"
+                shift 2
+                ;;
+            *)
+                break
+                ;;
+        esac
+    done
 
     # Parsear flags que consumen argumento
     case "${1:-}" in

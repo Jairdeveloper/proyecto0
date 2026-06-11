@@ -20,12 +20,12 @@ keywords:
 
 # Indice de Documentacion
 
-> 35 documentos organizados por area tematica.
+> 37 documentos organizados por area tematica.
 > Secuencia de creacion: NNN ascendente.
 
 ## Area: dev
 
-Desarrollo. 25 documentos (GUIDE 9, PLAN 2, PROP 8, REP 4, SPEC 2).
+Desarrollo. 27 documentos (GUIDE 9, PLAN 2, PROP 8, REP 6, SPEC 2).
 
 | NNN | Tipo | Modulo | Resumen |
 |-----|------|--------|---------|
@@ -54,6 +54,8 @@ Desarrollo. 25 documentos (GUIDE 9, PLAN 2, PROP 8, REP 4, SPEC 2).
 | 031 | PLAN | compiler-bot | Plan de ejecucion detallado para integrar LLMs (Claude, OpenAI) en el RECPL Compiler Bot. Describe ... |
 | 032 | REP | compiler-bot | Reporte de implementacion de la FASE-L1 del plan 031: adapters de proveedor LLM... |
 | 033 | REP | compiler-bot | Reporte de implementacion de la FASE-L2 del plan 031: fachada LLM y mapper IR... |
+| 034 | REP | compiler-bot | Reporte de implementacion de la FASE-L3 del plan 031: router inteligente e integ... |
+| 035 | REP | compiler-bot | Reporte de implementacion de la FASE-L4 del plan 031: tests, documentacion y hard... |
 
 ## Area: mgt
 
@@ -140,4 +142,6 @@ Legacy. 2 documentos (GUIDE 2).
 | 031 | `031_PLAN_DEV_COMPILER_BOT_LLM_EXECUTION_1_0_DRAFT.md` | dev | PLAN |
 | 032 | `032_REP_DEV_COMPILER_BOT_LLM_FASE_L1_1_0_DRAFT.md` | dev | REP |
 | 033 | `033_REP_DEV_COMPILER_BOT_LLM_FASE_L2_1_0_DRAFT.md` | dev | REP |
+| 034 | `034_REP_DEV_COMPILER_BOT_LLM_FASE_L3_1_0_DRAFT.md` | dev | REP |
+| 035 | `035_REP_DEV_COMPILER_BOT_LLM_FASE_L4_1_0_DRAFT.md` | dev | REP |
 | ALGP003 | `ALGP003_CONVENCION_DOCUMENTACION_v1_0_DRAFT.md` | algorithms | ALGP |
