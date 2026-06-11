@@ -20,12 +20,12 @@ keywords:
 
 # Indice de Documentacion
 
-> 31 documentos organizados por area tematica.
+> 35 documentos organizados por area tematica.
 > Secuencia de creacion: NNN ascendente.
 
 ## Area: dev
 
-Desarrollo. 22 documentos (GUIDE 9, PLAN 1, PROP 8, REP 2, SPEC 2).
+Desarrollo. 25 documentos (GUIDE 9, PLAN 2, PROP 8, REP 4, SPEC 2).
 
 | NNN | Tipo | Modulo | Resumen |
 |-----|------|--------|---------|
@@ -51,16 +51,20 @@ Desarrollo. 22 documentos (GUIDE 9, PLAN 1, PROP 8, REP 2, SPEC 2).
 | 026 | GUIDE | compiler-bot | Descripcion del bucle principal RECPL (recpl.sh) que envuelve e itera sobre el p... |
 | 027 | PROP | compiler-bot | Propuesta de mejora para agregar las banderas -c/--command y -f/--file al bucle ... |
 | 028 | PROP | compiler-bot | Propuesta de diseno para implementar un patron composite que permita al modo int... |
+| 031 | PLAN | compiler-bot | Plan de ejecucion detallado para integrar LLMs (Claude, OpenAI) en el RECPL Compiler Bot. Describe ... |
+| 032 | REP | compiler-bot | Reporte de implementacion de la FASE-L1 del plan 031: adapters de proveedor LLM... |
+| 033 | REP | compiler-bot | Reporte de implementacion de la FASE-L2 del plan 031: fachada LLM y mapper IR... |
 
 ## Area: mgt
 
-Gestion. 3 documentos (REP 3).
+Gestion. 4 documentos (REP 4).
 
 | NNN | Tipo | Modulo | Resumen |
 |-----|------|--------|---------|
 | 019 | REP | framemaker | Reporte de gerencia: analisis de ingenieria inversa sobre Adobe FrameMaker desde... |
 | 021 | REP | framemaker | Reporte de analisis de mercado: estimacion de interes en el producto RECPL Compi... |
 | 023 | REP | project-analysis | Analisis integral del proyecto @Proyecto0. Cubre objetivos alcanzados, debilidad... |
+| 030 | REP | compiler-bot | Reporte de ingenieria inversa de Claude/OpenAI y propuesta de integracion con RECPL... |
 
 ## Area: doc
 
@@ -132,4 +136,8 @@ Legacy. 2 documentos (GUIDE 2).
 | 027 | `027_PROP_DEV_COMPILER_BOT_CLI_FLAGS_1_0_DRAFT.md` | dev | PROP |
 | 028 | `028_PROP_DEV_COMPILER_BOT_COMPOSITE_1_0_DRAFT.md` | dev | PROP |
 | 029 | `029_PROP_DOC_DOCS_ORGANIZATION_1_0_DRAFT.md` | doc | PROP |
+| 030 | `030_REP_MGT_COMPILER_BOT_LLM_INTEGRATION_1_0_DRAFT.md` | mgt | REP |
+| 031 | `031_PLAN_DEV_COMPILER_BOT_LLM_EXECUTION_1_0_DRAFT.md` | dev | PLAN |
+| 032 | `032_REP_DEV_COMPILER_BOT_LLM_FASE_L1_1_0_DRAFT.md` | dev | REP |
+| 033 | `033_REP_DEV_COMPILER_BOT_LLM_FASE_L2_1_0_DRAFT.md` | dev | REP |
 | ALGP003 | `ALGP003_CONVENCION_DOCUMENTACION_v1_0_DRAFT.md` | algorithms | ALGP |

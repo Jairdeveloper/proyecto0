@@ -245,3 +245,29 @@ de esos usarian una herramienta tipo compiler-compiler = 15,000
 sinergia
 como envolverias el "tutorial" proyecto descrito en el siguiente archivo /home/john/proyects/proyect0/template/tutorial.md en un marco generico para inicializar, configurar, planeara, codificar, etc..., un proyecto de desarrollo de software. Escribe un archivo .md con tu respuesta. Utiliza tu conocimiento y estadares de la industria para escribir tu respuesta.
 lifecycle
+So the user wants:
+- From interactive mode, being able to run -c "instruccion" or -f archivo.txt as internal commands
+- The batch/composite mode runs within the interactive session, sharing state
+- Then returns to interactive mode
+
+The key architectural change would be:
+1. Make process_instruction() the central dispatch for ALL instruction processing
+2. Add source and command as interactive commands
+3. The file mode in interactive context reads and processes each instruction through the same process_instruction() pipeline
+4. State persists because they share the same RECPL_STATE_DIR
+So the composite pattern would look like:
+recpl.sh
+  └── main()
+       └── interactive_mode()    ← COMPOSITE (outer loop)
+            ├── process_instruction()  ← procesa instruccion individual
+            ├── [source archivo]       ← delega a modo archivo (mismo estado)
+            ├── [exec instruccion]     ← delega a modo comando (mismo estado)
+            └── [pipe | filter]        ← modo batch dinamico desde dentr
+
+
+Quiero implementar mi bot-compiler en contra de las apis de claude, openai etc... cómo podria hacerlo, escribe un archivo .md con una propuesta implementacion,la intencion de esta feature es que mi compiler-bot tambien pueda traducir la intencion del usuario y porqué no que este pueda tambien taducir esa intencion y en una respuesta/mutacion, etc, depende de la solicitud del usuario, una  respuesta a su solicitud. Escribe archivo .md con la propuesta con el sigiente formato :
+-- frontmatter --
+# Reporte de Gerencia: Ingenieria Inversa
+## prompt 
+Hacer ingenieria inversa a claude y openai de acuerdo a su informacion publica para replicar su comportamiento en la forma en que se comunican sus agentes y sus procesos principales. 
+Generar reporte. 
