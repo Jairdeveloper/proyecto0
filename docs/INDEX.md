@@ -20,12 +20,12 @@ keywords:
 
 # Indice de Documentacion
 
-> 40 documentos organizados por area tematica.
+> 44 documentos organizados por area tematica.
 > Secuencia de creacion: NNN ascendente.
 
 ## Area: dev
 
-Desarrollo. 30 documentos (GUIDE 9, PLAN 2, PROP 8, REP 9, SPEC 2).
+Desarrollo. 34 documentos (GUIDE 10, PLAN 2, PROP 10, REP 10, SPEC 2).
 
 | NNN | Tipo | Modulo | Resumen |
 |-----|------|--------|---------|
@@ -59,6 +59,10 @@ Desarrollo. 30 documentos (GUIDE 9, PLAN 2, PROP 8, REP 9, SPEC 2).
 | 036 | REP | compiler-bot | Reporte de implementacion de la Fase 1 del patron composite: funciones composite_... |
 | 037 | REP | compiler-bot | Reporte de implementacion de la Fase 2 del patron composite: comandos source y exec en modo interactivo y batch... |
 | 038 | REP | compiler-bot | Reporte de implementacion de la Fase 3 del patron composite: pruebas de source, exec y estado compartido... |
+| 039 | PROP | compiler-bot | Propuesta de capa TUI (Terminal UI) para RECPL. Analiza si el proyecto esta maduro, recomienda wrapper liviano whiptail... |
+| 040 | PROP | compiler-bot | Propuesta de debugger de pipeline RECPL con 5 modos: trace, step, timing, inspect, xtrace... |
+| 041 | REP | compiler-bot | Reporte de implementacion del debugger de pipeline RECPL. pipeline_debugger.sh con 5 modos, 784 lineas, probado en 10 escenarios... |
+| 042 | GUIDE | compiler-bot | Runbook de uso del pipeline_debugger.sh: 5 modos, ejemplos, troubleshooting, buenas practicas... |
 
 ## Area: mgt
 
@@ -150,4 +154,8 @@ Legacy. 2 documentos (GUIDE 2).
 | 036 | `036_REP_DEV_COMPILER_BOT_COMPOSITE_FASE1_1_0_DRAFT.md` | dev | REP |
 | 037 | `037_REP_DEV_COMPILER_BOT_COMPOSITE_FASE2_1_0_DRAFT.md` | dev | REP |
 | 038 | `038_REP_DEV_COMPILER_BOT_COMPOSITE_FASE3_1_0_DRAFT.md` | dev | REP |
+| 039 | `039_PROP_DEV_COMPILER_BOT_TUI_LAYER_1_0_DRAFT.md` | dev | PROP |
+| 040 | `040_PROP_DEV_COMPILER_BOT_PIPELINE_DEBUGGER_1_0_DRAFT.md` | dev | PROP |
+| 041 | `041_REP_DEV_COMPILER_BOT_PIPELINE_DEBUGGER_1_0_ACTIVE.md` | dev | REP |
+| 042 | `042_GUIDE_DEV_COMPILER_BOT_PIPELINE_DEBUGGER_RUNBOOK_1_0_DRAFT.md` | dev | GUIDE |
 | ALGP003 | `ALGP003_CONVENCION_DOCUMENTACION_v1_0_DRAFT.md` | algorithms | ALGP |

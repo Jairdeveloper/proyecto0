@@ -271,3 +271,91 @@ Quiero implementar mi bot-compiler en contra de las apis de claude, openai etc..
 ## prompt 
 Hacer ingenieria inversa a claude y openai de acuerdo a su informacion publica para replicar su comportamiento en la forma en que se comunican sus agentes y sus procesos principales. 
 Generar reporte. 
+Escribe un archivo .md con un plan de ejecucion describiendo, mejoras (y explicacion detallada del funcionamiento de esta ingracion con LLMs y el bot-compiler) detalladas para que esta propuesta sea realmente realizable y documentable de manera que se pueda explicar su uso sin tanta complejidad. Utiliza patrones de diseño y las guias de estilo/convencion que estamos usando en el proyecto para escribir tu propuesta detallada. 
+
+ RECPL Compiler Bot. Shell-based bot que procesa lenguaje natural y genera/procesa respuesta via pipeline compilador (preprocess → lexer → parser → semantic → IR → synthesis).
+
+ Analiza el archivo :/home/john/proyects/proyect0/docs/027_PROP_DEV_COMPILER_BOT_CLI_FLAGS_1_0_DRAFT.md. Dime el estado actual del archivo, encuanto a la implementacion sugerida. Escribe una nueva seccion con el estado actual del archivo.
+
+
+
+ The user is asking how to debug the RECPL pipeline. Let me think about what tools and approaches are available based on the project structure I've seen.
+From what I know about the project:
+1. The pipeline is: preprocess → lexer → parser → semantic → IR → synthesis
+2. Each stage passes JSON via stdin/stdout pipes
+3. There's a LOG_FILE variable for logging
+4. The test suite runs individual stages
+5. There are individual scripts in frontend/, middleend/, backend/
+Let me provide practical debugging approaches based on the actual codebase.
+El pipeline trabaja con JSON puro via stdin/stdout. Hay varias formas segun que necesites ver:
+1. Etapa por etapa (la mas util)
+Ejecuta cada etapa individualmente con una instruccion conocida:
+cd compiler-bot
+# 1. Ver que sale del preprocesador
+./frontend/preprocessor.sh "crea modulo pagos en nestjs"
+# 2. Ver tokens del lexer
+./frontend/lexer.sh "$(./frontend/preprocessor.sh "crea modulo pagos en nestjs")"
+# 3. Pipeline completo paso a paso con pipes
+./frontend/preprocessor.sh "crea modulo pagos en nestjs" | \
+  ./frontend/lexer.sh | \
+  ./frontend/parser.sh | \
+  RECPL_STATE_DIR=/tmp/recpl_debug ./frontend/semantic.sh | \
+  ./middleend/ir_generator.sh | \
+  ./backend/synthesis.sh
+2. Ver errores de una etapa
+Si una etapa falla, el stderr tiene la causa. El pipeline oficial lo silencia (2>/dev/null), pero en debug quitalo:
+./frontend/lexer.sh "crea modulo test_module en nestjs" 2>&1
+#                ↑ muestra "Error lexico: token no reconocido en col 17: '_'"
+3. Router
+Si el problema esta en el ruteo (deterministico vs LLM):
+# Forzar pipeline deterministico
+RECPL_LLM_MODE=deterministic ./frontend/router.sh "crea modulo pagos en nestjs"
+# Ver que decision toma
+RECPL_LLM_MODE=auto ./frontend/router.sh "instruccion larga que no reconoce"
+4. Log del bucle
+recpl.sh escribe un log operable via LOG_FILE:
+LOG_FILE=/tmp/recpl_debug.log ./recpl.sh -c "crea modulo pagos en nestjs"
+cat /tmp/recpl_debug.log
+5. Modo batch para aislar
+Usa -c para probar una instruccion sin entrar al modo interactivo:
+./recpl.sh -c "crea modulo pagos en nestjs"
+Si el problema es solo en interactivo, prueba exactamente el mismo texto en batch:
+echo "crea modulo pagos en nestjs" | ./recpl.sh
+
+
+¿Existe algun debugguer para archivos .sh's ? 
+The user is asking about debuggers for shell scripts (.sh files).
+bash tiene modo debug nativo. No necesitas herramienta externa:
+bash -x (trace de ejecucion)
+Muestra cada linea ANTES de ejecutarla, con + anidados por profundidad:
+bash -x recpl.sh -c "crea modulo pagos en nestjs"
+Para una sola funcion del script sin ejecutar todo:
+bash -x -c '
+source compiler-bot/recpl.sh
+init_state
+process_instruction "crea modulo pagos en nestjs"
+cleanup
+'
+bash -v (verbose)
+Muestra cada linea mientras se lee, sin expandir variables:
+bash -v recpl.sh -c "crea modulo pagos en nestjs"
+Combinar -xv
+bash -xv recpl.sh -c "crea modulo pagos en nestjs"
+Debug parcial con set -x / set +x
+Envuelve solo la seccion que te interesa:
+set -x       # activa trace
+process_instruction "crea modulo pagos en nestjs"
+set +x       # desactiva trace
+PS4 para contexto extra
+La variable PS4 controla el prefijo del trace (+  por defecto). Cambialo para mostrar linea y funcion:
+PS4='+[$LINENO] ' bash -x recpl.sh -c "crea modulo pagos en nestjs"
+O con funcion anidada:
+PS4='+${BASH_SOURCE}:${LINENO}:${FUNCNAME[0]:-main}() ' bash -x recpl.sh
+Resumen
+Herramienta	Que muestra	Cuando usarla
+bash -x	Cada linea con variables expandidas	Flujo general, bugs de control
+bash -v	Cada linea sin expandir	Problemas de parsing/sintaxis
+set -x/set +x	Solo una seccion	Pipeline, funcion especifica
+PS4	Linea, archivo, funcion	Scripts con multiples archivos
+
+Escribe una propuesta de implementacion en un archivo .md para un debugger para proyecto0 (El proyecto actual), La idea nace de la necesidad de aprender el funcionamiento interno del pipeline, La La finalidad del debugger es proporcionar al equipo de ingenieria inversa una herramienta para que puedan encontrar bugs, latencias, entre otros "fallos", inconsistencia del sistema.la propuesta debe tener en cuenta la conversacion y la propuestas hechas en la conversacion siguiente:

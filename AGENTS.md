@@ -93,6 +93,27 @@ Initialized on `main` (originariamente `master`). 2 commits existentes.
 Algunos archivos aun sin trackear — commitear cambios completes antes de
 finalizar cada sesion de trabajo.
 
+### CHANGELOG.md
+
+El proyecto mantiene `CHANGELOG.md` en la raiz siguiendo
+[Keep a Changelog](https://keepachangelog.com/es/1.0.0/) y
+[Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+**Cuando anotar cambios:**
+- Al completar una fase, feature o milestone significativo
+- Cuando se anaden, modifican o eliminan funcionalidades publicas
+- Cuando cambia la interfaz CLI (flags, comandos, modos)
+- Cuando se modifican componentes del pipeline compilador
+- Cuando se agregan o eliminan dependencias
+- Cuando cambia el conteo de tests (nuevos tests o rotos)
+- Cuando el usuario lo indique explicitamente
+
+**Formato de entrada:**
+Cada `CHANGELOG.md` entry usa `### Added`, `### Changed`, `### Fixed`,
+`### Removed` o `### Security` como secciones. Versionar con
+`## [MAJOR.MINOR.PATCH] — YYYY-MM-DD`. Describir el cambio en
+presente (tercera persona) o pasado simple.
+
 ### RECPL Compiler Bot (`compiler-bot/`)
 
 Shell-based bot that processes natural language as a compiler pipeline (Aho Dragon Book).

@@ -545,7 +545,77 @@ import ...
 
 ---
 
-## 8. Checklist de Implementacion
+## 8. Estado de Implementacion (Junio 2026)
+
+*Seccion agregada post-implementacion al momento del commit `7cf8f86`.*
+
+### 8.1 Resumen
+
+| Aspecto | Estado |
+|---------|--------|
+| Estatus del documento | `IMPLEMENTED` — toda la propuesta fue traducida a codigo |
+| Checklist (Seccion 9) | 14/14 items marcados como completados |
+| Fases completadas | 4 de 4 (Fase 1 a Fase 4) |
+| Reportes asociados | `036_REP` (Fase 1), `037_REP` (Fase 2), `038_REP` (Fase 3) |
+| Version actual de recpl.sh | 1.2.0 |
+| Tests | 72 pasan, 0 fallan |
+
+### 8.2 Correspondencia propuesta vs. implementacion
+
+| Elemento propuesto (Seccion 4) | Implementado en recpl.sh | Lineas |
+|--------------------------------|--------------------------|--------|
+| `composite_exec()` | Igual a la propuesta | 136-139 |
+| `composite_file()` | Igual a la propuesta | 144-164 |
+| `file_mode()` → delega a `composite_file()` | Igual a la propuesta | 175-191 |
+| `interactive_mode()`: caso `source\ *)` | Igual a la propuesta (+ validacion de ruta vacia) | 254-258 |
+| `interactive_mode()`: caso `exec\ *)` | Igual a la propuesta (+ `exec` exacto sin args) | 262-275 |
+| Banner con comandos | Igual a la propuesta | 225 |
+| `show_help()` con source/exec | Igual a la propuesta | 76-77 |
+
+### 8.3 Desviaciones respecto a la propuesta original
+
+La implementacion real se desvio de la propuesta en dos puntos:
+
+1. **`source`/`exec` tambien en `batch_mode()`** — La propuesta (Seccion 3.1)
+   solo mencionaba agregarlos al dispatcher de `interactive_mode()`. Sin embargo,
+   al implementar la Fase 2, se decidio agregarlos tambien a `batch_mode()` para
+   permitir su uso en modo pipe (`echo "source seed.txt" | ./recpl.sh`). Esto
+   se documento en `037_REP_DEV_COMPILER_BOT_COMPOSITE_FASE2_1_0_DRAFT.md` (Sec. 3).
+
+2. **Manejo de `exec` sin argumento** — La propuesta no contemplaba el caso
+   `exec` exacto (sin trailing space). Se agregaron dos patrones en ambos
+   dispatchers: `exec\ *)` captura "exec algo", y `exec` captura "exec" solo
+   para mostrar el mensaje de uso. El codigo propuesto solo tenia el primer
+   patron.
+
+### 8.4 Exactitud de las estimaciones
+
+| Fase | Propuesto | Real | Diferencia |
+|------|-----------|------|------------|
+| Fase 1: Funciones composite | 15 min | ~20 min | Dentro del margen |
+| Fase 2: Modificar interactive_mode | 15 min | ~25 min | Incluyo batch_mode (no previsto) |
+| Fase 3: Pruebas | 10 min | ~15 min | Incluyo depuracion de entidades con guion bajo |
+| Fase 4: Documentacion | 10 min | ~15 min | Incluyo actualizacion de INDEX.md y 028 |
+| **Total** | **~50 min** | **~75 min** | +50% por desviaciones y depuracion |
+
+### 8.5 Salud actual del codigo
+
+- **`bash -n recpl.sh`**: Sin errores de sintaxis
+- **`bash -n tests/run_tests.sh`**: Sin errores de sintaxis
+- **Test 12 en run_tests.sh**: 6 aserciones probando source, exec y estado compartido
+- **Cobertura de modo interactivo**: Sin tests automatizados (el modo interactivo
+  requiere terminal, solo se prueba manualmente)
+- **Modos batch, -c y -f**: Probados via Test 7 y Test 12
+
+### 8.6 Referencias
+
+- `036_REP_DEV_COMPILER_BOT_COMPOSITE_FASE1_1_0_DRAFT.md` — Fase 1: composite_exec y composite_file
+- `037_REP_DEV_COMPILER_BOT_COMPOSITE_FASE2_1_0_DRAFT.md` — Fase 2: source/exec en dispatchers
+- `038_REP_DEV_COMPILER_BOT_COMPOSITE_FASE3_1_0_DRAFT.md` — Fase 3: pruebas
+
+---
+
+## 9. Checklist de Implementacion
 
 - [x] `composite_exec()`: wrapper simple de `process_instruction()`
 - [x] `composite_file()`: loop de lectura de archivo SIN init/cleanup

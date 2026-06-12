@@ -4,7 +4,7 @@ area: dev
 type: PROP
 module: compiler-bot
 version: 1.0
-status: DRAFT
+status: IMPLEMENTED
 tags:
   - prop
   - improvement
@@ -13,6 +13,7 @@ tags:
   - batch
   - command-mode
   - file-mode
+  - implemented
 summary: "Propuesta de mejora para agregar las banderas -c/--command y -f/--file al bucle RECPL. Estas banderas permiten ejecutar instrucciones desde la linea de comandos o desde un archivo, extendiendo los modos de operacion del bot sin romper la compatibilidad hacia atras."
 keywords:
   - recpl
@@ -35,8 +36,8 @@ changelog:
 # Mejora: Banderas -c/--command y -f/--file para recpl.sh
 
 > **Archivo modificado:** `compiler-bot/recpl.sh`
-> **Version:** 1.0.0 → 1.1.0
-> **Tests:** 47/47 pasan
+> **Version:** 1.0.0 → 1.2.0
+> **Tests:** 72/72 pasan
 
 ---
 
@@ -280,7 +281,7 @@ jobs:
 
 ## 6. Impacto en Tests
 
-Los 47 tests existentes pasan sin modificaciones porque:
+Los 72 tests existentes pasan sin modificaciones porque:
 
 | Test | Como se afecta |
 |------|---------------|
@@ -303,3 +304,154 @@ el proyecto no tiene un framework de tests para flags de CLI
 | Archivos con BOM o encoding no-UTF8 | El preprocesador maneja NFKC |
 | `-c` sin estado entre instrucciones | Usar modo interactivo o batch para sesiones multi-instruccion |
 | Compatibilidad con shells no-bash | El script usa `#!/bin/sh` (POSIX), las nuevas funciones tambien |
+
+---
+
+## 8. Observaciones sobre el estado actual del proyecto
+
+*Redactado al momento del commit `7cf8f86` (Junio 2026).*
+
+### 8.1 Lo que ha cambiado desde esta propuesta
+
+| Aspecto | Propuesta original (027) | Estado actual | Diferencia |
+|---------|--------------------------|---------------|------------|
+| Version de recpl.sh | 1.1.0 | 1.2.0 | Se agregaron flags `--llm`, `--provider` y comandos `source`/`exec` |
+| Conteo de tests | 47 tests | 72 tests | +25 tests (LLM Fases L1-L4, composite Fase 1-3) |
+| `file_mode()` | Loop inline propio | Delega en `composite_file()` | Refactorizado en composite Fase 1 para compartir logica con `source` |
+| `batch_mode()` | Solo `quit`/`help`/`process_instruction` | Tambien `source` y `exec` | Mejora de Fase 2: se puede invocar archivos e instrucciones inline desde el pipe |
+| `interactive_mode()` | Sin `source`/`exec` | Con `source` y `exec` como comandos internos | Mejora de Fase 2: estado compartido dentro de la sesion |
+| `show_help()` | Sin mencion de source/exec | Muestra ambos comandos | Documentacion actualizada |
+| Banderas disponibles | `-c`, `-f`, `--help`, `--version` | Ademas `--llm`, `--provider` | Extension LLM (Fases L1-L4 del plan 031) |
+| Tests de CLI | "No se agregaron tests especificos" | Test 12 cubre source/exec via batch mode | Cobertura parcial (faltan tests directos de `-c` y `-f`) |
+
+### 8.2 Implementacion efectiva vs. propuesta
+
+La Seccion 3.1 muestra `file_mode()` con un loop inline:
+
+```sh
+# Como se propuso originalmente:
+file_mode() {
+    filepath="$1"
+    init_state
+    while read -r line; do
+        process_instruction "$line"
+    done < "$filepath"
+    cleanup
+}
+```
+
+En la implementacion actual, `file_mode()` delega en `composite_file()`
+siguiendo el principio DRY y el patron composite:
+
+```sh
+# Como se implemento finalmente:
+file_mode() {
+    filepath="$1"
+    init_state
+    composite_file "$filepath"
+    cleanup
+}
+```
+
+La logica de lectura de archivo se movio a `composite_file()` para que
+tanto `file_mode()` como el comando interno `source` compartan el mismo
+codigo. Esto no estaba previsto en la propuesta original.
+
+### 8.3 Limitaciones que persisten
+
+- **Sin tests para `-c` y `-f` directos:** La suite de tests usa solo
+  modo batch (pipe). Las banderas `-c` y `-f` no tienen tests
+  automatizados; se verifican manualmente.
+- **`-c` sin estado entre invocaciones:** Cada `-c` crea estado nuevo,
+  igual que en la propuesta. Para sesiones multi-instruccion se debe
+  usar modo interactivo, batch, o `source` con un archivo.
+- **Sin validacion post-scaffold:** El pipeline genera archivos pero no
+  verifica que el modulo resultante compile o pase tests de sintaxis.
+- **Sin CI/CD:** Aunque la propuesta menciona integracion en CI/CD
+  (Seccion 5.5), no hay pipelines automatizados configurados.
+
+### 8.4 Lo que la propuesta predijo correctamente
+
+| Prediccion | Se cumple | Nota |
+|------------|-----------|------|
+| 100% compatible hacia atras | Si | Todos los modos existentes funcionan igual |
+| Estado init+process+cleanup por invocacion | Si | En `-c`, `-f` y `command_mode` |
+| Error a stderr + exit 1 si archivo no existe | Si | En `file_mode()` y `composite_file()` |
+| Parseo antes de deteccion de terminal | Si | Los flags se parsean antes de `[ -t 0 ]` |
+| Formato `-c "texto"` con espacio | Si | `command_mode "$2"` |
+| Sin modificacion al pipeline interno | Si | `process_instruction()` no se modifico |
+
+---
+
+## 9. Estado de Implementacion (Junio 2026)
+
+*Seccion agregada post-implementacion al momento del commit `7cf8f86`.*
+
+### 9.1 Resumen
+
+| Aspecto | Estado |
+|---------|--------|
+| Estatus del documento | `DRAFT` — la implementacion existe pero el frontmatter no refleja el cambio |
+| Banderas implementadas | `-c`/`--command` ✅, `-f`/`--file` ✅ |
+| `command_mode()` | Implementado igual a la propuesta |
+| `file_mode()` | Implementado con desviaciones (delega en `composite_file()`, no loop inline) |
+| Parseo de argumentos | Implementado con validaciones explicitas (mas completo que la propuesta) |
+| Banderas adicionales no previstas | `--llm`, `--provider`, `--help`, `--version` |
+| Version actual de recpl.sh | 1.2.0 (la propuesta dice 1.1.0) |
+| Tests | 72 pasan, 0 fallan (la propuesta dice 47) |
+
+### 9.2 Correspondencia propuesta vs. implementacion
+
+| Elemento propuesto (Seccion 3) | Implementado en recpl.sh | Lineas | Coincide |
+|--------------------------------|--------------------------|--------|----------|
+| `command_mode()`: init + process + cleanup | Igual a la propuesta | 167-172 | ✅ |
+| `file_mode()`: init + while-read + cleanup | Delega en `composite_file()`, no loop inline | 175-191 | ⚠ Parcial |
+| Validacion de archivo (existencia/permisos) | Implementado con if blocks + exit 1 | 178-186 | ✅ (propuesta solo lo tenia como comentario) |
+| Parseo en main() antes de deteccion de terminal | Implementado | 311-328 | ✅ |
+| `[ -z "${2:-}" ]` en flags | Implementado | 313, 321 | ✅ |
+| Exit 1 si archivo no encontrado | Implementado | 180, 185 | ✅ |
+
+### 9.3 Desviaciones respecto a la propuesta original
+
+1. **`file_mode()` usa `composite_file()` en vez de loop inline** — La propuesta (Seccion 3.1) mostraba `file_mode()` con un `while read -r line` inline. En la implementacion real, la logica de lectura de archivo se extrajo a `composite_file()` (creada en composite Fase 1, doc 028) para compartir codigo con el comando `source`. `file_mode()` ahora es un wrapper de 3 lineas: `init_state; composite_file "$filepath"; cleanup`.
+
+2. **Validacion de archivo explicita** — La propuesta tenia un comentario `# validar que existe y es legible` sin codigo. La implementacion real agrega dos bloques `if` con `exit 1` y mensajes de error a stderr.
+
+3. **Flags no previstos `--llm` y `--provider`** — La propuesta no contemplaba la integracion con LLMs. Actualmente `main()` parsea estos flags antes que `-c`/`-f`, permitiendo combinaciones como `./recpl.sh --llm -c "instruccion"`.
+
+4. **`batch_mode()` ampliado** — La propuesta (Seccion 4, tabla de modos) dice que batch tiene solo `quit` y `help` como comandos especiales. Actualmente `batch_mode()` tambien soporta `source` y `exec` (agregado en composite Fase 2).
+
+5. **`--help` y `--version` como flags en main()** — La propuesta no menciona estos flags en el parseo de argumentos, aunque estan implementados en `recpl.sh:330-338`.
+
+### 9.4 Exactitud de las estimaciones
+
+| Aspecto | Propuesto | Real | Nota |
+|---------|-----------|------|------|
+| Lineas de codigo nuevas | ~25 lineas (command_mode + file_mode + parseo) | ~30 lineas | Incluye validaciones adicionales |
+| Tests | 47/47 pasan sin modificaciones | 72/72 pasan | +25 tests de LLM y composite |
+| Banderas totales | 4 (`-c`, `-f`, `--help`, `--version`) | 6 (+`--llm`, `--provider`) | Extension no prevista |
+| Complejidad del parseo | `case "${1:-}" in ... esac` | `while` loop + `case` anidado | Por compatibilidad con `--llm` antepuesto |
+
+### 9.5 Salud actual del codigo
+
+- **`bash -n recpl.sh`**: Sin errores de sintaxis
+- **`command_mode()`**: 6 lineas, identica a la propuesta
+- **`file_mode()`**: 17 lineas (vs ~8 propuestas), mas robusta por validaciones y delegacion
+- **Parseo de `-c`/`-f`**: Con validacion explicita de argumento faltante
+- **Tests directos de `-c`/`-f`**: No existen (igual que en la propuesta, Seccion 6). Se verifican manualmente.
+
+### 9.6 Frontmatter — corregido durante esta revision
+
+| Campo | Antes | Despues |
+|-------|-------|---------|
+| `status` | `DRAFT` | `IMPLEMENTED` |
+| `version` en resumen (header) | `1.0.0 → 1.1.0` | `1.0.0 → 1.2.0` |
+| Tests en resumen (header y Seccion 6) | `47/47 pasan` | `72/72 pasan` |
+
+### 9.7 Referencias
+
+- `recpl.sh:167-172` — `command_mode()`
+- `recpl.sh:175-191` — `file_mode()` (con delegacion a `composite_file()`)
+- `recpl.sh:289-328` — Parseo de flags en `main()` (incluye `--llm`/`--provider`)
+- `028_PROP_DEV_COMPILER_BOT_COMPOSITE_1_0_DRAFT.md` — Propuesta composite que refactorizo `file_mode()`
+- `036_REP_DEV_COMPILER_BOT_COMPOSITE_FASE1_1_0_DRAFT.md` — Creacion de `composite_file()`
