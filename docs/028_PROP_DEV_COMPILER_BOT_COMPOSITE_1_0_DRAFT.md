@@ -4,7 +4,7 @@ area: dev
 type: PROP
 module: compiler-bot
 version: 1.0
-status: DRAFT
+status: IMPLEMENTED
 tags:
   - prop
   - composite-pattern
@@ -13,6 +13,7 @@ tags:
   - recpl
   - architecture
   - state-sharing
+  - implemented
 summary: "Propuesta de diseno para implementar un patron composite que permita al modo interactivo de RECPL invocar modos batch, comando y archivo de forma dinamica, compartiendo el mismo estado y retornando al loop principal. Traduce el comportamiento de herramientas como source (bash), \i (psql) y .read (sqlite3) al contexto del compilador RECPL."
 keywords:
   - composite
@@ -546,17 +547,17 @@ import ...
 
 ## 8. Checklist de Implementacion
 
-- [ ] `composite_exec()`: wrapper simple de `process_instruction()`
-- [ ] `composite_file()`: loop de lectura de archivo SIN init/cleanup
-- [ ] Refactor: `file_mode()` usa `composite_file()` internamente
-- [ ] `interactive_mode()`: caso `source\ *)` en el dispatcher
-- [ ] `interactive_mode()`: caso `exec\ *)` en el dispatcher
-- [ ] Banner actualizado con nuevos comandos
-- [ ] `show_help()` actualizado
-- [ ] Validacion: archivo no encontrado en `source`
-- [ ] Validacion: instruccion vacia en `exec`
-- [ ] Test: estado compartido entre source y comandos manuales
-- [ ] Test: errores dentro de source no rompen la sesion
-- [ ] `bash -n recpl.sh` pasa
-- [ ] `bash tests/run_tests.sh` pasa (47 tests)
-- [ ] Este documento actualizado con resultados de implementacion
+- [x] `composite_exec()`: wrapper simple de `process_instruction()`
+- [x] `composite_file()`: loop de lectura de archivo SIN init/cleanup
+- [x] Refactor: `file_mode()` usa `composite_file()` internamente
+- [x] `interactive_mode()`: caso `source\ *)` en el dispatcher
+- [x] `interactive_mode()`: caso `exec\ *)` en el dispatcher
+- [x] Banner actualizado con nuevos comandos
+- [x] `show_help()` actualizado
+- [x] Validacion: archivo no encontrado en `source`
+- [x] Validacion: instruccion vacia en `exec`
+- [x] Test: estado compartido entre source y comandos manuales
+- [x] Test: errores dentro de source no rompen la sesion
+- [x] `bash -n recpl.sh` pasa
+- [x] `bash tests/run_tests.sh` pasa (72 tests)
+- [x] Este documento actualizado con resultados de implementacion

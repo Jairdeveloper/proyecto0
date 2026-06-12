@@ -266,6 +266,38 @@ done
 
 echo
 
+# === Test 12: Composite pattern (source/exec) ===
+echo "--- Test 12: Composite pattern (source/exec) ---"
+
+# Test 12a: source con archivo valido
+seed_file="/tmp/recpl_test_source_valid_$$"
+echo "crea modulo validmod en nestjs" > "$seed_file"
+result=$(printf "source %s\nquit\n" "$seed_file" | "${BOT_DIR}/recpl.sh" 2>/dev/null)
+assert_contains "source: archivo valido" "$result" "scaffold:module"
+rm -f "$seed_file"
+
+# Test 12b: source con archivo inexistente
+result=$(printf "source /tmp/nonexistent_%d.txt\nquit\n" "$$" | "${BOT_DIR}/recpl.sh" 2>/dev/null)
+assert_contains "source: archivo inexistente" "$result" "Error: archivo no encontrado"
+
+# Test 12c: exec con instruccion valida
+result=$(printf "exec crea modulo execmod en nestjs\nquit\n" | "${BOT_DIR}/recpl.sh" 2>/dev/null)
+assert_contains "exec: instruccion valida" "$result" "scaffold:module"
+
+# Test 12d: exec sin argumento
+result=$(printf "exec\nquit\n" | "${BOT_DIR}/recpl.sh" 2>/dev/null)
+assert_contains "exec: sin argumento" "$result" "Uso: exec <instruccion>"
+
+# Test 12e: Estado compartido entre source y comandos manuales
+seed_file2="/tmp/recpl_test_shared_$$"
+echo "crea modulo sharedmod en nestjs" > "$seed_file2"
+result=$(printf "source %s\nmostrar sharedmod\nquit\n" "$seed_file2" | "${BOT_DIR}/recpl.sh" 2>/dev/null)
+assert_contains "estado compartido: CREATE via source" "$result" "scaffold:module"
+assert_contains "estado compartido: READ manual" "$result" "Mostrando"
+rm -f "$seed_file2"
+
+echo
+
 # === Resumen ===
 echo "=========================================="
 echo "RESUMEN: $PASS pasaron, $FAIL fallaron"

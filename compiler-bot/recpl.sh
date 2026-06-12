@@ -73,6 +73,8 @@ EJEMPLOS:
 COMANDOS ESPECIALES:
   quit, salir, exit, q  → termina el bucle
   help                  → muestra esta ayuda
+  source <archivo>      → ejecuta instrucciones desde un archivo
+  exec <instruccion>    → ejecuta una instruccion inline
 
 BANDERAS:
   -c, --command TEXTO      Ejecuta una instruccion y termina
@@ -195,6 +197,21 @@ batch_mode() {
         case "$line" in
             quit|salir|exit|q) break ;;
             help) show_help; break ;;
+            source\ *)
+                filepath="${line#source }"
+                composite_file "$filepath"
+                ;;
+            exec\ *)
+                instruction="${line#exec }"
+                if [ -z "$instruction" ]; then
+                    echo "Uso: exec <instruccion>"
+                else
+                    composite_exec "$instruction"
+                fi
+                ;;
+            exec)
+                echo "Uso: exec <instruccion>"
+                ;;
             *) process_instruction "$line" ;;
         esac
     done
@@ -205,6 +222,7 @@ batch_mode() {
 interactive_mode() {
     echo "RECPL Compiler Bot v${VERSION}"
     echo "Escribe 'quit' para salir."
+    echo "Comandos: source <archivo>, exec <instruccion>"
     echo
 
     while true; do
@@ -229,6 +247,30 @@ interactive_mode() {
                 continue
                 ;;
             "")
+                continue
+                ;;
+
+            # Comandos composite: source <archivo>
+            source\ *)
+                filepath="${input#source }"
+                [ -z "$filepath" ] && echo "Uso: source <archivo>" && continue
+                composite_file "$filepath"
+                continue
+                ;;
+
+            # Comandos composite: exec <instruccion>
+            exec\ *)
+                instruction="${input#exec }"
+                if [ -z "$instruction" ]; then
+                    echo "Uso: exec <instruccion>"
+                else
+                    composite_exec "$instruction"
+                    echo
+                fi
+                continue
+                ;;
+            exec)
+                echo "Uso: exec <instruccion>"
                 continue
                 ;;
         esac
