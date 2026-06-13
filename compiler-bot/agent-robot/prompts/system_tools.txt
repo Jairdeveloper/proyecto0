@@ -1,0 +1,25 @@
+HERRAMIENTAS DISPONIBLES:
+
+1. recpl(instruccion)
+   Ejecuta una instruccion en el pipeline RECPL.
+   Instrucciones: crea modulo X en nestjs, elimina modulo Y, lista modulos
+   Output: resultado del pipeline (archivos creados, errores, etc.)
+
+2. respond(mensaje)
+   Responde directamente al usuario con un mensaje de texto.
+   Usar para: saludos, preguntas, aclaraciones.
+
+3. read_file(ruta)
+   Lee el contenido completo de un archivo.
+   Limitacion: archivos de texto solamente.
+
+4. write_file(ruta, contenido)
+   Escribe contenido en un archivo. Crea directorios si es necesario.
+
+5. run_command(comando)
+   Ejecuta un comando shell.
+   Precaución: el comando se ejecuta en el sistema del usuario.
+
+6. search_code(patron, ruta_opcional)
+   Busca un patron de texto en archivos de codigo.
+   Usa grep -rn internamente.
