@@ -3,8 +3,8 @@ id: 006
 area: dev
 type: PROP
 module: compiler-bot
-version: 1.0
-status: DRAFT
+version: 1.1
+status: IMPLEMENTED
 tags:
   - proposal
   - compiler
@@ -29,6 +29,10 @@ keywords:
   - dragon-book
   - compiler-compiler
 changelog:
+  - version: 1.1
+    date: 2026-06-12
+    author: workflow-agent
+    description: "Estado de implementacion: 12/14 tareas completadas, 6 componentes nuevos (router LLM, debugger, providers), 72 tests. Documentado en seccion 9."
   - version: 1.0
     date: 2026-06-07
     author: workflow-agent
@@ -546,7 +550,130 @@ synthesis(ir_json, tac[]) → bot_response:
 
 ---
 
-## 9. Referencias
+## 9. Estado de Implementacion
+
+> **Fecha del analisis:** 2026-06-12
+> **Herramienta usada:** `pipeline_debugger.sh` para instrumentacion
+> **Commit:** `fa2a782` (11 archivos, +2969/−8 lineas)
+
+### 9.1 Resumen
+
+De las 14 tareas propuestas originalmente, **12 estan completamente
+implementadas** y **2 permanecen pendientes** (TASK-009 Tracer,
+TASK-012 Scorer). Adicionalmente, se han construido **6 componentes
+no contemplados en la propuesta original**, incluyendo integracion
+LLM, un debugger de pipeline, y un nucleo C experimental.
+
+El pipeline completo consta de **~2881 lineas de shell** distribuidas
+en 12 scripts, mas **784 lineas del debugger** y **352 del bucle
+principal**.
+
+### 9.2 Estado por Tarea
+
+| ID | Tarea | Estado | Archivo / Notas |
+|----|-------|--------|-----------------|
+| TASK-001 | Alfabeto y tokens | COMPLETADO | `lexer.sh:58-108` — 11 tipos de token (desviacion: no existe token ARTICLE, se maneja contextualmente en parser) |
+| TASK-002 | DFA lexer (READ) | COMPLETADO | `lexer.sh` (165 lineas) — DFA con maximal munch, posicion line/col, JSON por token |
+| TASK-003 | Preprocesador | COMPLETADO | `preprocessor.sh` (94 lineas) — lowercase, colapso, trim. Sin NFKC (desviacion menor) |
+| TASK-004 | Gramatica BNF | COMPLETADO | `parser.sh:10-16` — BNF documentada en comentarios, identica a la propuesta |
+| TASK-005 | Parser recursivo descendente (EVAL) | COMPLETADO | `parser.sh` (340 lineas) — LL(1), 4 acciones, modulo_espec, opcional_tech |
+| TASK-006 | Tabla de simbolos | COMPLETADO | `semantic.sh:32-83` — Hash persistente en disco via RECPL_STATE_DIR |
+| TASK-007 | Analizador semantico | COMPLETADO | `semantic.sh` (245 lineas) — Type checking, unicidad, existencia, ambitos |
+| TASK-008 | Generador IR.json | COMPLETADO | `ir_generator.sh` (183 lineas) — IR canonico con template, trace_id, symbol_table |
+| TASK-009 | Tracer (three-address code) | **PENDIENTE** | No implementado. Seccion 5.6 de la propuesta (opcional). El `pipeline_debugger.sh` cubre parcialmente la necesidad de trazabilidad. |
+| TASK-010 | Synthesis (PRINT) | COMPLETADO | `synthesis.sh` (199 lineas) — 4 acciones: scaffold, delete, update, read |
+| TASK-011 | Bucle LOOP principal | COMPLETADO | `recpl.sh` (352 lineas) — 4 modos, source/exec, flags CLI, integracion LLM |
+| TASK-012 | Scorer (busqueda de patrones) | **PENDIENTE** | No implementado. Seccion 4 paso 5 de la propuesta (opcional). |
+| TASK-013 | Template scaffolding | COMPLETADO | `scaffold.sh` (91 lineas) + `templates/` — 3 plantillas (module-nestjs, entity-nestjs, module-prisma) |
+| TASK-014 | Pruebas unitarias | COMPLETADO | `tests/run_tests.sh` — **72 tests, 0 fallos** (vs 47 estimados en la propuesta) |
+
+### 9.3 Mapa de Componentes Actual
+
+```
+compiler-bot/
+├── pipeline_debugger.sh    (784 lines)  ← NUEVO: debugger con 5 modos
+├── recpl.sh                (352 lines)  ← Bucle principal (LOOP)
+├── frontend/
+│   ├── preprocessor.sh     ( 94 lines)  ← Normalizacion
+│   ├── lexer.sh            (165 lines)  ← DFA tokenizer (READ)
+│   ├── parser.sh           (340 lines)  ← LL(1) recursive descent (EVAL)
+│   ├── semantic.sh         (245 lines)  ← Analisis semantico + symbol table
+│   └── router.sh           (177 lines)  ← NUEVO: ruteo deterministico/LLM
+│   └── llm_classifier.sh   (170 lines)  ← NUEVO: fachada LLM
+├── middleend/
+│   ├── ir_generator.sh     (183 lines)  ← AST → IR.json
+│   └── llm_ir_mapper.sh    ( 81 lines)  ← NUEVO: mapper LLM → IR
+├── backend/
+│   ├── synthesis.sh        (199 lines)  ← IR → respuesta JSON
+│   └── scaffold.sh         ( 91 lines)  ← Template rendering
+├── providers/
+│   ├── provider_common.sh               ← NUEVO: utilidades LLM
+│   ├── claude.sh                        ← NUEVO: provider Anthropic
+│   └── openai.sh                        ← NUEVO: provider OpenAI
+├── templates/
+│   ├── module-nestjs/      (3 files)    ← Templates NestJS
+│   ├── entity-nestjs/      (1 file)     ← Templates entidad NestJS
+│   └── module-prisma/      (1 file)     ← Templates Prisma
+└── tests/
+    └── run_tests.sh        (312 lines)  ← 72 tests
+```
+
+### 9.4 Componentes No Contemplados en la Propuesta
+
+| Componente | Archivo | Proposito |
+|------------|---------|-----------|
+| Router inteligente | `frontend/router.sh` | Decide si una instruccion va al pipeline deterministico o al LLM. Implementa patron Strategy con 3 modos (auto/llm/deterministic). |
+| Fachada LLM | `frontend/llm_classifier.sh` | Clasifica instrucciones via LLM (Claude/OpenAI) usando tool schemas. |
+| Mapper LLM → IR | `middleend/llm_ir_mapper.sh` | Convierte tool calls del LLM al mismo formato IR.json del pipeline deterministico. |
+| Providers | `providers/claude.sh`, `providers/openai.sh`, `providers/provider_common.sh` | Adaptadores de proveedor LLM con manejo de API keys, rate limiting, timeouts. |
+| Pipeline debugger | `pipeline_debugger.sh` | Instrumentacion del pipeline con 5 modos (trace, step, timing, inspect, xtrace). 784 lineas. |
+| Nucleo C experimental | `recpl-core/` | Implementacion paralela en C con hash table, JSON builder, Makefile. |
+
+### 9.5 Desviaciones de la Propuesta Original
+
+| Aspecto Propuesto | Implementado | Diferencia |
+|-------------------|-------------|------------|
+| Token `ARTICLE` | No existe | Articulos ("un", "el") son tokens `ENTITY`; el parser los detecta contextualmente con `is_article()` |
+| `ENTITY` regex `[A-Z][a-zA-Z]+` | `[a-z][a-z]*` | El preprocessor pasa todo a lowercase; el lexer solo recibe minusculas |
+| Tech case-insensitive | Solo lowercase | `TECH_NESTJS` matchea literal "nestjs" (no "NestJS") |
+| NFKC normalization en preprocessor | No implementado | Solo `tr '[:upper:]' '[:lower:]'` |
+| Tabla de simbolos en memoria | Archivos en disco | RECPL_STATE_DIR persiste estado entre instrucciones (pipe-safe) |
+| Scorer (seccion 4 paso 5) | No implementado | Marcado como opcional en la propuesta |
+| Tracer (three-address code) | No implementado | Marcado como opcional en la propuesta |
+| 47 tests estimados | 72 tests reales | 25 tests adicionales por componentes nuevos (LLM, composite, debugger) |
+| Sintesis solo deterministico | Sintesis + LLM | El router permite delegar al LLM cuando el deterministico falla |
+
+### 9.6 Fases de Implementacion vs Realidad
+
+| Fase Propuesta | Tareas | Estado Real |
+|----------------|--------|-------------|
+| FASE-1: Nucleo RECPL | TASK-001 al TASK-005, TASK-011 | COMPLETADO — nucleo funciona con 4 modos, flags CLI, source/exec |
+| FASE-2: Semantica e IR | TASK-006 al TASK-008 | COMPLETADO — symbol table persistente, IR canonico con trace_id |
+| FASE-3: Synthesis y Output | TASK-010, TASK-013 | COMPLETADO — 4 acciones, 3 templates, scaffolding a disco |
+| FASE-4: Trazabilidad y Scoring | TASK-009, TASK-012 | **PENDIENTE** — ni tracer ni scorer implementados. `pipeline_debugger.sh` cubre necesidades de trazabilidad parcialmente |
+| FASE-5: End-to-end y Tests | TASK-011, TASK-014 | COMPLETADO — 72 tests, todos pasando |
+
+### 9.7 Proxima Evolucion
+
+1. **TASK-009 (Tracer):** Opcional. Si se implementa, produciria
+   three-address code a partir del IR.json para trazabilidad fina
+   de cada operacion del pipeline.
+
+2. **TASK-012 (Scorer):** Opcional. Requiere un historial de
+   entrenamiento (training set) y un algoritmo de similitud. No
+   hay datos de entrenamiento disponibles actualmente.
+
+3. **Bug known: `--output` flag:** El modo silencioso del
+   `pipeline_debugger.sh` redirige el JSON final a /dev/null
+   (bug confirmado en sesion de ing. inversa).
+
+4. **Bug known: Underscore en lexer:** `_` no es caracter
+   reconocido, rompe nombres de entidad como `test_module`.
+
+5. **Bug known: Multi-entidad:** La gramatica no soporta
+   `crea modulo auth y users en nestjs`.
+
+## 10. Referencias
 
 - **Aho, Sethi, Ullman.** *Compilers: Principles, Techniques, and Tools* (Dragon Book), cap.1-4.
 - **Louden.** *Compiler Construction: Principles and Practice*, caps.1-2.

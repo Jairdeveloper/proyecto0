@@ -5,6 +5,13 @@ Todas las cambios notables de este proyecto se documentan en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es/1.0.0/),
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0] — 2026-06-13
+
+### Added
+- `docs/047_PROP_DEV_COMPILER_BOT_AGENT_CONCEPT_1_0_DRAFT.md` — propuesta de nuevo concepto para Proyecto0 como agente de IA open-source multi-proposito. Analisis de viabilidad, arquitectura de agentes, gap analysis, plan de migracion.
+- `docs/048_PLAN_DEV_COMPILER_BOT_AGENT_IMPL_1_0_DRAFT.md` — plan de implementacion de la capa agent-robot. Arquitectura, bridge, herramientas del agente, 4 fases con 25 tareas, reglas de diseno (no tocar codigo existente, modo deterministico como capa inferior, solo terminal).
+- INDEX.md actualizado a 50 documentos (PLAN dev: 2 → 3, total docs: 49 → 50)
+
 ## [1.4.0] — 2026-06-12
 
 ### Added
@@ -13,6 +20,10 @@ y este proyecto se adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.
 - `docs/040_PROP_DEV_COMPILER_BOT_PIPELINE_DEBUGGER_1_0_DRAFT.md` — propuesta del debugger de pipeline
 - `docs/041_REP_DEV_COMPILER_BOT_PIPELINE_DEBUGGER_1_0_ACTIVE.md` — reporte de implementacion del debugger
 - `docs/042_GUIDE_DEV_COMPILER_BOT_PIPELINE_DEBUGGER_RUNBOOK_1_0_DRAFT.md` — runbook de uso del debugger
+- `docs/043_REP_DEV_COMPILER_BOT_PIPELINE_RE_1_0_DRAFT.md` — reporte de ingenieria inversa del pipeline RECPL
+- `docs/044_GUIDE_DEV_COMPILER_BOT_PIPELINE_DEBUGGER_CHEATSHEET_1_0_DRAFT.md` — cheatsheet de comandos del debugger
+- `docs/045_PROP_DEV_COMPILER_BOT_PROVIDER_APIFREELLM_1_0_DRAFT.md` — propuesta de provider apifreellm.com
+- `docs/046_PROP_DEV_COMPILER_BOT_TIER_ARCHITECTURE_1_0_DRAFT.md` — propuesta de arquitectura free/paid para providers LLM
 - Seccion 8 "Estado de Implementacion" en `028_PROP`
 - Secciones 8 "Observaciones" y 9 "Estado de Implementacion" en `027_PROP`
 - Subseccion "CHANGELOG.md" en AGENTS.md con convenciones de anotacion
@@ -20,7 +31,7 @@ y este proyecto se adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.
 ### Changed
 - `docs/027_PROP` status: DRAFT → IMPLEMENTED, version 1.1.0 → 1.2.0, test count 47 → 72
 - `docs/040_PROP` status: DRAFT → IMPLEMENTED, tabla de riesgos mejorada con mitigaciones reales del sistema
-- INDEX.md actualizado a 44 documentos (GUIDE dev: 9 → 10, REP dev: 9 → 10, PROP dev: 10)
+- INDEX.md actualizado a 45 documentos (GUIDE dev: 9 → 10, REP dev: 9 → 11, PROP dev: 10)
 
 ## [1.3.0] — 2026-06-12
 

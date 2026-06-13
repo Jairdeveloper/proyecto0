@@ -20,12 +20,12 @@ keywords:
 
 # Indice de Documentacion
 
-> 44 documentos organizados por area tematica.
+> 50 documentos organizados por area tematica.
 > Secuencia de creacion: NNN ascendente.
 
 ## Area: dev
 
-Desarrollo. 34 documentos (GUIDE 10, PLAN 2, PROP 10, REP 10, SPEC 2).
+Desarrollo. 40 documentos (GUIDE 11, PLAN 3, PROP 13, REP 11, SPEC 2).
 
 | NNN | Tipo | Modulo | Resumen |
 |-----|------|--------|---------|
@@ -52,6 +52,7 @@ Desarrollo. 34 documentos (GUIDE 10, PLAN 2, PROP 10, REP 10, SPEC 2).
 | 027 | PROP | compiler-bot | Propuesta de mejora para agregar las banderas -c/--command y -f/--file al bucle ... |
 | 028 | PROP | compiler-bot | Propuesta de diseno para implementar un patron composite que permita al modo int... |
 | 031 | PLAN | compiler-bot | Plan de ejecucion detallado para integrar LLMs (Claude, OpenAI) en el RECPL Compiler Bot. Describe ... |
+| 048 | PLAN | compiler-bot | Plan de implementacion detallado para la capa agent-robot sobre RECPL. Arquitectura, bridge, herramientas del agente, fases con tareas, reglas de diseno... |
 | 032 | REP | compiler-bot | Reporte de implementacion de la FASE-L1 del plan 031: adapters de proveedor LLM... |
 | 033 | REP | compiler-bot | Reporte de implementacion de la FASE-L2 del plan 031: fachada LLM y mapper IR... |
 | 034 | REP | compiler-bot | Reporte de implementacion de la FASE-L3 del plan 031: router inteligente e integ... |
@@ -63,7 +64,12 @@ Desarrollo. 34 documentos (GUIDE 10, PLAN 2, PROP 10, REP 10, SPEC 2).
 | 040 | PROP | compiler-bot | Propuesta de debugger de pipeline RECPL con 5 modos: trace, step, timing, inspect, xtrace... |
 | 041 | REP | compiler-bot | Reporte de implementacion del debugger de pipeline RECPL. pipeline_debugger.sh con 5 modos, 784 lineas, probado en 10 escenarios... |
 | 042 | GUIDE | compiler-bot | Runbook de uso del pipeline_debugger.sh: 5 modos, ejemplos, troubleshooting, buenas practicas... |
-
+| 043 | REP | compiler-bot | Reporte de ingenieria inversa del pipeline RECPL. 10 escenarios, 6 etapas, 3 bugs detectados. Basado en pipeline_debugger.sh... |
+| 044 | GUIDE | compiler-bot | Cheatsheet de comandos de pipeline_debugger.sh. Todos los modos, flags y ejemplos con salida real... |
+| 045 | PROP | compiler-bot | Propuesta de provider apifreellm.com para RECPL. Analisis de API, diseno de adapter free/premium, integracion con llm_classifier.sh... |
+| 046 | PROP | compiler-bot | Propuesta de arquitectura free/paid para providers LLM. Dispatcher multi-provider, registry de proveedores, fallback chain, 0 cambios en adapters existentes... |
+| 047 | PROP | compiler-bot | Analisis y propuesta de nuevo concepto para Proyecto0: de compilador NL a agente de IA open-source multi-proposito. Arquitectura de agentes, analisis de brechas, plan de migracion... |
+ 
 ## Area: mgt
 
 Gestion. 4 documentos (REP 4).
@@ -158,4 +164,10 @@ Legacy. 2 documentos (GUIDE 2).
 | 040 | `040_PROP_DEV_COMPILER_BOT_PIPELINE_DEBUGGER_1_0_DRAFT.md` | dev | PROP |
 | 041 | `041_REP_DEV_COMPILER_BOT_PIPELINE_DEBUGGER_1_0_ACTIVE.md` | dev | REP |
 | 042 | `042_GUIDE_DEV_COMPILER_BOT_PIPELINE_DEBUGGER_RUNBOOK_1_0_DRAFT.md` | dev | GUIDE |
+| 043 | `043_REP_DEV_COMPILER_BOT_PIPELINE_RE_1_0_DRAFT.md` | dev | REP |
+| 044 | `044_GUIDE_DEV_COMPILER_BOT_PIPELINE_DEBUGGER_CHEATSHEET_1_0_DRAFT.md` | dev | GUIDE |
+| 045 | `045_PROP_DEV_COMPILER_BOT_PROVIDER_APIFREELLM_1_0_DRAFT.md` | dev | PROP |
+| 046 | `046_PROP_DEV_COMPILER_BOT_TIER_ARCHITECTURE_1_0_DRAFT.md` | dev | PROP |
+| 047 | `047_PROP_DEV_COMPILER_BOT_AGENT_CONCEPT_1_0_DRAFT.md` | dev | PROP |
+| 048 | `048_PLAN_DEV_COMPILER_BOT_AGENT_IMPL_1_0_DRAFT.md` | dev | PLAN |
 | ALGP003 | `ALGP003_CONVENCION_DOCUMENTACION_v1_0_DRAFT.md` | algorithms | ALGP |

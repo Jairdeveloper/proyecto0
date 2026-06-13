@@ -2,3 +2,4 @@ modules/
 *.o
 recpl-core
 .env
+prompts/build.md

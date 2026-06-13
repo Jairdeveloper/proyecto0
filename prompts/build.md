@@ -279,6 +279,9 @@ Escribe un archivo .md con un plan de ejecucion describiendo, mejoras (y explica
 
 
 
+Escribe una propuesta de implementacion en un archivo .md para un debugger para proyecto0 (El proyecto actual), La idea nace de la necesidad de aprender el funcionamiento interno del pipeline, La La finalidad del debugger es proporcionar al equipo de ingenieria inversa una herramienta para que puedan encontrar bugs, latencias, entre otros "fallos", inconsistencia del sistema.la propuesta debe tener en cuenta la conversacion y la propuestas hechas en la conversacion siguiente:
+
+
  The user is asking how to debug the RECPL pipeline. Let me think about what tools and approaches are available based on the project structure I've seen.
 From what I know about the project:
 1. The pipeline is: preprocess → lexer → parser → semantic → IR → synthesis
@@ -358,4 +361,39 @@ bash -v	Cada linea sin expandir	Problemas de parsing/sintaxis
 set -x/set +x	Solo una seccion	Pipeline, funcion especifica
 PS4	Linea, archivo, funcion	Scripts con multiples archivos
 
-Escribe una propuesta de implementacion en un archivo .md para un debugger para proyecto0 (El proyecto actual), La idea nace de la necesidad de aprender el funcionamiento interno del pipeline, La La finalidad del debugger es proporcionar al equipo de ingenieria inversa una herramienta para que puedan encontrar bugs, latencias, entre otros "fallos", inconsistencia del sistema.la propuesta debe tener en cuenta la conversacion y la propuestas hechas en la conversacion siguiente:
+
+Quiero darle un nuevo concepto a Proyecto0. Escribe un analisis en un archivo .md para mi propuesta de nuevo concepto para Proyecto0. Lee todos los archivos dentro del directorio /home/john/proyects/proyect0/docs para que tengas una aproximación de lo que se esta creando. Mi propuesta se basa en lo siguiente:
+Que es Proyecto0(RECPL):
+un agente de código abierto que te ayuda a escribir y ejecutar código con cualquier modelo de IA. Está disponible como interfaz de terminal, aplicación de escritorio o extensión de IDE. 
+Cómo usar recpl?
+Acceso a una terminal
+Claves de API de los proveedores de LLM que quiera usar.
+```
+leer /home/john/proyects/proyect0/docs/010_GUIDE_DEV_COMPILER_BOT_RUNBOOK_1_0_DRAFT.md
+
+```
+¿Necesito suscripciones extra de IA para usar RECPL?
+No necesariamente, RECPL viene con un conjunto de modelos gratuitos que puedes usar sin crear una cuenta. Aparte de estos, puedes usar cualquiera de los modelos de codificación populares creando una cuenta de (feature de proveedores gratuitos, exponer api interna para ofrecerlos gratuitamente como opcion). Aunque animamos a los usuarios a usar (funcionalidad interna que provee modelos gratuitos), RECPL también funciona con todos los proveedores populares como OpenAI, Anthropic, xAI, etc. Incluso puedes conectar tus modelos locales.
+
+¿Puedo usar mis suscripciones de IA existentes con OpenCode?
+Sí, RECPL soporta planes de suscripción de los principales proveedores. Puedes usar tus suscripciones de Claude Pro/Max, ChatGPT Plus/Pro o GitHub Copilot.
+
+¿Solo puedo usar RECPL en la terminal? *futuro*
+¡Ya no! RECPL ahora está disponible como una aplicación para tu escritorio y web!
+
+¿Cuánto cuesta RECPL?
+RECPL es 100% gratuito de usar. También viene con un conjunto de modelos gratuitos. Puede haber costos adicionales si conectas cualquier otro proveedor.
+
+¿Es RECPL de código abierto?
+Sí, RECPL es totalmente de código abierto. El código fuente es público en GitHub bajo la Licencia MIT, lo que significa que cualquiera puede usar, modificar o contribuir a su desarrollo. Cualquiera de la comunidad puede abrir problemas, enviar solicitudes de extracción y extender la funcionalidad.
+
+
+
+La idea nace de un estudio hecho de la tendencia actual/revolucion a la automatización del desarrollo de software, se proponer utilizar la base de codigo actual y extrapolarla a un sistema de agentes. Entiendase como agente, "una entidad computacional diseñada para percibir su entorno (ambos, digital y potencialmente fisica), tomar decisiones informadas basadas en esas percepciones y un conjunto de objetivos predefinidos o aprendidos, y ejecutar acciones para alcanzar esos objetivos de manera autonoma:
+Caracteristicas:
+- Autonomia
+- Proactividad
+- Reactividad
+Son orientados al objetivo.
+Una Capacidad es el uso de herramientas lo que les permite inractuar con apis externas, bases de datos o servicios, alcanzando mas alla de su liezo inmediato, poseen memoria, retienen informacion a lo largo de las interacciones y pueden establecer conversaciones con usuarios, otros sistemas, incluso otros agentes que operan en el mismo lienzo conectados..."
+La finalidad de esta redireccion, Es que la herramienta creada le sea de utilidad a cualquier desarrollador de software para cualquier tarea de desarrollo de software de manera mas intuitiva.
