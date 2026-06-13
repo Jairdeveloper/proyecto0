@@ -5,6 +5,25 @@ Todas las cambios notables de este proyecto se documentan en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es/1.0.0/),
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.0] — 2026-06-13
+
+### Added
+- `compiler-bot/agent-robot/tools/tool_read_file.sh` — herramienta de lectura de archivos con validaciones (ruta, existencia, permisos). Responde JSON con path, lineas, bytes, y contenido.
+- `compiler-bot/agent-robot/tools/tool_write_file.sh` — herramienta de escritura de archivos con creacion automatica de directorios y verificacion de permisos.
+- `compiler-bot/agent-robot/tools/tool_run_command.sh` — herramienta de ejecucion de comandos del sistema via `sh -c` con medicion de tiempo.
+- Tests de Fase 2 en `test_agent.sh`: 3 tests nuevos (read_file, write_file, run_command). Suite total: 10 tests funcionales.
+- `docs/050_REP_DEV_COMPILER_BOT_FASE2_AGENT_TOOLS_1_0_DRAFT.md` — reporte de implementacion de Fase 2.
+- INDEX.md actualizado a 52 documentos (REP dev: 11 → 12, doc total: 51 → 52)
+
+### Changed
+- `agent.sh`: `classify_intent()` y `execute_intent()` extendidos con deteccion y ejecucion de read_file, write_file, run_command. Las detecciones de Fase 2 se ubican antes que RECPL para priorizar patrones especificos ("crea archivo" antes que "crea").
+- `agent.sh`: `format_response()` ampliado con manejo de tipos `file_content`, `command_output`, `file_written`. Uso de `printf` en vez de `echo` para compatibilidad con dash.
+- `agent.sh`: `main()` usa archivo temporal en vez de `$()` para capturar respuesta de execute_intent, evitando bug de dash + echo + jq.
+- `tool_respond.sh`: reescrito a `jq -n --arg` en lugar de heredoc, eliminando riesgo de expansion de shell.
+
+### Fixed
+- Compatibilidad con **dash** (`/bin/sh` en Debian/Ubuntu): `echo` en dash interpreta secuencias de escape (`\n`), rompiendo JSON con contenido multilinea. Reemplazado por `printf '%s'` en todas las funciones que procesan JSON.
+
 ## [1.6.0] — 2026-06-13
 
 ### Added

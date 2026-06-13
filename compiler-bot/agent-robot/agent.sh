@@ -93,6 +93,26 @@ classify_intent() {
         return
     }
 
+    # --- Fase 2: herramientas del sistema (antes que RECPL por ser mas especificas) ---
+
+    # Detectar escritura de archivos (antes que el "crea" generico de RECPL)
+    echo "$_lower" | grep -qE '^(crea archivo|escribe|write|crea el archivo|genera archivo) ' && {
+        echo "write_file"
+        return
+    }
+
+    # Detectar lectura de archivos
+    echo "$_lower" | grep -qE '^(lee|muestra|cat|abre|read) ' && {
+        echo "read_file"
+        return
+    }
+
+    # Detectar ejecucion de comandos
+    echo "$_lower" | grep -qE '^(ejecuta|corre|run|executa|lanza) ' && {
+        echo "run_command"
+        return
+    }
+
     # Detectar comando RECPL (palabras clave: crea, genera, elimina, lista, etc.)
     echo "$_lower" | grep -qE '^(crea|genera|elimina|borra|lista|muestra|actualiza|modifica|source|exec)' && {
         echo "recpl"
@@ -141,6 +161,29 @@ execute_intent() {
             show_help
             ;;
 
+        read_file)
+            . "$SCRIPT_DIR/tools/tool_read_file.sh"
+            # Extraer ruta: remover "lee " o "muestra " o "cat " del inicio
+            _path=$(echo "$_instruction" | sed 's/^\(lee\|muestra\|cat\|abre\|read\) //')
+            tool_read_file "$_path"
+            ;;
+
+        write_file)
+            . "$SCRIPT_DIR/tools/tool_write_file.sh"
+            # Parseo basico: "crea archivo <ruta> con contenido <contenido>"
+            _rest=$(echo "$_instruction" | sed 's/^\(crea archivo\|escribe\|write\|crea el archivo\|genera archivo\) //')
+            _path=$(echo "$_rest" | sed 's/ con contenido.*//' | sed 's/ con texto.*//' | xargs)
+            _content=$(echo "$_rest" | sed 's/^.* con contenido //' | sed 's/^.* con texto //')
+            [ -z "$_content" ] && _content="$_rest"
+            tool_write_file "$_path" "$_content"
+            ;;
+
+        run_command)
+            . "$SCRIPT_DIR/tools/tool_run_command.sh"
+            _cmd=$(echo "$_instruction" | sed 's/^\(ejecuta\|corre\|run\|executa\|lanza\) //')
+            tool_run_command "$_cmd"
+            ;;
+
         recpl)
             # Delegar en RECPL via bridge
             . "$SCRIPT_DIR/bridge.sh"
@@ -156,18 +199,39 @@ execute_intent() {
 }
 
 # --- Formatear respuesta para el usuario ---
+# Maneja distintos tipos de respuesta: mensaje textual, contenido de archivo,
+# salida de comando, escritura de archivo.
 format_response() {
     _json="$1"
 
-    _exito=$(echo "$_json" | jq -r '.exito // false' 2>/dev/null)
-    _tipo=$(echo "$_json" | jq -r '.tipo_respuesta // "text"' 2>/dev/null)
-    _mensaje=$(echo "$_json" | jq -r '.mensaje // ""' 2>/dev/null)
+    _exito=$(printf '%s' "$_json" | jq -r '.exito // false' 2>/dev/null)
+    _tipo=$(printf '%s' "$_json" | jq -r '.tipo_respuesta // "text"' 2>/dev/null)
 
-    if [ "$_exito" = "true" ]; then
-        echo "✅ $_mensaje"
-    else
-        echo "❌ $_mensaje"
-    fi
+    case "$_tipo" in
+        file_content)
+            _path=$(printf '%s' "$_json" | jq -r '.path // ""' 2>/dev/null)
+            _lines=$(printf '%s' "$_json" | jq -r '.lineas // 0' 2>/dev/null)
+            _content=$(printf '%s' "$_json" | jq -r '.contenido // ""' 2>/dev/null)
+            printf '✅ %s (%s lineas)\n' "$_path" "$_lines"
+            [ -n "$_content" ] && printf '%s\n' "$_content"
+            ;;
+        command_output)
+            _output=$(printf '%s' "$_json" | jq -r '.output // ""' 2>/dev/null)
+            printf '✅ %s\n' "$(printf '%s' "$_output" | head -5)"
+            ;;
+        file_written)
+            _mensaje=$(printf '%s' "$_json" | jq -r '.mensaje // ""' 2>/dev/null)
+            printf '✅ %s\n' "$_mensaje"
+            ;;
+        *)
+            _mensaje=$(printf '%s' "$_json" | jq -r '.mensaje // ""' 2>/dev/null)
+            if [ "$_exito" = "true" ]; then
+                printf '✅ %s\n' "$_mensaje"
+            else
+                printf '❌ %s\n' "$_mensaje"
+            fi
+            ;;
+    esac
 }
 
 # --- MAIN ---
@@ -234,16 +298,18 @@ main() {
     _intent=$(classify_intent "$_instruction")
     memory_log "INTENT: $_intent"
 
-    # Ejecutar
-    _result=$(execute_intent "$_intent" "$_instruction")
+    # Ejecutar (usando archivo temporal para evitar bug de dash + $() + jq)
+    _result_file="/tmp/agent_result_$$.tmp"
+    execute_intent "$_intent" "$_instruction" > "$_result_file"
     _exit_code=$?
 
     # Formatear y mostrar
-    format_response "$_result"
-    memory_log "RESP: $(echo "$_result" | jq -c '.' 2>/dev/null || echo "$_result")"
+    format_response "$(cat "$_result_file")"
+    memory_log "RESP: $(cat "$_result_file" | jq -c '.' 2>/dev/null || cat "$_result_file")"
 
     # Guardar en historial
-    memory_add_history "$_instruction" "$_result"
+    memory_add_history "$_instruction" "$(cat "$_result_file")"
+    rm -f "$_result_file"
 
     return $_exit_code
 }

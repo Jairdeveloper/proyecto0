@@ -23,7 +23,10 @@ test_files_exist() {
         "$SCRIPT_DIR/agent-robot/memory.sh" \
         "$SCRIPT_DIR/agent-robot/tools/tool_registry.sh" \
         "$SCRIPT_DIR/agent-robot/tools/tool_recpl.sh" \
-        "$SCRIPT_DIR/agent-robot/tools/tool_respond.sh"; do
+        "$SCRIPT_DIR/agent-robot/tools/tool_respond.sh" \
+        "$SCRIPT_DIR/agent-robot/tools/tool_read_file.sh" \
+        "$SCRIPT_DIR/agent-robot/tools/tool_write_file.sh" \
+        "$SCRIPT_DIR/agent-robot/tools/tool_run_command.sh"; do
         if [ -f "$f" ]; then
             echo "  ✅ Existe: $(basename "$f")"
         else
@@ -43,7 +46,10 @@ test_bash_syntax() {
         "$SCRIPT_DIR/agent-robot/memory.sh" \
         "$SCRIPT_DIR/agent-robot/tools/tool_registry.sh" \
         "$SCRIPT_DIR/agent-robot/tools/tool_recpl.sh" \
-        "$SCRIPT_DIR/agent-robot/tools/tool_respond.sh"; do
+        "$SCRIPT_DIR/agent-robot/tools/tool_respond.sh" \
+        "$SCRIPT_DIR/agent-robot/tools/tool_read_file.sh" \
+        "$SCRIPT_DIR/agent-robot/tools/tool_write_file.sh" \
+        "$SCRIPT_DIR/agent-robot/tools/tool_run_command.sh"; do
         if bash -n "$f" 2>/dev/null; then
             echo "  ✅ Syntax OK: $(basename "$f")"
         else
@@ -143,6 +149,57 @@ test_memory() {
     unset AGENT_MEMORY_DIR
 }
 
+# --- Fase 2: tool_read_file ---
+test_tool_read_file() {
+    # Crear archivo temporal
+    _tmp="/tmp/test_agent_read_$$.txt"
+    echo "contenido de prueba" > "$_tmp"
+
+    _result=$(cd "$SCRIPT_DIR" && sh -c '. agent-robot/tools/tool_read_file.sh && tool_read_file "'$_tmp'"')
+    _exito=$(echo "$_result" | jq -r '.exito // false' 2>/dev/null)
+
+    if [ "$_exito" = "true" ]; then
+        echo "  ✅ tool_read_file funciona"
+    else
+        echo "  ❌ tool_read_file falla"
+        echo "     Output: $_result"
+        FAIL=$((FAIL + 1))
+        FAIL_MSGS="${FAIL_MSGS}TOOL_READ_FILE "
+    fi
+    rm -f "$_tmp"
+}
+
+# --- Fase 2: tool_write_file ---
+test_tool_write_file() {
+    _tmp="/tmp/test_agent_write_$$.txt"
+    _result=$(cd "$SCRIPT_DIR" && sh -c '. agent-robot/tools/tool_write_file.sh && tool_write_file "'$_tmp'" "test content"')
+    _exito=$(echo "$_result" | jq -r '.exito // false' 2>/dev/null)
+
+    if [ "$_exito" = "true" ] && [ -f "$_tmp" ]; then
+        echo "  ✅ tool_write_file funciona"
+    else
+        echo "  ❌ tool_write_file falla"
+        FAIL=$((FAIL + 1))
+        FAIL_MSGS="${FAIL_MSGS}TOOL_WRITE_FILE "
+    fi
+    rm -f "$_tmp"
+}
+
+# --- Fase 2: tool_run_command ---
+test_tool_run_command() {
+    _result=$(cd "$SCRIPT_DIR" && sh -c '. agent-robot/tools/tool_run_command.sh && tool_run_command "echo ok"')
+    _exito=$(echo "$_result" | jq -r '.exito // false' 2>/dev/null)
+
+    if [ "$_exito" = "true" ]; then
+        echo "  ✅ tool_run_command funciona"
+    else
+        echo "  ❌ tool_run_command falla"
+        echo "     Output: $_result"
+        FAIL=$((FAIL + 1))
+        FAIL_MSGS="${FAIL_MSGS}TOOL_RUN_COMMAND "
+    fi
+}
+
 # --- Test: --agent flag ---
 test_agent_flag() {
     _result=$(cd "$SCRIPT_DIR" && ./recpl.sh --agent "hola" 2>/dev/null)
@@ -156,7 +213,7 @@ test_agent_flag() {
 
 # --- MAIN ---
 echo "=========================================="
-echo " Tests Agent-Robot (Fase 1)"
+echo " Tests Agent-Robot (Fase 1 + Fase 2)"
 echo "=========================================="
 echo ""
 
@@ -172,6 +229,9 @@ echo "--- Funcionalidad ---"
 test_tool_respond
 test_tool_registry
 test_memory
+test_tool_read_file
+test_tool_write_file
+test_tool_run_command
 test_agent_greeting
 test_agent_identity
 test_bridge_recpl

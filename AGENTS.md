@@ -156,7 +156,10 @@ Shell-based agent layer over the RECPL pipeline. Classifies intent, routes to to
 | `tools/tool_recpl.sh` | Tool: delegate to RECPL via bridge |
 | `tools/tool_respond.sh` | Tool: textual response to user |
 | `agent-robot.sh` | Global entrypoint |
-| `tests/test_agent.sh` | Test suite: 7 tests, expects FAIL=0 |
+| `tests/test_agent.sh` | Test suite: 10 tests (Fase 1 + Fase 2), expects FAIL=0 |
+| `tools/tool_read_file.sh` | Tool: read file content |
+| `tools/tool_write_file.sh` | Tool: write content to file |
+| `tools/tool_run_command.sh` | Tool: execute shell commands |
 
 #### Template dirs (`templates/`)
 
