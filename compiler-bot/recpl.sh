@@ -286,7 +286,7 @@ interactive_mode() {
 main() {
     trap 'cleanup; exit 0' INT TERM
 
-    # Parsear flags --llm y --provider (pueden combinarse con -c/-f)
+    # Parsear flags --llm, --provider, --agent (pueden combinarse con -c/-f)
     while [ $# -gt 0 ]; do
         case "$1" in
             --llm)
@@ -300,6 +300,10 @@ main() {
                 fi
                 export RECPL_LLM_PROVIDER="$2"
                 shift 2
+                ;;
+            --agent|--robot)
+                shift
+                exec "$SCRIPT_DIR/agent-robot.sh" "$@"
                 ;;
             *)
                 break

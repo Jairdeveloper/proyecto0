@@ -5,6 +5,17 @@ Todas las cambios notables de este proyecto se documentan en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es/1.0.0/),
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.0] — 2026-06-13
+
+### Added
+- `docs/049_PLAN_DEV_COMPILER_BOT_AGENT_EXECUTION_1_0_DRAFT.md` — plan de ejecucion detallado de la capa agent-robot. 4 fases con 25 tareas, pseudocodigo completo de cada archivo (config.sh, bridge.sh, agent.sh, memory.sh, planner.sh, 7 tools, system prompts), comandos de verificacion por tarea, dependencias entre fases, y criterios de exito.
+- INDEX.md actualizado a 51 documentos (PLAN dev: 3 → 4)
+
+### Fixed
+- `tool_registry.sh`: sintaxis incorrecta `}` → `fi` en bloque `if` de `run_tool()` (linea 72) que causaba error de syntax check
+- Dependencia `jq` instalada via binario estatico (jq 1.7.1 linux-amd64) — necesaria para parsing JSON en tool_respond, memory, y tool_registry
+- Suite de tests agent-robot: FAIL=0 (0 fallos de 7 tests funcionales)
+
 ## [1.5.0] — 2026-06-13
 
 ### Added

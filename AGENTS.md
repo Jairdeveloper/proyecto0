@@ -139,7 +139,24 @@ All stages pass data as JSON via stdin/stdout pipes. Persistent symbol table via
 | `backend/synthesis.sh` | IR.json → bot response JSON (tipo_respuesta, mensaje, payload) |
 | `backend/scaffold.sh` | Template rendering: copies template files, replaces `__NAME__`/`__LOWERNAME__` |
 | `recpl.sh` | Main LOOP: interactive/batch mode, error recovery, persistent state |
-| `tests/run_tests.sh` | Test suite: 47 tests covering all components and integration |
+| `tests/run_tests.sh` | Test suite: 72 tests covering all components and integration |
+| `tests/test_agent.sh` | Test suite: 7 tests covering agent-robot layer |
+
+#### Agent-robot layer (`agent-robot/`)
+
+Shell-based agent layer over the RECPL pipeline. Classifies intent, routes to tools, manages state.
+
+| File | Function |
+|------|----------|
+| `config.sh` | Environment variables, defaults, version |
+| `bridge.sh` | Unidirectional bridge: agent → RECPL via `recpl.sh -c` |
+| `agent.sh` | Main loop: classify intent, execute, format response, log to memory |
+| `memory.sh` | Persistent JSON state: history, context, sessions |
+| `tools/tool_registry.sh` | Central tool registry (recpl, respond, read_file, write_file, run_command, search_code) |
+| `tools/tool_recpl.sh` | Tool: delegate to RECPL via bridge |
+| `tools/tool_respond.sh` | Tool: textual response to user |
+| `agent-robot.sh` | Global entrypoint |
+| `tests/test_agent.sh` | Test suite: 7 tests, expects FAIL=0 |
 
 #### Template dirs (`templates/`)
 
@@ -154,6 +171,7 @@ All stages pass data as JSON via stdin/stdout pipes. Persistent symbol table via
 - **Persistent state via env var** — `RECPL_STATE_DIR` points to a directory; semantic.sh reads/writes state files there
 - **Symbol table stored on disk** — pipe-safe, processes one AST per invocation
 - **Scaffolding writes to `modules/<name>/`** — added to `.gitignore`
+- **`jq` es dependencia critica** — requerido por agent-robot (tool_respond, memory, tool_registry) para todo el parsing JSON. Instalar via binario estatico de jqlang/jq (NO el paquete npm `jq`, que es un wrapper Node.js incompleto)
 
 #### State of tasks
 
@@ -172,7 +190,7 @@ All stages pass data as JSON via stdin/stdout pipes. Persistent symbol table via
 | TASK-011 | LOOP principal | COMPLETED (recpl.sh) |
 | TASK-012 | Scorer (pattern matching) | PENDING |
 | TASK-013 | Template scaffolding | COMPLETED (scaffold.sh + templates/) |
-| TASK-014 | Tests | COMPLETED (tests/run_tests.sh, 47 tests) |
+| TASK-014 | Tests | COMPLETED (tests/run_tests.sh, 72 tests) |
 
 ### Active conventions
 

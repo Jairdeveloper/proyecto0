@@ -20,12 +20,12 @@ keywords:
 
 # Indice de Documentacion
 
-> 50 documentos organizados por area tematica.
+> 51 documentos organizados por area tematica.
 > Secuencia de creacion: NNN ascendente.
 
 ## Area: dev
 
-Desarrollo. 40 documentos (GUIDE 11, PLAN 3, PROP 13, REP 11, SPEC 2).
+Desarrollo. 41 documentos (GUIDE 11, PLAN 4, PROP 13, REP 11, SPEC 2).
 
 | NNN | Tipo | Modulo | Resumen |
 |-----|------|--------|---------|
@@ -53,6 +53,7 @@ Desarrollo. 40 documentos (GUIDE 11, PLAN 3, PROP 13, REP 11, SPEC 2).
 | 028 | PROP | compiler-bot | Propuesta de diseno para implementar un patron composite que permita al modo int... |
 | 031 | PLAN | compiler-bot | Plan de ejecucion detallado para integrar LLMs (Claude, OpenAI) en el RECPL Compiler Bot. Describe ... |
 | 048 | PLAN | compiler-bot | Plan de implementacion detallado para la capa agent-robot sobre RECPL. Arquitectura, bridge, herramientas del agente, fases con tareas, reglas de diseno... |
+| 049 | PLAN | compiler-bot | Plan de ejecucion detallado de la capa agent-robot. 4 fases, 25 tareas concretas con pseudocodigo de cada archivo, comandos de verificacion, dependencias entre tareas, y criterios de exito por fase... |
 | 032 | REP | compiler-bot | Reporte de implementacion de la FASE-L1 del plan 031: adapters de proveedor LLM... |
 | 033 | REP | compiler-bot | Reporte de implementacion de la FASE-L2 del plan 031: fachada LLM y mapper IR... |
 | 034 | REP | compiler-bot | Reporte de implementacion de la FASE-L3 del plan 031: router inteligente e integ... |
@@ -170,4 +171,5 @@ Legacy. 2 documentos (GUIDE 2).
 | 046 | `046_PROP_DEV_COMPILER_BOT_TIER_ARCHITECTURE_1_0_DRAFT.md` | dev | PROP |
 | 047 | `047_PROP_DEV_COMPILER_BOT_AGENT_CONCEPT_1_0_DRAFT.md` | dev | PROP |
 | 048 | `048_PLAN_DEV_COMPILER_BOT_AGENT_IMPL_1_0_DRAFT.md` | dev | PLAN |
+| 049 | `049_PLAN_DEV_COMPILER_BOT_AGENT_EXECUTION_1_0_DRAFT.md` | dev | PLAN |
 | ALGP003 | `ALGP003_CONVENCION_DOCUMENTACION_v1_0_DRAFT.md` | algorithms | ALGP |
