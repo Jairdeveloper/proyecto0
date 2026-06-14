@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 
 from ..base_stage import PipelineStage
-from ..feedback_loop import FeedbackLoop
+from ..feedback_loop import get_global_feedback
 from ..state_models import (
     ActionPlan,
     AnalysisResult,
@@ -38,7 +38,7 @@ class RequirementDecomposer(PipelineStage):
         self._feature_identifier = FeatureIdentifier()
         self._constraint_detector = ConstraintDetector()
         self._story_generator = StoryGenerator()
-        self._feedback = FeedbackLoop()
+        self._feedback = get_global_feedback()
         self._raw_text = ""
 
     def receive_mission(self, input_data: object) -> None:
@@ -99,4 +99,6 @@ class RequirementDecomposer(PipelineStage):
         )
 
     def learn_and_improve(self, feedback: object) -> None:
-        self._feedback.record(self.name, {"input_len": len(self._raw_text)})
+        self._feedback.record_stage(
+            self.name, {"input_len": len(self._raw_text)},
+        )

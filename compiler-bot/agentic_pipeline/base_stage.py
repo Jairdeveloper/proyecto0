@@ -1,6 +1,11 @@
+import logging
+import time
 from abc import ABC, abstractmethod
 
+from .feedback_loop import get_global_feedback
 from .state_models import StageContext, AnalysisResult, ActionPlan, StageOutput
+
+logger = logging.getLogger(__name__)
 
 
 class PipelineStage(ABC):
@@ -28,6 +33,28 @@ class PipelineStage(ABC):
         self.receive_mission(input_data)
         analysis = self.analyze()
         plan = self.reflect_and_plan(analysis)
-        output = self.act(plan)
+        t0 = time.time()
+        try:
+            output = self.act(plan)
+            duration = time.time() - t0
+            metrics = {
+                "duration_seconds": round(duration, 4),
+                "success": output.success,
+                "error": output.error,
+                **output.metrics,
+            }
+            get_global_feedback().record_stage(self.name, metrics)
+        except Exception as exc:
+            duration = time.time() - t0
+            logger.error("Stage %s failed after %.2fs: %s", self.name, duration, exc)
+            get_global_feedback().record_stage(
+                self.name,
+                {
+                    "duration_seconds": round(duration, 4),
+                    "success": False,
+                    "error": str(exc),
+                },
+            )
+            raise
         self.learn_and_improve(output.feedback)
         return output
