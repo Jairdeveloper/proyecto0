@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Repo `@Proyecto0` — RECPL Compiler Bot. Shell-based bot que procesa lenguaje natural y genera scaffolding de codigo NestJS/Prisma. El pipeline RECPL (preprocess → lexer → parser → semantic → IR → synthesis) es el producto. NestJS/Prisma es el formato de salida, no un proyecto separado.
+Repo `@Proyecto0` — RECPL Compiler Bot. Shell-based bot que procesa lenguaje natural y genera scaffolding de codigo NestJS/Prisma. Pipeline v1 en Shell, pipeline v2.0 en Python (LangChain+LangGraph). El pipeline RECPL (preprocess → lexer → parser → semantic → IR → synthesis) es el producto. NestJS/Prisma es el formato de salida, no un proyecto separado.
 ## ROLE
 
 Eres un agente especializado en <compiladores, teoria de lenguajes, ingenieria de prompt, ingenieria inversa.>.
@@ -74,7 +74,7 @@ planea construir.
 
 ### Shell script rules
 
-Strict conventions in `000_DEV_GUIDE_SHELL_STYLE_1_0_DRAFT.md`:
+Strict conventions in `000_GUIDE_DEV_SHELL_STYLE_1_0_DRAFT.md`:
 - **No `set -e`** — handle errors explicitly at each call site
 - **No `eval`** — never
 - Always double-quote variables
@@ -82,6 +82,20 @@ Strict conventions in `000_DEV_GUIDE_SHELL_STYLE_1_0_DRAFT.md`:
 - Functions: `snake_case` with `()`, not `function` keyword
 - Constants: `SCREAMING_SNAKE_CASE`
 - Validate: `bash -n script.sh && shellcheck script.sh`
+
+### Python rules (RECPL v2.0)
+
+Strict conventions in `070_GUIDE_DEV_PYTHON_STYLE_1_0_DRAFT.md`:
+- **Type hints obligatorios** — todas las funciones y metodos
+- **ruff check .** — 0 errores antes de commit
+- **ruff format .** — formateo automatico (line-length 100, 4 espacios)
+- **Pydantic** para datos en los limites del sistema (input/output/state)
+- **Logging con `%s`** — NO f-strings en logger
+- **Excepciones explicitas** — NO `except: pass`, NO codigos de retorno
+- **Imports ordenados**: stdlib → terceros → locales (separados por linea)
+- **Tests con pytest** — `pytest tests/ -v --cov=agentic_pipeline`
+- **Sin secretos hardcodeados** — usar pydantic-settings con prefijo `AGENTIC_`
+- **sin shell=True** — usar `subprocess.run()` con lista de argumentos
 
 ### State machine pattern (shell workflows)
 

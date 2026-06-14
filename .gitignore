@@ -3,3 +3,10 @@ modules/
 recpl-core
 .env
 prompts/build.md
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.ruff_cache/
+.pytest_cache/
