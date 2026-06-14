@@ -1,0 +1,19 @@
+start: section+
+
+section: page_def
+       | module_def
+
+page_def: PAGE_KEYWORD (CNAME | COMP_KEYWORD)? component_list?
+
+module_def: MODULE_KEYWORD (CNAME | COMP_KEYWORD)?
+
+component_list: (COMP_KEYWORD | CNAME) (CONNECTOR (COMP_KEYWORD | CNAME))*
+
+PAGE_KEYWORD: "pagina"i | "web_app"i | "landing"i | "portal"i | "page"i
+MODULE_KEYWORD: "modulo"i | "api"i | "module"i
+CONNECTOR: "con"i | "y"i | "de"i | "en"i | "para"i | "del"i | "un"i | "una"i
+COMP_KEYWORD: "formulario"i | "tabla"i | "grafico"i | "navbar"i | "sidebar"i | "modal"i | "card"i | "list"i | "dashboard"i | "crud"i
+
+%import common.CNAME
+%import common.WS
+%ignore WS

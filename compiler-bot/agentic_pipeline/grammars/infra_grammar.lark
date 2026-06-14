@@ -1,0 +1,15 @@
+start: infrastructure+
+
+infrastructure: INFRA_KEYWORD CNAME? resource_list?
+
+resource_list: CONNECTOR? resource_item (CONNECTOR? resource_item)*
+resource_item: RES_KEYWORD | CNAME | NUMBER
+
+INFRA_KEYWORD: "basededatos"i | "servicio"i | "despliegue"i | "database"i | "deploy"i
+CONNECTOR: "con"i | "y"i | "de"i | "en"i | "para"i | "del"i
+RES_KEYWORD: "cpu"i | "memoria"i | "almacenamiento"i | "replicas"i | "contenedor"i
+
+%import common.CNAME
+%import common.NUMBER
+%import common.WS
+%ignore WS

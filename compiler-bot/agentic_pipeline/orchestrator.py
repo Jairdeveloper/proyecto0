@@ -2,6 +2,8 @@ import logging
 
 from langgraph.graph import StateGraph
 
+from .nodes.lexer import Lexer
+from .nodes.parser import ParserGLR
 from .nodes.preprocessor import Preprocessor
 from .state_models import StageContext, Stage
 
@@ -20,9 +22,19 @@ class PipelineOrchestrator:
             "preprocessor",
             lambda ctx: Preprocessor(ctx).execute(ctx.input_data),
         )
+        self.graph.add_node(
+            "lexer",
+            lambda ctx: Lexer(ctx).execute(ctx.input_data),
+        )
+        self.graph.add_node(
+            "parser",
+            lambda ctx: ParserGLR(ctx).execute(ctx.input_data),
+        )
         self.graph.add_edge("input", "preprocessor")
+        self.graph.add_edge("preprocessor", "lexer")
+        self.graph.add_edge("lexer", "parser")
         self.graph.add_node("output", lambda x: x)
-        self.graph.add_edge("preprocessor", "output")
+        self.graph.add_edge("parser", "output")
         self.graph.set_finish_point("output")
         self.compiled = self.graph.compile()
 

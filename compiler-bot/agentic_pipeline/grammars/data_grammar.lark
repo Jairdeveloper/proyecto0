@@ -1,0 +1,15 @@
+start: entity_def+
+
+entity_def: ENTITY_KEYWORD CNAME attribute_list?
+
+attribute_list: attribute (CONNECTOR? attribute)*
+
+attribute: CNAME ":" ATTR_TYPE
+
+ENTITY_KEYWORD: "entidad"i | "modelo"i | "entity"i
+CONNECTOR: "con"i | "y"i | "de"i | "en"i | "para"i | "del"i
+ATTR_TYPE: "string"i | "int"i | "boolean"i | "date"i | "relation"i
+
+%import common.CNAME
+%import common.WS
+%ignore WS
