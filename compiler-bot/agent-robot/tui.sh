@@ -27,7 +27,7 @@ tui_check() {
 }
 
 # --- Titulo dinamico del menu ---
-TUI_MENU_TITLE="${AGENT_TUI_MENU_TITLE:-Proyecto0(RECPL) - ${AGENT_LLM_PROVIDER:-claude}}"
+TUI_MENU_TITLE="${AGENT_TUI_MENU_TITLE:-Proyecto0(RECPL) - ${AGENT_LLM_PROVIDER:-apifreellm}}"
 
 # --- Menu principal ---
 tui_menu() {
@@ -35,7 +35,7 @@ tui_menu() {
         --menu "Selecciona una opcion:" 20 60 10 \
         "1" "Ejecutar instruccion RECPL" \
         "2" "Modo interactivo" \
-        "3" "Configurar LLM (${AGENT_LLM_PROVIDER:-claude})" \
+        "3" "Configurar LLM (${AGENT_LLM_PROVIDER:-apifreellm})" \
         "4" "Ver historial" \
         "5" "Ayuda" \
         "6" "Salir" 3>&1 1>&2 2>&3)
@@ -71,13 +71,13 @@ tui_output() {
 
 # --- Configurar LLM ---
 tui_llm_config() {
-    _valid_providers="claude openai"
+    _valid_providers="claude openai apifreellm"
     _valid_modes="auto llm deterministic"
 
     while true; do
         _provider=$(whiptail --title "Configurar LLM" \
             --inputbox "Proveedor LLM ($(echo $_valid_providers | tr ' ' ', ')):" 10 60 \
-            "${AGENT_LLM_PROVIDER:-claude}" 3>&1 1>&2 2>&3)
+            "${AGENT_LLM_PROVIDER:-apifreellm}" 3>&1 1>&2 2>&3)
         [ -z "$_provider" ] && return
         _found=0
         for _p in $_valid_providers; do
@@ -103,7 +103,7 @@ tui_llm_config() {
     export AGENT_LLM_MODE="$_mode"
 
     tui_output "Configuracion actualizada para esta sesion:
-  Proveedor: ${AGENT_LLM_PROVIDER:-claude}
+  Proveedor: ${AGENT_LLM_PROVIDER:-apifreellm}
   Modo:      ${AGENT_LLM_MODE:-auto}"
 }
 

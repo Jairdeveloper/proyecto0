@@ -397,3 +397,23 @@ Caracteristicas:
 Son orientados al objetivo.
 Una Capacidad es el uso de herramientas lo que les permite inractuar con apis externas, bases de datos o servicios, alcanzando mas alla de su liezo inmediato, poseen memoria, retienen informacion a lo largo de las interacciones y pueden establecer conversaciones con usuarios, otros sistemas, incluso otros agentes que operan en el mismo lienzo conectados..."
 La finalidad de esta redireccion, Es que la herramienta creada le sea de utilidad a cualquier desarrollador de software para cualquier tarea de desarrollo de software de manera mas intuitiva.
+
+Escribe un archivo .md con una propuesta de escala para Proyecto0: La ropuesta debe tener en cuenta los siguientes requerimientos :
+- Componente	Cambio necesario
+Lexer/Parser	Expandir vocabulario de ~10 tokens a ~100+ (dominio web)
+Semantic	Agregar type-checking de UI/DB/API
+IR	Nuevo schema con grafo de dependencias multi-target
+Planner	De 10 líneas de heurística a un planner basado en LLM con validación
+Synthesis	Generadores para React, Next.js, Tailwind, Prisma, Docker
+Scaffold	De copiar templates a AST-based code generation
+Veredicto
+> Proyecto0 puede evolucionar para ejecutar ese prompt, pero requiere reescribir ~80% del pipeline (especialmente IR, planner y synthesis) y agregar tres componentes nuevos: descomponedor de requerimientos, generador de UI, y validador de output.
+El núcleo del diseño (pipeline compilador con stages separados) es sólido y escala. Lo que no escala es la implementación actual, que está optimizada para un dominio mínimo viable. Si el objetivo es ese, el proyecto está en la dirección correcta pero le falta ~6-12 meses de desarrollo enfocado. 
+- Cada mejora/escalamiento debe estar descrita por separado por ejemplo mejora de lexer descrita en una seccion, escalamiento de preprocessor es una seccion aparte...
+- El modulo Scaffold podemos hacerlo mas inteligente, o eliminarlo y mantener el pipiline/agente lo mas generico posible. 
+- utiliza patrones de diseño establecidos en el libro Design pattern Explained simply por Alexander Shvets.
+- Añade a cada etapa del pipeline una funcion o loop de 5 pasos para realizar tareas a la ejecucion de cada etapa del pipeline, pasos:  1.Recibir la mision. 2.Analizar la situacion. 3.Reflexionar y planificar. 4.Actuar 5. Aprender y mejorar.   
+- Propongo utilizar algun tipo de framework, LangChain, along with
+its stateful extension LangGraph, Crew AI, The Google Agent Developer
+Kit (Google ADK).
+EL requerimiento de escalamiento nace de la necesidad de cumplir con el siguiente prompt, sugerido por un usuario de la plataforma, prompt:(nuevo dominio minimo viable) "Diseña una página web moderna, profesional y totalmente responsive para un servicio de acortamiento de enlaces. La página debe tener una interfaz limpia con un formulario principal donde el usuario pueda introducir una URL larga y obtener un enlace corto. Incluye una sección de estadísticas que muestre clics, fecha de creación, país y dispositivo de acceso. Agrega autenticación de usuarios, panel de control, historial de enlaces, códigos QR para cada enlace y opciones de enlaces personalizados. Utiliza una paleta de colores moderna, tipografía clara y animaciones sutiles. Prioriza velocidad, accesibilidad, experiencia de usuario y diseño SaaS profesional. " Se requiere que el pipeline/agente cumpla o sea capaz de resolver este tipo de solicitudes.

@@ -16,9 +16,9 @@ AGENT_DIR="$(dirname "$0")"
 # deterministic: solo RECPL via bridge, sin LLM
 AGENT_LLM_MODE="${AGENT_LLM_MODE:-auto}"
 
-# --- Proveedor LLM preferido (opcional) ---
-# Si se deja vacio, se usa el provider chain definido en RECPL
-AGENT_LLM_PROVIDER="${AGENT_LLM_PROVIDER:-}"
+# --- Proveedor LLM preferido ---
+# apifreellm: gratuito via API externa (requiere API_FREE_KEY)
+AGENT_LLM_PROVIDER="${AGENT_LLM_PROVIDER:-apifreellm}"
 
 # --- Capa LLM ---
 # free | paid | auto (ver propuesta 046)

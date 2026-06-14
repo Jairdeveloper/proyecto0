@@ -17,7 +17,7 @@
 #
 # VARIABLES DE ENTORNO:
 #   AGENT_LLM_MODE      auto|llm|deterministic (default: auto)
-#   AGENT_LLM_PROVIDER  claude|openai|apifreellm
+#   AGENT_LLM_PROVIDER  claude|openai|apifreellm (default: apifreellm)
 #   AGENT_LLM_TIER      free|paid|auto
 #   AGENT_MEMORY_DIR    directorio de memoria (default: /tmp/agent_memory)
 # ============================================================================
