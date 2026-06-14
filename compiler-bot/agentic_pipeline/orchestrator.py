@@ -9,6 +9,7 @@ from .nodes.planner import HybridPlanner
 from .nodes.preprocessor import Preprocessor
 from .nodes.semantic_analyzer import SemanticAnalyzer
 from .nodes.synthesis import SynthesisOrchestrator
+from .nodes.ui_generator import UIGenerator
 from .nodes.validator import ValidatorPipeline
 from .state_models import StageContext, Stage
 
@@ -52,6 +53,10 @@ class PipelineOrchestrator:
             lambda ctx: SynthesisOrchestrator(ctx).execute(ctx.input_data),
         )
         self.graph.add_node(
+            "ui_generator",
+            lambda ctx: UIGenerator(ctx).execute(ctx.input_data),
+        )
+        self.graph.add_node(
             "validator",
             lambda ctx: ValidatorPipeline(ctx).execute(ctx.input_data),
         )
@@ -62,7 +67,8 @@ class PipelineOrchestrator:
         self.graph.add_edge("semantic_analyzer", "ir_generator")
         self.graph.add_edge("ir_generator", "planner")
         self.graph.add_edge("planner", "synthesis")
-        self.graph.add_edge("synthesis", "validator")
+        self.graph.add_edge("synthesis", "ui_generator")
+        self.graph.add_edge("ui_generator", "validator")
         self.graph.add_node("output", lambda x: x)
         self.graph.add_edge("validator", "output")
         self.graph.set_finish_point("output")
