@@ -8,6 +8,7 @@ from .nodes.parser import ParserGLR
 from .nodes.planner import HybridPlanner
 from .nodes.preprocessor import Preprocessor
 from .nodes.semantic_analyzer import SemanticAnalyzer
+from .nodes.synthesis import SynthesisOrchestrator
 from .state_models import StageContext, Stage
 
 logger = logging.getLogger(__name__)
@@ -45,14 +46,19 @@ class PipelineOrchestrator:
             "planner",
             lambda ctx: HybridPlanner(ctx).execute(ctx.input_data),
         )
+        self.graph.add_node(
+            "synthesis",
+            lambda ctx: SynthesisOrchestrator(ctx).execute(ctx.input_data),
+        )
         self.graph.add_edge("input", "preprocessor")
         self.graph.add_edge("preprocessor", "lexer")
         self.graph.add_edge("lexer", "parser")
         self.graph.add_edge("parser", "semantic_analyzer")
         self.graph.add_edge("semantic_analyzer", "ir_generator")
         self.graph.add_edge("ir_generator", "planner")
+        self.graph.add_edge("planner", "synthesis")
         self.graph.add_node("output", lambda x: x)
-        self.graph.add_edge("planner", "output")
+        self.graph.add_edge("synthesis", "output")
         self.graph.set_finish_point("output")
         self.compiled = self.graph.compile()
 

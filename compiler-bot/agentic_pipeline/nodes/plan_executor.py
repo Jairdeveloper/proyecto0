@@ -38,9 +38,7 @@ class PlanObserver:
             "new_state": new_state.value,
         }
         self._log.append(entry)
-        logger.info(
-            "Task %s: %s -> %s", task.id, old_state.value, new_state.value
-        )
+        logger.info("Task %s: %s -> %s", task.id, old_state.value, new_state.value)
 
     def on_error(self, task: Task, error: str) -> None:
         entry = {
@@ -77,11 +75,9 @@ class PlanExecutor(ABC):
 
     # --- Template Method hooks ---
 
-    def pre_execute(self, task: Task) -> None:
-        ...
+    def pre_execute(self, task: Task) -> None: ...
 
-    def post_execute(self, task: Task) -> None:
-        ...
+    def post_execute(self, task: Task) -> None: ...
 
     def on_error(self, task: Task, error: Exception) -> None:
         self._observer.on_error(task, str(error))
@@ -115,9 +111,7 @@ class PlanExecutor(ABC):
                     cmd.execute(base_dir)
                 task.state = TaskState.DONE
                 self._done.add(task.id)
-                self._observer.on_state_change(
-                    task, TaskState.RUNNING, TaskState.DONE
-                )
+                self._observer.on_state_change(task, TaskState.RUNNING, TaskState.DONE)
             except Exception as e:
                 task.state = TaskState.FAILED
                 self.on_error(task, e)

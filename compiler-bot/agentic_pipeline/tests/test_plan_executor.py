@@ -122,7 +122,8 @@ class TestRollback:
             base = Path(tmp)
             t = Task(id="scaffold", description="scaffold")
             cmd = ScaffoldCommand(
-                "scaffold", "mymodule",
+                "scaffold",
+                "mymodule",
                 items=[{"name": "main.ts", "kind": "file", "content": "// code"}],
             )
             executor.register_command("scaffold", cmd)

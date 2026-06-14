@@ -85,7 +85,8 @@ class TaskGraph:
 
     def ready_tasks(self, done_ids: set[str]) -> list[Task]:
         return [
-            t for t in self._tasks.values()
+            t
+            for t in self._tasks.values()
             if t.id not in done_ids
             and t.state == TaskState.PENDING
             and t.can_run(done_ids)
@@ -170,8 +171,7 @@ class HybridPlanner(PipelineStage):
 
     def analyze(self) -> AnalysisResult:
         dep_order = (
-            self._input_data.get("dependency_order", [])
-            if self._input_data else []
+            self._input_data.get("dependency_order", []) if self._input_data else []
         )
         return AnalysisResult(
             observations=[f"Dependency order: {dep_order}"],
@@ -195,6 +195,7 @@ class HybridPlanner(PipelineStage):
 
     def act(self, plan: ActionPlan) -> StageOutput:
         self._task_graph = TaskGraph()
+        ir_tree = self._input_data.get("ir_tree") if self._input_data else None
         self._build_tasks_from_ir()
         complexity = self._heuristic.estimate_complexity(self._task_graph)
         ordered = self._heuristic.plan(self._task_graph)
@@ -210,6 +211,7 @@ class HybridPlanner(PipelineStage):
                 "execution_order": [t.id for t in ordered],
                 "commands": commands,
                 "is_acyclic": not self._task_graph.has_cycle(),
+                "ir_tree": ir_tree,
             },
             metrics={
                 "task_count": len(ordered),
@@ -221,9 +223,7 @@ class HybridPlanner(PipelineStage):
         pass
 
     def _build_tasks_from_ir(self) -> None:
-        ir_tree = (
-            self._input_data.get("ir_tree") if self._input_data else None
-        )
+        ir_tree = self._input_data.get("ir_tree") if self._input_data else None
         if ir_tree is None:
             return
         for child in getattr(ir_tree, "children", []):
@@ -262,9 +262,11 @@ class HybridPlanner(PipelineStage):
     def _build_commands(self, tasks: list[Task]) -> list[dict[str, Any]]:
         commands: list[dict[str, Any]] = []
         for task in tasks:
-            commands.append({
-                "task_id": task.id,
-                "type": "scaffold",
-                "path": f"modules/{task.id.lower()}",
-            })
+            commands.append(
+                {
+                    "task_id": task.id,
+                    "type": "scaffold",
+                    "path": f"modules/{task.id.lower()}",
+                }
+            )
         return commands

@@ -44,7 +44,8 @@ class TestFileCreateCommand:
 class TestScaffoldCommand:
     def test_execute_creates_scaffold(self):
         cmd = ScaffoldCommand(
-            "t1", "mymod",
+            "t1",
+            "mymod",
             items=[
                 {"name": "main.py", "kind": "file", "content": "# hello"},
                 {"name": "utils", "kind": "dir"},
@@ -60,7 +61,8 @@ class TestScaffoldCommand:
 
     def test_undo_removes_scaffold(self):
         cmd = ScaffoldCommand(
-            "t1", "undo_mod",
+            "t1",
+            "undo_mod",
             items=[{"name": "file.txt", "kind": "file", "content": "data"}],
         )
         with tempfile.TemporaryDirectory() as tmp:

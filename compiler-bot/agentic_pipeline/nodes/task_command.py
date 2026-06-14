@@ -15,12 +15,10 @@ class TaskCommand(ABC):
     """Abstract command with execute() and undo()."""
 
     @abstractmethod
-    def execute(self, base_dir: Path | None = None) -> Path | None:
-        ...
+    def execute(self, base_dir: Path | None = None) -> Path | None: ...
 
     @abstractmethod
-    def undo(self) -> bool:
-        ...
+    def undo(self) -> bool: ...
 
 
 class FileCreateCommand(TaskCommand):

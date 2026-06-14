@@ -1,6 +1,5 @@
 """Tests for Task model, TaskGraph, and HeuristicPlanner."""
 
-
 from agentic_pipeline.nodes.planner import (
     HeuristicPlanner,
     Task,
@@ -133,9 +132,27 @@ class TestHeuristicPlanner:
         assert hp.estimate_complexity(g) == "complex"
 
     def test_detect_layer(self):
-        assert HeuristicPlanner._detect_layer(Task(id="config_app", description="c")) == "config"
-        assert HeuristicPlanner._detect_layer(Task(id="entity_user", description="e")) == "data"
-        assert HeuristicPlanner._detect_layer(Task(id="api_auth", description="a")) == "api"
-        assert HeuristicPlanner._detect_layer(Task(id="page_home", description="p")) == "ui"
-        assert HeuristicPlanner._detect_layer(Task(id="db_postgres", description="d")) == "infra"
-        assert HeuristicPlanner._detect_layer(Task(id="generic_thing", description="g")) == "domain"
+        assert (
+            HeuristicPlanner._detect_layer(Task(id="config_app", description="c"))
+            == "config"
+        )
+        assert (
+            HeuristicPlanner._detect_layer(Task(id="entity_user", description="e"))
+            == "data"
+        )
+        assert (
+            HeuristicPlanner._detect_layer(Task(id="api_auth", description="a"))
+            == "api"
+        )
+        assert (
+            HeuristicPlanner._detect_layer(Task(id="page_home", description="p"))
+            == "ui"
+        )
+        assert (
+            HeuristicPlanner._detect_layer(Task(id="db_postgres", description="d"))
+            == "infra"
+        )
+        assert (
+            HeuristicPlanner._detect_layer(Task(id="generic_thing", description="g"))
+            == "domain"
+        )
