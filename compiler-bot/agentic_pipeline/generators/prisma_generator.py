@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from .base_generator import BaseGenerator, GeneratorFactory
+from .base_generator import BaseGenerator
 
 
 class PrismaGenerator(BaseGenerator):
@@ -100,6 +100,3 @@ class PrismaGenerator(BaseGenerator):
     @staticmethod
     def _get_name(node: object) -> str:
         return getattr(node, "name", "Unknown")
-
-
-GeneratorFactory.register("prisma", PrismaGenerator)

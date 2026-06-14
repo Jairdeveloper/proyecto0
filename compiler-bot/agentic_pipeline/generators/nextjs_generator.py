@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from .base_generator import BaseGenerator, GeneratorFactory
+from .base_generator import BaseGenerator
 
 
 class NextJSGenerator(BaseGenerator):
@@ -76,6 +76,3 @@ class NextJSGenerator(BaseGenerator):
             f"  );\n"
             f"}}\n"
         )
-
-
-GeneratorFactory.register("nextjs", NextJSGenerator)

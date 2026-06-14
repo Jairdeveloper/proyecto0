@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from .base_generator import BaseGenerator, GeneratorFactory
+from .base_generator import BaseGenerator
 
 
 class DockerGenerator(BaseGenerator):
@@ -104,6 +104,3 @@ class DockerGenerator(BaseGenerator):
             port_lines = "\n".join(f'      - "{p}"' for p in ports)
             lines.append(f"  {name}:\n    image: {image}\n    ports:\n{port_lines}\n")
         return "\n".join(lines) + "\n"
-
-
-GeneratorFactory.register("docker", DockerGenerator)

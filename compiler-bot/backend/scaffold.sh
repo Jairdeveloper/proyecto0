@@ -3,6 +3,12 @@
 # scaffold.sh - Generador de codigo desde templates para el bot RECPL
 # ============================================================================
 #
+# ADVERTENCIA: DEPRECATED
+#   Esta herramienta ha sido reemplazada por el sistema de generadores
+#   AST-based en agentic_pipeline/generators/ (Sprint 9).
+#   Los templates en templates/ han sido movidos a templates/archive/.
+#   Usar solo para compatibilidad hacia atras con el pipeline v1 shell.
+#
 # PROPOSITO:
 #   Dado un template y un nombre de entidad, genera los archivos
 #   reemplazando los placeholders __NAME__ y __LOWERNAME__.

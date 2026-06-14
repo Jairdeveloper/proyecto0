@@ -1,5 +1,7 @@
 """Tests for GeneratorFactory."""
 
+from pathlib import Path
+
 from agentic_pipeline.generators.base_generator import BaseGenerator, GeneratorFactory
 from agentic_pipeline.generators.docker_generator import DockerGenerator
 from agentic_pipeline.generators.nestjs_generator import NestJSGenerator
@@ -41,20 +43,11 @@ class TestGeneratorFactory:
         except ValueError:
             pass
 
-    def test_list_targets(self):
-        targets = GeneratorFactory.list_targets()
-        assert "react" in targets
-        assert "nextjs" in targets
-        assert "tailwind" in targets
-        assert "prisma" in targets
-        assert "nestjs" in targets
-        assert "docker" in targets
-
-    def test_custom_registration(self):
-        class TestGen(BaseGenerator):
-            def generate(self, ir_node, output_dir):
-                return []
-
-        GeneratorFactory.register("test_custom", TestGen)
-        gen = GeneratorFactory.get_generator("test_custom")
-        assert isinstance(gen, TestGen)
+    def test_all_generators_produce_files(self, tmp_path: Path):
+        for target in ("react", "nextjs", "tailwind", "prisma", "nestjs", "docker"):
+            gen = GeneratorFactory.get_generator(target)
+            assert isinstance(gen, BaseGenerator)
+            out = tmp_path / target
+            out.mkdir(exist_ok=True)
+            result = gen.generate(None, out)
+            assert isinstance(result, list)

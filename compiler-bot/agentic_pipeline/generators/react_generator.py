@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from .base_generator import BaseGenerator, GeneratorFactory
+from .base_generator import BaseGenerator
 
 
 class ReactGenerator(BaseGenerator):
@@ -74,6 +74,3 @@ class ReactGenerator(BaseGenerator):
             f"}};\n\n"
             f"export default {name};\n"
         )
-
-
-GeneratorFactory.register("react", ReactGenerator)

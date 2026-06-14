@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from .base_generator import BaseGenerator, GeneratorFactory
+from .base_generator import BaseGenerator
 
 
 class NestJSGenerator(BaseGenerator):
@@ -109,6 +109,3 @@ class NestJSGenerator(BaseGenerator):
             f"  {a.get('name', 'field')}: {a.get('type', 'string')};" for a in attrs
         )
         return f"export class {name} {{\n{fields}\n}}\n"
-
-
-GeneratorFactory.register("nestjs", NestJSGenerator)

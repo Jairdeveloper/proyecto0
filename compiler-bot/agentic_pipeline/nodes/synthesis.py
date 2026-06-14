@@ -57,6 +57,16 @@ class SynthesisOrchestrator(PipelineStage):
 
         generated_files: list[str] = []
         errors: list[str] = []
+        warnings: list[str] = []
+
+        for cmd in commands:
+            cmd_type = cmd.get("type", "")
+            if cmd_type == "scaffold":
+                warnings.append(
+                    "Command type 'scaffold' is deprecated. "
+                    "Use AST-based generators instead. "
+                    "See agentic_pipeline/generators/"
+                )
 
         if ir_tree is not None:
             file_paths = self._generate_from_tree(ir_tree)
@@ -93,6 +103,7 @@ class SynthesisOrchestrator(PipelineStage):
             output_data={
                 "generated_files": generated_files,
                 "errors": errors,
+                "warnings": warnings,
                 "task_count": len(tasks),
             },
             metrics={

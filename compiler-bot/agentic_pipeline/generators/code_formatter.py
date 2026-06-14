@@ -20,7 +20,7 @@ class CodeFormatter:
         ".yml": ["npx", "prettier", "--write"],
         ".yaml": ["npx", "prettier", "--write"],
         ".py": ["black"],
-        ".prisma": [],
+        ".prisma": ["npx", "prisma", "format"],
     }
 
     def format_file(self, filepath: Path) -> bool:
@@ -28,7 +28,6 @@ class CodeFormatter:
         cmd_template = self.FORMATTERS.get(ext)
         if not cmd_template:
             return False
-
         cmd = [*cmd_template, str(filepath)]
         try:
             subprocess.run(cmd, capture_output=True, text=True, timeout=30)

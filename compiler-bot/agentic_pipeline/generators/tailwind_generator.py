@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from .base_generator import BaseGenerator, GeneratorFactory
+from .base_generator import BaseGenerator
 
 
 class TailwindGenerator(BaseGenerator):
@@ -65,6 +65,3 @@ class TailwindGenerator(BaseGenerator):
     @staticmethod
     def _render_css() -> str:
         return "@tailwind base;\n@tailwind components;\n@tailwind utilities;\n"
-
-
-GeneratorFactory.register("tailwind", TailwindGenerator)
