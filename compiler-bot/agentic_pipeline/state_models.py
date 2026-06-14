@@ -63,3 +63,12 @@ class DesignTokens(BaseModel):
     font_family: str = "'Inter', sans-serif"
     border_radius: str = "8px"
     spacing_unit: str = "4px"
+
+
+class RequirementGraph(BaseModel):
+    domain: str
+    entities: list[dict] = []
+    features: list[str] = []
+    constraints: list[str] = []
+    user_stories: list[str] = []
+    raw_text: str = ""
