@@ -5,6 +5,7 @@ from langgraph.graph import StateGraph
 from .nodes.ir_generator import IRGenerator
 from .nodes.lexer import Lexer
 from .nodes.parser import ParserGLR
+from .nodes.planner import HybridPlanner
 from .nodes.preprocessor import Preprocessor
 from .nodes.semantic_analyzer import SemanticAnalyzer
 from .state_models import StageContext, Stage
@@ -40,13 +41,18 @@ class PipelineOrchestrator:
             "ir_generator",
             lambda ctx: IRGenerator(ctx).execute(ctx.input_data),
         )
+        self.graph.add_node(
+            "planner",
+            lambda ctx: HybridPlanner(ctx).execute(ctx.input_data),
+        )
         self.graph.add_edge("input", "preprocessor")
         self.graph.add_edge("preprocessor", "lexer")
         self.graph.add_edge("lexer", "parser")
         self.graph.add_edge("parser", "semantic_analyzer")
         self.graph.add_edge("semantic_analyzer", "ir_generator")
+        self.graph.add_edge("ir_generator", "planner")
         self.graph.add_node("output", lambda x: x)
-        self.graph.add_edge("ir_generator", "output")
+        self.graph.add_edge("planner", "output")
         self.graph.set_finish_point("output")
         self.compiled = self.graph.compile()
 
