@@ -156,10 +156,12 @@ Shell-based agent layer over the RECPL pipeline. Classifies intent, routes to to
 | `tools/tool_recpl.sh` | Tool: delegate to RECPL via bridge |
 | `tools/tool_respond.sh` | Tool: textual response to user |
 | `agent-robot.sh` | Global entrypoint |
-| `tests/test_agent.sh` | Test suite: 10 tests (Fase 1 + Fase 2), expects FAIL=0 |
+| `tests/test_agent.sh` | Test suite: 13 tests (Fase 1 + Fase 2 + Fase 3), expects FAIL=0 |
 | `tools/tool_read_file.sh` | Tool: read file content |
 | `tools/tool_write_file.sh` | Tool: write content to file |
 | `tools/tool_run_command.sh` | Tool: execute shell commands |
+| `tools/tool_search_code.sh` | Tool: search code for patterns |
+| `planner.sh` | Multi-step plan decomposer |
 
 #### Template dirs (`templates/`)
 
@@ -194,6 +196,10 @@ Shell-based agent layer over the RECPL pipeline. Classifies intent, routes to to
 | TASK-012 | Scorer (pattern matching) | PENDING |
 | TASK-013 | Template scaffolding | COMPLETED (scaffold.sh + templates/) |
 | TASK-014 | Tests | COMPLETED (tests/run_tests.sh, 72 tests) |
+| TASK-015 | Planner (multi-paso) | COMPLETED (planner.sh) |
+| TASK-016 | Memory multi-sesion | COMPLETED (memory.sh) |
+| TASK-017 | Search code tool | COMPLETED (tool_search_code.sh) |
+| TASK-018 | Test suite | COMPLETED (test_agent.sh, 13 tests) |
 
 ### Active conventions
 

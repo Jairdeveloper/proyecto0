@@ -20,12 +20,12 @@ keywords:
 
 # Indice de Documentacion
 
-> 52 documentos organizados por area tematica.
+> 54 documentos organizados por area tematica.
 > Secuencia de creacion: NNN ascendente.
 
 ## Area: dev
 
-Desarrollo. 42 documentos (GUIDE 11, PLAN 4, PROP 13, REP 12, SPEC 2).
+Desarrollo. 44 documentos (GUIDE 11, PLAN 4, PROP 13, REP 14, SPEC 2).
 
 | NNN | Tipo | Modulo | Resumen |
 |-----|------|--------|---------|
@@ -55,6 +55,8 @@ Desarrollo. 42 documentos (GUIDE 11, PLAN 4, PROP 13, REP 12, SPEC 2).
 | 048 | PLAN | compiler-bot | Plan de implementacion detallado para la capa agent-robot sobre RECPL. Arquitectura, bridge, herramientas del agente, fases con tareas, reglas de diseno... |
 | 049 | PLAN | compiler-bot | Plan de ejecucion detallado de la capa agent-robot. 4 fases, 25 tareas concretas con pseudocodigo de cada archivo, comandos de verificacion, dependencias entre tareas, y criterios de exito por fase... |
 | 050 | REP | compiler-bot | Reporte de implementacion de la Fase 2 del plan 049: herramientas del sistema para la capa agent-robot (tool_read_file, tool_write_file, tool_run_command), integracion en agent.sh, tests, y fix de compatibilidad con dash... |
+| 051 | REP | compiler-bot | Reporte de implementacion de la Fase 1 del plan 049: fundacion de la capa agent-robot (config.sh, bridge.sh, agent.sh, memory.sh, tool_registry.sh, tool_recpl.sh, tool_respond.sh), tests, y compatibilidad con dash... |
+| 052 | REP | compiler-bot | Reporte de implementacion de la Fase 3 del plan 049: planificador multi-paso (planner.sh), memoria multi-sesion y exportacion, busqueda en codigo (tool_search_code.sh), integracion en agent.sh, 13 tests funcionales... |
 | 032 | REP | compiler-bot | Reporte de implementacion de la FASE-L1 del plan 031: adapters de proveedor LLM... |
 | 033 | REP | compiler-bot | Reporte de implementacion de la FASE-L2 del plan 031: fachada LLM y mapper IR... |
 | 034 | REP | compiler-bot | Reporte de implementacion de la FASE-L3 del plan 031: router inteligente e integ... |
@@ -174,4 +176,6 @@ Legacy. 2 documentos (GUIDE 2).
 | 048 | `048_PLAN_DEV_COMPILER_BOT_AGENT_IMPL_1_0_DRAFT.md` | dev | PLAN |
 | 049 | `049_PLAN_DEV_COMPILER_BOT_AGENT_EXECUTION_1_0_DRAFT.md` | dev | PLAN |
 | 050 | `050_REP_DEV_COMPILER_BOT_FASE2_AGENT_TOOLS_1_0_DRAFT.md` | dev | REP |
+| 051 | `051_REP_DEV_COMPILER_BOT_FASE1_AGENT_FOUNDATION_1_0_DRAFT.md` | dev | REP |
+| 052 | `052_REP_DEV_COMPILER_BOT_FASE3_AGENT_PLANNER_MEMORY_1_0_DRAFT.md` | dev | REP |
 | ALGP003 | `ALGP003_CONVENCION_DOCUMENTACION_v1_0_DRAFT.md` | algorithms | ALGP |

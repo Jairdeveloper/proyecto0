@@ -5,6 +5,26 @@ Todas las cambios notables de este proyecto se documentan en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es/1.0.0/),
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.0] — 2026-06-13
+
+### Added
+- `compiler-bot/agent-robot/planner.sh` — planificador multi-paso que descompone instrucciones complejas ("crea X y Y") en pasos individuales. Funciones: `planificar()`, `_plan_multi_create()`, `_plan_full_project()`, `ejecutar_plan()`.
+- `compiler-bot/agent-robot/tools/tool_search_code.sh` — herramienta de busqueda en codigo fuente via `grep -rn` con respuesta JSON estructurada.
+- `memory.sh`: 3 funciones nuevas — `memory_list_sessions()` (listar sesiones), `memory_set_session()` (cambiar sesion), `memory_export()` (exportar memoria a JSON).
+- Tests de Fase 3 en `test_agent.sh`: 3 tests nuevos (planner multi-create, memory persistente, tool_search_code). Suite total: 13 tests funcionales.
+- `docs/051_REP_DEV_COMPILER_BOT_FASE1_AGENT_FOUNDATION_1_0_DRAFT.md` — reporte de implementacion de Fase 1 (anadido retroactivamente al INDEX).
+- `docs/052_REP_DEV_COMPILER_BOT_FASE3_AGENT_PLANNER_MEMORY_1_0_DRAFT.md` — reporte de implementacion de Fase 3.
+- INDEX.md actualizado a 54 documentos (REP dev: 12 → 14, doc total: 52 → 54)
+
+### Changed
+- `agent.sh`: `classify_intent()` extendido con deteccion de multi-instruccion ("crea X y Y" → plan) y proyecto completo. `execute_intent()`: nuevo caso `plan` que carga planner.sh y ejecuta plan. `format_response()`: soporte para tipo `plan_completed`, y fallback a `.tipo` si no hay `.tipo_respuesta`.
+- `planner.sh`: `ejecutar_plan()` envia texto legible a stderr y solo JSON a stdout, para compatibilidad con el pipeline de format_response.
+- AGENTS.md: tabla de componentes actualizada con `tool_search_code.sh`, `planner.sh`; tabla de tareas actualizada (14→18 tasks, 13 tests).
+
+### Fixed
+- `planner.sh`: parsing de modulos en `_plan_multi_create()` — `tr 'y' ' '` reemplazaba el caracter 'y' dentro de palabras (ej. "payments" → "pa ments"). Reemplazado por `sed` con delimitadores de palabra. `sed 's/en.*$//'` cortaba palabras que contienen "en" (ej. "payments" → "paym"). Reemplazado por `sed 's/ en .*$//'` con espacio delimitador.
+- `agent.sh`: patron de deteccion de multi-instruccion corregido de `(y |,).*(crea|...)` a `(crea|...).*(y |,)` para instrucciones donde la accion precede a la conjuncion.
+
 ## [1.7.0] — 2026-06-13
 
 ### Added

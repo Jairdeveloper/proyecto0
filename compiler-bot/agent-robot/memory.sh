@@ -105,3 +105,52 @@ memory_log() {
     _log_file="${AGENT_LOG_FILE:-/tmp/agent.log}"
     echo "[$_timestamp] $_msg" >> "$_log_file"
 }
+
+# --- Logging por niveles ---
+# Uso: memory_log_debug "mensaje"
+#      memory_log_info "mensaje"
+#      memory_log_warn "mensaje"
+#      memory_log_error "mensaje"
+memory_log_debug() {
+    [ "${AGENT_LOG_LEVEL:-info}" = "debug" ] && memory_log "DEBUG: $*"
+}
+memory_log_info() {
+    memory_log "INFO: $*"
+}
+memory_log_warn() {
+    memory_log "WARN: $*"
+}
+memory_log_error() {
+    memory_log "ERROR: $*"
+}
+
+# --- Listar sesiones disponibles ---
+# Uso: memory_list_sessions
+memory_list_sessions() {
+    if [ -d "$AGENT_MEMORY_DIR" ]; then
+        ls "$AGENT_MEMORY_DIR"/agent_memory_*.json 2>/dev/null | while read -r f; do
+            _name=$(basename "$f" .json | sed 's/agent_memory_//')
+            _size=$(wc -c < "$f" 2>/dev/null || echo 0)
+            echo "  $_name ($_size bytes)"
+        done
+    fi
+}
+
+# --- Cambiar de sesion ---
+# Uso: memory_set_session "nombre_sesion"
+memory_set_session() {
+    _session="$1"
+    [ -z "$_session" ] && return 1
+    echo "$AGENT_MEMORY_DIR/agent_memory_${_session}.json"
+}
+
+# --- Exportar memoria a JSON legible ---
+# Uso: memory_export
+memory_export() {
+    _mem_file="$AGENT_MEMORY_DIR/agent_memory.json"
+    if [ -f "$_mem_file" ]; then
+        cat "$_mem_file" | jq '.'
+    else
+        echo '{}'
+    fi
+}

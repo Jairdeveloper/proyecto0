@@ -100,6 +100,42 @@ bridge_debug() {
     echo '{"exito":true,"origen":"debugger","tipo_respuesta":"text","mensaje":""}'
 }
 
+# --- Ejecutar instruccion en LLM y devolver respuesta estructurada ---
+# Uso: bridge_llm "instruccion"
+# Output: JSON con respuesta del LLM
+bridge_llm() {
+    _instruction="$1"
+    _provider="${AGENT_LLM_PROVIDER:-}"
+
+    _start_time=$(date +%s 2>/dev/null)
+    [ -z "$_start_time" ] && _start_time=0
+
+    if [ -n "$_provider" ]; then
+        _raw_output=$(RECPL_LLM_PROVIDER="$_provider" \
+            cd "$BRIDGE_SCRIPT_DIR" && ./recpl.sh --llm -c "$_instruction" 2>/dev/null)
+    else
+        _raw_output=$(cd "$BRIDGE_SCRIPT_DIR" && ./recpl.sh --llm -c "$_instruction" 2>/dev/null)
+    fi
+    _exit_code=$?
+
+    _end_time=$(date +%s 2>/dev/null)
+    _elapsed=$((_end_time - _start_time))
+    [ "$_elapsed" -lt 0 ] && _elapsed=0
+
+    if [ -z "$_raw_output" ]; then
+        jq -n --arg exito false --arg origen "llm" \
+            --arg tipo "error" \
+            --arg msg "LLM no produjo respuesta" \
+            '{exito: $exito, origen: $origen, tipo_respuesta: $tipo, mensaje: $msg, payload: null, raw: "", tiempo_ms: 0}'
+        return
+    fi
+
+    jq -n --arg exito true --arg origen "llm" \
+        --arg tipo "llm_response" \
+        --arg respuesta "$_raw_output" \
+        '{exito: $exito, origen: $origen, tipo_respuesta: $tipo, mensaje: $respuesta, payload: {}, raw: $respuesta, tiempo_ms: 0}'
+}
+
 # --- Consultar estado interno de RECPL ---
 # Uso: bridge_state
 # Output: JSON con snapshot del estado

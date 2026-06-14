@@ -112,9 +112,9 @@ process_instruction() {
         return
     fi
 
-    # Si el resultado es un respond o clarify, mostrarlo directamente
+    # Si el resultado es un respond, clarify o error, mostrarlo directamente
     accion=$(echo "$result" | jq -r '.accion // ""')
-    if [ "$accion" = "respond" ] || [ "$accion" = "clarify" ]; then
+    if [ "$accion" = "respond" ] || [ "$accion" = "clarify" ] || [ "$accion" = "error" ]; then
         mensaje=$(echo "$result" | jq -r '.mensaje // ""')
         echo "{\"tipo_respuesta\":\"$accion\",\"mensaje\":\"$mensaje\",\"payload\":null}"
         return

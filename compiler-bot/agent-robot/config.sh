@@ -29,6 +29,7 @@ AGENT_MEMORY_DIR="${AGENT_MEMORY_DIR:-/tmp/agent_memory}"
 
 # --- Logging ---
 AGENT_LOG_FILE="${AGENT_LOG_FILE:-/tmp/agent.log}"
+AGENT_LOG_LEVEL="${AGENT_LOG_LEVEL:-info}"
 
 # --- Version ---
 AGENT_VERSION="1.0.0"

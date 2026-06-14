@@ -12,6 +12,7 @@
 #   ./agent.sh "instruccion"             # modo normal
 #   ./agent.sh --llm "instruccion"       # fuerza LLM
 #   ./agent.sh --deterministic "instruc" # solo RECPL deterministico
+#   ./agent.sh --tui                     # modo TUI (whiptail)
 #   echo "instruccion" | ./agent.sh      # modo batch (stdin)
 #
 # VARIABLES DE ENTORNO:
@@ -24,11 +25,44 @@
 # --- Cargar configuracion ---
 SCRIPT_DIR="$(dirname "$0")"
 . "$SCRIPT_DIR/config.sh"
+
+# --- Warning: memoria en /tmp/ ---
+if echo "$AGENT_MEMORY_DIR" | grep -q "^/tmp/"; then
+    echo "⚠️  Memoria en /tmp/ (se pierde al reiniciar). Usa AGENT_MEMORY_DIR para cambiarlo." >&2
+fi
+
 . "$SCRIPT_DIR/memory.sh"
 
 # --- Inicializar memoria ---
 memory_init
-memory_log "Agent started (v$AGENT_VERSION)"
+memory_log_info "Agent started (v$AGENT_VERSION)"
+
+# --- Captura de senales ---
+trap 'echo ""; echo "Operacion cancelada por el usuario."; exit 0' INT TERM
+
+# --- Sanitizar instruccion ---
+# Rechaza caracteres peligrosos como backticks y sustitucion $()
+sanitize_instruction() {
+    _input="$1"
+    echo "$_input" | grep -qE '[\`\$]' && {
+        echo "Error: La instruccion contiene caracteres no permitidos"
+        return 1
+    }
+    echo "$_input"
+    return 0
+}
+
+# --- Timeout wrapper ---
+# Usa timeout(1) si esta disponible en el sistema
+timeout_run() {
+    _timeout="$1"
+    shift
+    if command -v timeout >/dev/null 2>&1; then
+        timeout "$_timeout" "$@"
+    else
+        "$@"
+    fi
+}
 
 # --- Banner ---
 show_banner() {
@@ -46,6 +80,8 @@ USO:
   ./agent.sh "instruccion"                Modo normal
   ./agent.sh --llm "instruccion"          Fuerza uso de LLM
   ./agent.sh --deterministic "instruc"    Solo RECPL deterministico
+  ./agent.sh --plan "instruccion"         Planifica multi-paso y ejecuta
+  ./agent.sh --tui                        Modo TUI (whiptail)
   ./agent.sh --help                       Esta ayuda
 
 MODOS (via AGENT_LLM_MODE):
@@ -57,14 +93,28 @@ EJEMPLOS:
   ./agent.sh "crea modulo pagos en nestjs"
   ./agent.sh "hola"
   ./agent.sh --llm "explica que es RECPL"
+
+ERRORES COMUNES:
+  - "No entendi la instruccion": prueba con palabras clave como crea, genera,
+    lee, ejecuta, o escribe
+  - "RECPL no pudo procesar": el vocabulario deterministico es limitado a
+    crea, genera, elimina, lista, actualiza + modulo/entidad/proyecto
+  - Instruccion vacia: proporciona un texto despues del comando
 HELP
 }
 
-# --- Clasificar intencion (heuristica inicial, sin LLM) ---
-# Fase 1: deteccion basica por palabras clave.
-# Fase 3+: se reemplaza por planner.sh con LLM.
+# --- Clasificar intencion ---
+# Soporta modo deterministico (heuristica), llm (directo a LLM),
+# y auto (deterministico con fallback a LLM).
 classify_intent() {
     _instruction="$1"
+    _mode="${2:-auto}"
+
+    # Si modo es "llm", delegar directamente al LLM
+    if [ "$_mode" = "llm" ]; then
+        echo "llm"
+        return
+    fi
 
     # Normalizar a minusculas
     _lower=$(echo "$_instruction" | tr '[:upper:]' '[:lower:]')
@@ -113,6 +163,20 @@ classify_intent() {
         return
     }
 
+    # --- Fase 3: planificador multi-paso ---
+
+    # Detectar multi-instruccion: "crea X y Y" (accion antes de "y")
+    echo "$_lower" | grep -qE '(crea|genera|elimina).*(y |,)' && {
+        echo "plan"
+        return
+    }
+
+    # Detectar proyecto completo
+    echo "$_lower" | grep -qE '^(crea|genera).*(proyecto|completo|full)' && {
+        echo "plan"
+        return
+    }
+
     # Detectar comando RECPL (palabras clave: crea, genera, elimina, lista, etc.)
     echo "$_lower" | grep -qE '^(crea|genera|elimina|borra|lista|muestra|actualiza|modifica|source|exec)' && {
         echo "recpl"
@@ -125,7 +189,12 @@ classify_intent() {
         return
     }
 
-    # Por defecto: intentar RECPL (puede fallar si no entiende)
+    # Por defecto: en modo auto, intentar LLM como fallback
+    if [ "$_mode" = "auto" ]; then
+        echo "llm"
+        return
+    fi
+    # En modo deterministic: mantener RECPL
     echo "recpl"
 }
 
@@ -184,6 +253,23 @@ execute_intent() {
             tool_run_command "$_cmd"
             ;;
 
+        llm)
+            . "$SCRIPT_DIR/bridge.sh"
+            bridge_llm "$_instruction"
+            ;;
+
+        plan)
+            # Intentar planner LLM primero, fallback a heuristico
+            if [ -f "$SCRIPT_DIR/planner_llm.sh" ] && [ "$AGENT_LLM_MODE" != "deterministic" ]; then
+                . "$SCRIPT_DIR/planner_llm.sh"
+                _plan=$(planificar_llm "$_instruction")
+            else
+                . "$SCRIPT_DIR/planner.sh"
+                _plan=$(planificar "$_instruction")
+            fi
+            ejecutar_plan "$_plan"
+            ;;
+
         recpl)
             # Delegar en RECPL via bridge
             . "$SCRIPT_DIR/bridge.sh"
@@ -205,7 +291,7 @@ format_response() {
     _json="$1"
 
     _exito=$(printf '%s' "$_json" | jq -r '.exito // false' 2>/dev/null)
-    _tipo=$(printf '%s' "$_json" | jq -r '.tipo_respuesta // "text"' 2>/dev/null)
+    _tipo=$(printf '%s' "$_json" | jq -r '.tipo_respuesta // .tipo // "text"' 2>/dev/null)
 
     case "$_tipo" in
         file_content)
@@ -222,6 +308,14 @@ format_response() {
         file_written)
             _mensaje=$(printf '%s' "$_json" | jq -r '.mensaje // ""' 2>/dev/null)
             printf '✅ %s\n' "$_mensaje"
+            ;;
+        plan_completed)
+            _total=$(printf '%s' "$_json" | jq -r '.total_pasos // 0' 2>/dev/null)
+            printf '✅ Plan completado: %s pasos ejecutados\n' "$_total"
+            ;;
+        llm_response)
+            _mensaje=$(printf '%s' "$_json" | jq -r '.mensaje // ""' 2>/dev/null)
+            printf '%s\n' "$_mensaje"
             ;;
         *)
             _mensaje=$(printf '%s' "$_json" | jq -r '.mensaje // ""' 2>/dev/null)
@@ -250,6 +344,14 @@ main() {
                 _mode="deterministic"
                 shift
                 ;;
+            --plan)
+                _mode="plan"
+                shift
+                ;;
+            --tui)
+                _mode="tui"
+                shift
+                ;;
             -h|--help)
                 show_banner
                 show_help
@@ -274,6 +376,59 @@ main() {
         esac
     done
 
+    # --- Modo TUI: bucle interactivo ---
+    if [ "$_mode" = "tui" ]; then
+        . "$SCRIPT_DIR/tui.sh"
+        tui_check || return 1
+        while true; do
+            _choice=$(tui_menu)
+            case "$_choice" in
+                1)
+                    _inst=$(tui_input)
+                    if [ -n "$_inst" ]; then
+                        _result=$(main "$_inst" 2>&1)
+                        echo "$_result" | head -20 | while IFS= read -r _line; do
+                            [ -n "$_line" ] && tui_output "$_line"
+                        done
+                    fi
+                    ;;
+                2)
+                    . "$SCRIPT_DIR/tui.sh" && tui_interactive
+                    ;;
+                3)
+                    tui_llm_config
+                    ;;
+                4)
+                    tui_history
+                    ;;
+                5)
+                    tui_help
+                    ;;
+                6)
+                    exit 0
+                    ;;
+                "")
+                    exit 0
+                    ;;
+            esac
+        done
+        # unreachable
+    fi
+
+    # --- Modo plan: ejecutar planificador directamente ---
+    if [ "$_mode" = "plan" ]; then
+        _inst="$*"
+        if [ -z "$_inst" ]; then
+            read -r _inst || true
+        fi
+        if [ -n "$_inst" ]; then
+            . "$SCRIPT_DIR/planner_llm.sh" 2>/dev/null || . "$SCRIPT_DIR/planner.sh"
+            _plan=$(planificar "$_inst")
+            ejecutar_plan "$_plan"
+        fi
+        return
+    fi
+
     _instruction="$*"
 
     # Si no hay instruccion en args, leer de stdin
@@ -286,26 +441,37 @@ main() {
         echo "No se recibio ninguna instruccion."
         echo "Uso: echo \"instruccion\" | ./agent.sh"
         echo "     ./agent.sh \"instruccion\""
+        memory_log_warn "Instruccion vacia"
         return 1
     fi
 
-    memory_log "RECV: $_instruction"
+    memory_log_info "Instruccion recibida: $_instruction"
+
+    # Sanitizar instruccion
+    _sanitized=$(sanitize_instruction "$_instruction") || {
+        echo "$_sanitized"
+        memory_log_warn "Instruccion rechazada: $_instruction"
+        return 1
+    }
+    _instruction="$_sanitized"
 
     # Mostrar banner en primera interaccion
     show_banner
 
-    # Clasificar intencion
-    _intent=$(classify_intent "$_instruction")
-    memory_log "INTENT: $_intent"
+    # Clasificar intencion (pasar modo para soportar --llm y auto fallback)
+    _intent=$(classify_intent "$_instruction" "$_mode")
+    memory_log_info "Intencion clasificada: $_intent (modo: $_mode)"
 
     # Ejecutar (usando archivo temporal para evitar bug de dash + $() + jq)
     _result_file="/tmp/agent_result_$$.tmp"
     execute_intent "$_intent" "$_instruction" > "$_result_file"
     _exit_code=$?
 
+    memory_log_info "Ejecucion completada (exit: $_exit_code)"
+
     # Formatear y mostrar
     format_response "$(cat "$_result_file")"
-    memory_log "RESP: $(cat "$_result_file" | jq -c '.' 2>/dev/null || cat "$_result_file")"
+    memory_log_debug "RESP JSON: $(cat "$_result_file" | jq -c '.' 2>/dev/null || cat "$_result_file")"
 
     # Guardar en historial
     memory_add_history "$_instruction" "$(cat "$_result_file")"

@@ -138,7 +138,7 @@ router() {
 $instruction
 LLM_INPUT
 )
-                if [ $? -eq 0 ] && [ -n "$result" ]; then
+                if [ -n "$result" ]; then
                     echo "$result"
                     return 0
                 fi
@@ -156,7 +156,7 @@ LLM_INPUT
 $instruction
 LLM_INPUT
 )
-            if [ $? -eq 0 ] && [ -n "$result" ]; then
+            if [ -n "$result" ]; then
                 echo "$result"
                 return 0
             fi

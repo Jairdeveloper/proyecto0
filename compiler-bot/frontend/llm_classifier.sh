@@ -34,7 +34,12 @@ SCRIPT_DIR="$(dirname "$0")"
 # ============================================================================
 
 # --- Prompt que define el rol del LLM como compilador RECPL ---
+# Si RECPL_LLM_SYSTEM_PROMPT esta definido, usarlo; si no, el default
 get_system_prompt() {
+    if [ -n "${RECPL_LLM_SYSTEM_PROMPT:-}" ]; then
+        printf '%s\n' "$RECPL_LLM_SYSTEM_PROMPT"
+        return
+    fi
     cat <<'SYSTEM'
 Eres un compilador de lenguaje natural a codigo (RECPL).
 Traduces instrucciones del usuario en acciones del compilador.
@@ -60,6 +65,11 @@ SYSTEM
 
 # --- Schema de tools que el LLM puede invocar ---
 get_tools_json() {
+    # Si se sobreescribe el system prompt, no enviar tools por defecto
+    if [ -n "${RECPL_LLM_SYSTEM_PROMPT:-}" ]; then
+        echo '[]'
+        return
+    fi
     cat <<'TOOLS'
 [
   {"name":"scaffold_module","description":"Crea un modulo nuevo en la tecnologia especificada","parameters":{"type":"object","properties":{"nombre":{"type":"string","description":"Nombre del modulo"},"tech":{"type":"string","description":"Tecnologia (NestJS, Prisma, Express, FastAPI)"}},"required":["nombre","tech"]}},
@@ -168,3 +178,19 @@ llm_classify() {
         echo "{\"accion\":\"respond\",\"mensaje\":$(printf '%s' "$content" | jq -R -s .)}"
     fi
 }
+
+# ============================================================================
+# SECTION: Entry point (standalone)
+# ============================================================================
+
+# Cuando se ejecuta como script standalone (no sourced),
+# router.sh le pasa la instruccion por stdin.
+# Leer la primera linea y ejecutar llm_classify.
+if echo "$0" | grep -q "llm_classifier.sh"; then
+    read -r _input_line || true
+    if [ -n "$_input_line" ]; then
+        llm_classify "$_input_line"
+    else
+        echo "{\"accion\":\"error\",\"mensaje\":\"Instruccion vacia (stdin)\"}"
+    fi
+fi
