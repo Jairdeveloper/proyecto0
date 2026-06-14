@@ -34,8 +34,11 @@ class TestSemanticVisitor:
                     "node_type": "page",
                     "name": "login",
                     "children": [
-                        {"node_type": "component", "name": "form",
-                         "component_type": "formulario"},
+                        {
+                            "node_type": "component",
+                            "name": "form",
+                            "component_type": "formulario",
+                        },
                     ],
                 }
             ],
@@ -120,8 +123,11 @@ class TestSemanticVisitor:
                     "node_type": "page",
                     "name": "inside",
                     "children": [
-                        {"node_type": "component", "name": "btn",
-                         "component_type": "button"},
+                        {
+                            "node_type": "component",
+                            "name": "btn",
+                            "component_type": "button",
+                        },
                     ],
                 },
             ],
@@ -181,21 +187,26 @@ class TestSemanticAnalyzer:
         assert len(result.steps) == 3
 
     def test_act_returns_success_on_valid(self, analyzer):
-        analyzer.receive_mission({
-            "ast": {
-                "node_type": "project",
-                "children": [
-                    {
-                        "node_type": "page",
-                        "name": "login",
-                        "children": [
-                            {"node_type": "component", "name": "form",
-                             "component_type": "formulario"},
-                        ],
-                    },
-                ],
+        analyzer.receive_mission(
+            {
+                "ast": {
+                    "node_type": "project",
+                    "children": [
+                        {
+                            "node_type": "page",
+                            "name": "login",
+                            "children": [
+                                {
+                                    "node_type": "component",
+                                    "name": "form",
+                                    "component_type": "formulario",
+                                },
+                            ],
+                        },
+                    ],
+                }
             }
-        })
+        )
         plan = analyzer.reflect_and_plan(analyzer.analyze())
         output = analyzer.act(plan)
         assert output.success is True
@@ -203,35 +214,42 @@ class TestSemanticAnalyzer:
         assert output.output_data["semantic_errors"] == []
 
     def test_act_returns_errors_on_empty_page(self, analyzer):
-        analyzer.receive_mission({
-            "ast": {
-                "node_type": "project",
-                "children": [
-                    {"node_type": "page", "name": "empty", "children": []},
-                ],
+        analyzer.receive_mission(
+            {
+                "ast": {
+                    "node_type": "project",
+                    "children": [
+                        {"node_type": "page", "name": "empty", "children": []},
+                    ],
+                }
             }
-        })
+        )
         plan = analyzer.reflect_and_plan(analyzer.analyze())
         output = analyzer.act(plan)
         assert output.success is False
         assert len(output.output_data["semantic_errors"]) > 0
 
     def test_execute_full_flow(self, analyzer):
-        result = analyzer.execute({
-            "ast": {
-                "node_type": "project",
-                "children": [
-                    {
-                        "node_type": "page",
-                        "name": "login",
-                        "children": [
-                            {"node_type": "component", "name": "form",
-                             "component_type": "formulario"},
-                        ],
-                    },
-                ],
+        result = analyzer.execute(
+            {
+                "ast": {
+                    "node_type": "project",
+                    "children": [
+                        {
+                            "node_type": "page",
+                            "name": "login",
+                            "children": [
+                                {
+                                    "node_type": "component",
+                                    "name": "form",
+                                    "component_type": "formulario",
+                                },
+                            ],
+                        },
+                    ],
+                }
             }
-        })
+        )
         assert result.stage == Stage.SEMANTIC_ANALYZER
         assert result.success is True
 
@@ -241,21 +259,26 @@ class TestSemanticAnalyzer:
         assert True
 
     def test_symbol_table_in_output(self, analyzer):
-        analyzer.receive_mission({
-            "ast": {
-                "node_type": "project",
-                "children": [
-                    {
-                        "node_type": "page",
-                        "name": "home",
-                        "children": [
-                            {"node_type": "component", "name": "navbar",
-                             "component_type": "navigation"},
-                        ],
-                    },
-                ],
+        analyzer.receive_mission(
+            {
+                "ast": {
+                    "node_type": "project",
+                    "children": [
+                        {
+                            "node_type": "page",
+                            "name": "home",
+                            "children": [
+                                {
+                                    "node_type": "component",
+                                    "name": "navbar",
+                                    "component_type": "navigation",
+                                },
+                            ],
+                        },
+                    ],
+                }
             }
-        })
+        )
         plan = analyzer.reflect_and_plan(analyzer.analyze())
         output = analyzer.act(plan)
         snapshot = output.output_data["symbol_table_snapshot"]
@@ -263,14 +286,16 @@ class TestSemanticAnalyzer:
         assert len(snapshot) >= 1
 
     def test_warnings_on_unknown_node(self, analyzer):
-        analyzer.receive_mission({
-            "ast": {
-                "node_type": "project",
-                "children": [
-                    {"node_type": "weird_node", "name": "x"},
-                ],
+        analyzer.receive_mission(
+            {
+                "ast": {
+                    "node_type": "project",
+                    "children": [
+                        {"node_type": "weird_node", "name": "x"},
+                    ],
+                }
             }
-        })
+        )
         plan = analyzer.reflect_and_plan(analyzer.analyze())
         output = analyzer.act(plan)
         assert len(output.output_data["warnings"]) > 0

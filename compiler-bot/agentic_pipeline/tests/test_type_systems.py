@@ -1,6 +1,5 @@
 """Tests for TypeRegistry and domain validators."""
 
-
 from agentic_pipeline.nodes.type_systems import (
     TypeRegistry,
     data_entity_validator,
@@ -67,10 +66,12 @@ class TestUIComponentValidator:
 
 class TestPageValidator:
     def test_valid_page(self):
-        errors = page_validator({
-            "name": "login",
-            "children": [{"node_type": "component"}],
-        })
+        errors = page_validator(
+            {
+                "name": "login",
+                "children": [{"node_type": "component"}],
+            }
+        )
         assert errors == []
 
     def test_page_no_children(self):
@@ -84,12 +85,14 @@ class TestPageValidator:
 
 class TestDataEntityValidator:
     def test_valid_entity(self):
-        errors = data_entity_validator({
-            "name": "User",
-            "attributes": [
-                {"name": "email", "type": "string"},
-            ],
-        })
+        errors = data_entity_validator(
+            {
+                "name": "User",
+                "attributes": [
+                    {"name": "email", "type": "string"},
+                ],
+            }
+        )
         assert errors == []
 
     def test_no_attributes(self):
@@ -97,10 +100,12 @@ class TestDataEntityValidator:
         assert any("at least one" in e for e in errors)
 
     def test_invalid_attr_type(self):
-        errors = data_entity_validator({
-            "name": "Bad",
-            "attributes": [{"name": "foo", "type": "invalid_type"}],
-        })
+        errors = data_entity_validator(
+            {
+                "name": "Bad",
+                "attributes": [{"name": "foo", "type": "invalid_type"}],
+            }
+        )
         assert any("Invalid attribute type" in e for e in errors)
 
     def test_empty_name(self):
@@ -110,10 +115,12 @@ class TestDataEntityValidator:
 
 class TestInfraResourceValidator:
     def test_valid_resource(self):
-        errors = infra_resource_validator({
-            "name": "postgres",
-            "infra_type": "database",
-        })
+        errors = infra_resource_validator(
+            {
+                "name": "postgres",
+                "infra_type": "database",
+            }
+        )
         assert errors == []
 
     def test_empty_name(self):

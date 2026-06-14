@@ -65,9 +65,7 @@ class SemanticVisitor:
     def visit_component(self, node: dict[str, Any]) -> None:
         name = node.get("name", "")
         comp_type = node.get("component_type", "component")
-        self.symbols.define(
-            name, {"type": "component", "component_type": comp_type}
-        )
+        self.symbols.define(name, {"type": "component", "component_type": comp_type})
         errs = self.registry.validate("ui", "component", node)
         self.errors.extend(errs)
 
@@ -116,14 +114,10 @@ class SemanticAnalyzer(PipelineStage):
                 self._input_ir = ast
                 return
         self._input_ir = {"node_type": "project", "children": []}
-        logger.warning(
-            "SemanticAnalyzer received non-dict input, using empty IR"
-        )
+        logger.warning("SemanticAnalyzer received non-dict input, using empty IR")
 
     def analyze(self) -> AnalysisResult:
-        node_count = (
-            len(self._input_ir.get("children", [])) if self._input_ir else 0
-        )
+        node_count = len(self._input_ir.get("children", [])) if self._input_ir else 0
         return AnalysisResult(
             observations=[f"IR nodes to analyze: {node_count}"],
             detected_patterns=[],

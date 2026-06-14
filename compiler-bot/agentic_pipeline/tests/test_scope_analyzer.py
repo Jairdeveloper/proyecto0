@@ -1,6 +1,5 @@
 """Tests for SymbolTable with scopes and Memento pattern."""
 
-
 from agentic_pipeline.nodes.symbol_table import SymbolTable
 
 

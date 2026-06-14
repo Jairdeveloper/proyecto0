@@ -2,6 +2,7 @@ import logging
 
 from langgraph.graph import StateGraph
 
+from .nodes.ir_generator import IRGenerator
 from .nodes.lexer import Lexer
 from .nodes.parser import ParserGLR
 from .nodes.preprocessor import Preprocessor
@@ -35,12 +36,17 @@ class PipelineOrchestrator:
             "semantic_analyzer",
             lambda ctx: SemanticAnalyzer(ctx).execute(ctx.input_data),
         )
+        self.graph.add_node(
+            "ir_generator",
+            lambda ctx: IRGenerator(ctx).execute(ctx.input_data),
+        )
         self.graph.add_edge("input", "preprocessor")
         self.graph.add_edge("preprocessor", "lexer")
         self.graph.add_edge("lexer", "parser")
         self.graph.add_edge("parser", "semantic_analyzer")
+        self.graph.add_edge("semantic_analyzer", "ir_generator")
         self.graph.add_node("output", lambda x: x)
-        self.graph.add_edge("semantic_analyzer", "output")
+        self.graph.add_edge("ir_generator", "output")
         self.graph.set_finish_point("output")
         self.compiled = self.graph.compile()
 
