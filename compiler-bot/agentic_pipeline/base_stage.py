@@ -2,6 +2,7 @@ import logging
 import time
 from abc import ABC, abstractmethod
 
+from .contracts import STAGE_CONTRACTS
 from .feedback_loop import get_global_feedback
 from .state_models import StageContext, AnalysisResult, ActionPlan, StageOutput
 
@@ -36,6 +37,9 @@ class PipelineStage(ABC):
         t0 = time.time()
         try:
             output = self.act(plan)
+            contract = STAGE_CONTRACTS.get(self.name)
+            if contract and output.success:
+                contract.model_validate(output.output_data)
             duration = time.time() - t0
             metrics = {
                 "duration_seconds": round(duration, 4),

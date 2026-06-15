@@ -3,8 +3,6 @@
 import pytest
 
 from agentic_pipeline.nodes.preprocessor import (
-    DomainEnrichmentFilter,
-    ImplicitRequirementFilter,
     NormalizationFilter,
     Preprocessor,
     SegmentationFilter,
@@ -34,68 +32,13 @@ class TestNormalizationFilter:
         result = f.process("hello @#$% world!!!")
         assert "@" not in result
         assert "#" not in result
-        assert "!" in result  # keep basic punctuation
+        assert "!" in result
 
     def test_preserve_spanish_accents(self):
         f = NormalizationFilter()
         result = f.process("canción única")
         assert "canción" == result.split()[0]
         assert "única" == result.split()[1]
-
-
-# ============================================================================
-# DomainEnrichmentFilter
-# ============================================================================
-
-
-class TestDomainEnrichmentFilter:
-    def test_web_domain_enrichment(self):
-        f = DomainEnrichmentFilter()
-        result = f.process("crea una pagina", {"domain": "web"})
-        assert "domain:web" in result
-        assert "stack:" in result
-
-    def test_default_domain_enrichment(self):
-        f = DomainEnrichmentFilter()
-        result = f.process("crea algo")
-        assert "domain:web" in result
-
-    def test_mobile_domain_enrichment(self):
-        f = DomainEnrichmentFilter()
-        result = f.process("crea una app", {"domain": "mobile"})
-        assert "domain:mobile" in result
-        assert "mobile_app" in result
-
-
-# ============================================================================
-# ImplicitRequirementFilter
-# ============================================================================
-
-
-class TestImplicitRequirementFilter:
-    def test_auth_implicit(self):
-        f = ImplicitRequirementFilter()
-        result = f.process("sistema con auth")
-        assert "User model" in result
-        assert "JWT" in result
-        assert "login/signup" in result
-
-    def test_qr_implicit(self):
-        f = ImplicitRequirementFilter()
-        result = f.process("generar qr")
-        assert "QR code library" in result
-        assert "QR generation" in result
-
-    def test_multiple_implicit(self):
-        f = ImplicitRequirementFilter()
-        result = f.process("auth y qr")
-        assert "User model" in result
-        assert "QR code library" in result
-
-    def test_no_implicit(self):
-        f = ImplicitRequirementFilter()
-        result = f.process("crea una pagina simple")
-        assert "[implicit:" not in result
 
 
 # ============================================================================
@@ -124,21 +67,12 @@ class TestSegmentationFilter:
 
 
 class TestBuildFilterChain:
-    def test_web_chain_includes_domain_enrichment(self):
+    def test_chain_has_two_filters(self):
         chain = build_filter_chain("web")
         names = [c.__class__.__name__ for c in chain]
         assert "NormalizationFilter" in names
-        assert "DomainEnrichmentFilter" in names
-        assert "ImplicitRequirementFilter" in names
         assert "SegmentationFilter" in names
-        assert len(chain) == 4
-
-    def test_api_chain_without_domain_enrichment(self):
-        chain = build_filter_chain("api")
-        names = [c.__class__.__name__ for c in chain]
-        assert "NormalizationFilter" in names
-        assert "DomainEnrichmentFilter" not in names
-        assert len(chain) == 3
+        assert len(chain) == 2
 
 
 # ============================================================================
@@ -170,18 +104,11 @@ class TestPreprocessor:
         assert "normalized_text" in data
         assert "crea una pagina con auth" in data["normalized_text"].lower()
 
-    def test_act_detects_implicit(self, preprocessor):
-        preprocessor.receive_mission("Crea sistema con auth y qr")
-        plan = preprocessor.reflect_and_plan(preprocessor.analyze())
-        output = preprocessor.act(plan)
-        assert "User model" in output.output_data["normalized_text"]
-        assert "QR" in output.output_data["normalized_text"]
-
     def test_act_metrics(self, preprocessor):
         preprocessor.receive_mission("Crea una pagina")
         plan = preprocessor.reflect_and_plan(preprocessor.analyze())
         output = preprocessor.act(plan)
-        assert output.metrics["filters_applied"] == 4
+        assert output.metrics["filters_applied"] == 2
         assert output.metrics["input_len"] == 15
 
     def test_execute_full_flow(self, preprocessor):
@@ -216,9 +143,9 @@ class TestPreprocessorDifferentDomains:
     def test_web_domain_filters(self):
         ctx = StageContext(stage=Stage.PREPROCESSOR, input_data="")
         p = Preprocessor(ctx, domain="web")
-        assert len(p.filters) == 4
+        assert len(p.filters) == 2
 
     def test_api_domain_filters(self):
         ctx = StageContext(stage=Stage.PREPROCESSOR, input_data="")
         p = Preprocessor(ctx, domain="api")
-        assert len(p.filters) == 3
+        assert len(p.filters) == 2

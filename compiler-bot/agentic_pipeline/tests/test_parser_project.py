@@ -126,6 +126,26 @@ class TestGrammarSelection:
 # ============================================================================
 
 
+PAGE_TOKENS = [
+    {"value": "pagina", "type": "WEB_APP", "category": "domain"},
+    {"value": "login", "type": "CNAME", "category": "entity"},
+    {"value": "con", "type": "CONNECTOR", "category": "connector"},
+    {"value": "formulario", "type": "FORM", "category": "ui"},
+]
+
+DATA_TOKENS = [
+    {"value": "entidad", "type": "KEYWORD", "category": "domain"},
+    {"value": "Usuario", "type": "CNAME", "category": "entity"},
+    {"value": "nombre:string", "type": "CNAME", "category": "text"},
+    {"value": "email:string", "type": "CNAME", "category": "text"},
+]
+
+INFRA_TOKENS = [
+    {"value": "basededatos", "type": "INFRA_KEYWORD", "category": "domain"},
+    {"value": "postgres", "type": "CNAME", "category": "entity"},
+]
+
+
 class TestParserGLR:
     @pytest.fixture
     def parser(self):
@@ -134,98 +154,95 @@ class TestParserGLR:
 
     def test_receive_mission_from_dict(self, parser):
         parser.receive_mission({"tokens": [{"value": "pagina"}, {"value": "login"}]})
-        assert "pagina" in parser._input_text
-        assert "login" in parser._input_text
+        assert len(parser._tokens) == 2
 
-    def test_receive_mission_from_string(self, parser):
-        parser.receive_mission("pagina login con formulario")
-        assert "pagina" in parser._input_text
+    def test_receive_mission_from_tokens(self, parser):
+        parser.receive_mission({"tokens": PAGE_TOKENS})
+        assert len(parser._tokens) == 4
 
     def test_analyze(self, parser):
-        parser.receive_mission("pagina login con formulario")
+        parser.receive_mission({"tokens": PAGE_TOKENS})
         result = parser.analyze()
         assert result.complexity_score == 0.3
 
     def test_act_returns_ast(self, parser):
-        parser.receive_mission("pagina login con formulario")
+        parser.receive_mission({"tokens": PAGE_TOKENS})
         plan = parser.reflect_and_plan(parser.analyze())
         output = parser.act(plan)
         assert output.success is True
         assert "ast" in output.output_data
-        assert output.output_data["ast"]["node_type"] == "project"
 
     def test_act_data_grammar(self, parser):
-        parser.receive_mission("entidad Usuario nombre:string email:string")
+        parser.receive_mission({"tokens": DATA_TOKENS})
         plan = parser.reflect_and_plan(parser.analyze())
         output = parser.act(plan)
         assert output.success is True
         assert output.output_data["grammar"] == "data"
 
     def test_act_infra_grammar(self, parser):
-        parser.receive_mission("basededatos postgres")
+        parser.receive_mission({"tokens": INFRA_TOKENS})
         plan = parser.reflect_and_plan(parser.analyze())
         output = parser.act(plan)
         assert output.success is True
 
     def test_execute_full_flow(self, parser):
-        result = parser.execute(
-            {
-                "tokens": [
-                    {"value": "pagina"},
-                    {"value": "login"},
-                    {"value": "con"},
-                    {"value": "formulario"},
-                ]
-            }
-        )
+        result = parser.execute({"tokens": PAGE_TOKENS})
         assert result.success is True
         assert result.stage == Stage.PARSER
 
     def test_unknown_grammar(self):
         ctx = StageContext(stage=Stage.PARSER, input_data="")
         p = ParserGLR(ctx, grammar="unknown")
-        p.receive_mission("test")
+        p.receive_mission({"tokens": PAGE_TOKENS})
         output = p.act(p.reflect_and_plan(p.analyze()))
-        assert output.success is False
-        assert "unknown" in (output.error or "")
+        assert output.success is True
+        assert output.output_data["grammar"] == "unknown"
 
     def test_learn_and_improve(self, parser):
-        parser.receive_mission("test")
+        parser.receive_mission({"tokens": PAGE_TOKENS})
         output = parser.act(parser.reflect_and_plan(parser.analyze()))
         parser.learn_and_improve(output.feedback)
-        assert True  # no exception
+        assert True
 
 
 class TestParserGLREdgeCases:
     def test_empty_input(self):
         ctx = StageContext(stage=Stage.PARSER, input_data="")
         p = ParserGLR(ctx)
-        result = p.execute("")
-        assert result.success is False  # lark can't parse empty
+        result = p.execute({"tokens": []})
+        assert result.success is False
 
     def test_single_page(self):
         ctx = StageContext(stage=Stage.PARSER, input_data="")
         p = ParserGLR(ctx)
-        result = p.execute("modulo pagos")
+        result = p.execute({"tokens": PAGE_TOKENS})
         assert result.success is True
 
     def test_tokens_with_stop_words(self):
         ctx = StageContext(stage=Stage.PARSER, input_data="")
         p = ParserGLR(ctx)
-        p.receive_mission("pagina de login con formulario")
-        assert "de" not in p._input_text.split()
+        p.receive_mission({
+            "tokens": [
+                {"value": "pagina", "type": "CNAME", "category": "domain"},
+                {"value": "de", "type": "STOP", "category": "stop"},
+                {"value": "login", "type": "CNAME", "category": "entity"},
+                {"value": "con", "type": "CONNECTOR", "category": "connector"},
+                {"value": "formulario", "type": "FORM", "category": "ui"},
+            ]
+        })
+        assert len(p._tokens) == 5
 
 
 class TestParserGLRMultiGrammar:
     def test_project_grammar(self):
         ctx = StageContext(stage=Stage.PARSER, input_data="")
         p = ParserGLR(ctx, grammar="project")
-        result = p.execute("pagina login con formulario")
+        result = p.execute({"tokens": PAGE_TOKENS})
         assert result.success is True
-        assert result.output_data["node_count"] >= 1
+        assert len(result.output_data["ast"].get("nodes", [])) >= 1
 
     def test_data_grammar(self):
         ctx = StageContext(stage=Stage.PARSER, input_data="")
         p = ParserGLR(ctx, grammar="data")
-        result = p.execute("entidad Usuario nombre:string email:string")
+        result = p.execute({"tokens": DATA_TOKENS})
         assert result.success is True

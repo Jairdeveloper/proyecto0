@@ -10,6 +10,7 @@ from agentic_pipeline.state_models import (
 
 
 def test_stage_enum_values():
+    assert Stage.INTENT.value == "intent"
     assert Stage.REQUIREMENT_DECOMPOSER.value == "requirement_decomposer"
     assert Stage.PREPROCESSOR.value == "preprocessor"
     assert Stage.LEXER.value == "lexer"

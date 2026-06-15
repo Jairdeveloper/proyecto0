@@ -5,6 +5,7 @@ from datetime import datetime
 
 
 class Stage(Enum):
+    INTENT = "intent"
     REQUIREMENT_DECOMPOSER = "requirement_decomposer"
     PREPROCESSOR = "preprocessor"
     LEXER = "lexer"
@@ -23,6 +24,7 @@ class StageContext(BaseModel):
     input_data: Any
     previous_output: Optional[Any] = None
     config_overrides: dict = {}
+    last_error: Optional[str] = None
 
 
 class AnalysisResult(BaseModel):

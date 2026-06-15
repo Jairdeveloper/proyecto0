@@ -256,29 +256,32 @@ class ParserGLR(PipelineStage):
     def __init__(self, context: StageContext, grammar: str = ""):
         super().__init__(context)
         self.grammar_name = grammar
-        self._input_text = ""
+        self._tokens: list[dict] = []
+        self._enriched: dict = {}
 
     def receive_mission(self, input_data: object) -> None:
         if isinstance(input_data, dict):
-            tokens = input_data.get("tokens", [])
-            self._input_text = " ".join(t.get("value", "") for t in tokens)
+            tokens_raw = input_data.get("tokens", input_data)
+            if isinstance(tokens_raw, list):
+                self._tokens = tokens_raw
+            else:
+                self._tokens = []
+            self._enriched = input_data.get("enriched", {})
         else:
-            raw = str(input_data)
-            tokens_from_lexer = raw.split()
-            self._input_text = " ".join(tokens_from_lexer)
-        self._input_text = _clean_text(self._input_text)
-        logger.debug("Parser cleaned text: %.100s", self._input_text)
+            self._tokens = []
+            self._enriched = {}
 
     def analyze(self) -> AnalysisResult:
         return AnalysisResult(
-            observations=[f"Input: {len(self._input_text)} chars"],
+            observations=[f"Tokens: {len(self._tokens)}"],
             detected_patterns=[],
             risks=[],
             complexity_score=0.3,
         )
 
     def reflect_and_plan(self, analysis: AnalysisResult) -> ActionPlan:
-        grammar = self.grammar_name or _select_grammar(self._input_text)
+        text = " ".join(t.get("value", "") for t in self._tokens)
+        grammar = self.grammar_name or _select_grammar(text)
         logger.info("Selected grammar: %s", grammar)
         return ActionPlan(
             steps=[{"action": "parse", "grammar": grammar}],
@@ -286,47 +289,48 @@ class ParserGLR(PipelineStage):
         )
 
     def act(self, plan: ActionPlan) -> StageOutput:
+        if not self._tokens:
+            return StageOutput(
+                stage=self.context.stage,
+                output_data={},
+                success=False,
+                error="No tokens received from lexer",
+            )
+
         grammar = self.grammar_name
         if plan.steps:
             grammar = plan.steps[0].get("grammar", grammar)
 
-        if grammar not in PARSERS:
-            return StageOutput(
-                stage=self.context.stage,
-                output_data={},
-                success=False,
-                error=f"Unknown grammar: {grammar}",
-            )
+        ast = self._build_ast_from_tokens(self._tokens)
+        logger.info("Built AST from %d tokens: %d nodes", len(self._tokens), len(ast.get("nodes", [])))
+        return StageOutput(
+            stage=self.context.stage,
+            output_data={"ast": ast, "grammar": grammar},
+            metrics={
+                "tokens": len(self._tokens),
+                "ast_nodes": len(ast.get("nodes", [])),
+            },
+        )
 
-        parser = PARSERS[grammar]
-        builder = AST_BUILDERS[grammar]
-        try:
-            tree = parser.parse(self._input_text)
-            ast = builder(tree)
-            ir = ast.to_ir()
-            errors = [e for e in ast.validate() if e]
-            logger.info("Parsed %s grammar: %d nodes", grammar, len(ast.children))
-            return StageOutput(
-                stage=self.context.stage,
-                output_data={
-                    "ast": ir,
-                    "errors": errors,
-                    "grammar": grammar,
-                    "node_count": len(ast.children),
-                },
-                metrics={
-                    "node_count": len(ast.children),
-                    "error_count": len(errors),
-                },
-            )
-        except Exception as e:
-            logger.error("Parse error: %s", e)
-            return StageOutput(
-                stage=self.context.stage,
-                output_data={},
-                success=False,
-                error=str(e),
-            )
+    def _build_ast_from_tokens(self, tokens: list[dict]) -> dict:
+        actions = []
+        entities = []
+        for t in tokens:
+            cat = t.get("category", "")
+            if cat == "action":
+                actions.append(t.get("value", ""))
+            elif cat in ("entity", "domain"):
+                entities.append(t.get("value", ""))
+        return {
+            "type": "project" if entities else "unknown",
+            "actions": actions,
+            "entities": entities,
+            "nodes": [
+                {"type": "action", "value": a} for a in actions
+            ] + [
+                {"type": "entity", "value": e} for e in entities
+            ],
+        }
 
     def learn_and_improve(self, feedback: object) -> None:
         pass

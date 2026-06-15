@@ -66,7 +66,7 @@ async def test_pipeline_all_stages_executed():
     orch = PipelineOrchestrator()
     assert orch.compiled is not None
     stages = {
-        "requirement_decomposer",
+        "intent",
         "preprocessor",
         "lexer",
         "parser",

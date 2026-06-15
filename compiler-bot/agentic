@@ -8,6 +8,7 @@ import asyncio
 import json
 import sys
 
+from agentic_pipeline.debugger import PipelineDebugger
 from agentic_pipeline.orchestrator import PipelineOrchestrator
 
 
@@ -31,6 +32,18 @@ async def main() -> None:
     parser.add_argument(
         "--stream", action="store_true", help="Stream progress to stderr",
     )
+    parser.add_argument(
+        "--debug", type=str, choices=["trace", "step", "timing", "inspect"],
+        help="Debug mode: trace|step|timing|inspect",
+    )
+    parser.add_argument(
+        "--show-output", action="store_true",
+        help="Print output_data preview for each stage (use with --debug)",
+    )
+    parser.add_argument(
+        "--dialog", action="store_true",
+        help="Enable interactive dialog mode for ambiguous prompts",
+    )
     args = parser.parse_args()
 
     if args.file:
@@ -42,11 +55,19 @@ async def main() -> None:
         parser.print_help()
         sys.exit(1)
 
-    cb = _stream_callback if args.stream else None
-    orchestrator = PipelineOrchestrator(
-        stream_callback=cb, output_dir=args.output,
-    )
-    result = await orchestrator.run(prompt)
+    if args.debug:
+        debugger = PipelineDebugger(
+            mode=args.debug,
+            output_dir=args.output,
+            show_output=args.show_output,
+        )
+        result = await debugger.run(prompt)
+    else:
+        cb = _stream_callback if args.stream else None
+        orchestrator = PipelineOrchestrator(
+            stream_callback=cb, output_dir=args.output,
+        )
+        result = await orchestrator.run(prompt)
     print(json.dumps(result, indent=2, default=str))
 
 

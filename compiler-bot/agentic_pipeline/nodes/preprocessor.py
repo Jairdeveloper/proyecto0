@@ -68,30 +68,7 @@ class NormalizationFilter(PreprocessingFilter):
         return text
 
 
-class DomainEnrichmentFilter(PreprocessingFilter):
-    """Appends domain context hints (stack, frameworks)."""
 
-    def process(self, text: str, context: dict[str, Any] | None = None) -> str:
-        domain = (context or {}).get("domain", "web")
-        strategy = DOMAIN_STRATEGIES.get(domain, DOMAIN_STRATEGIES["web"])
-        stack_hint = ", ".join(strategy["stack"])
-        return f"{text} [domain:{domain} stack:{stack_hint}]"
-
-
-class ImplicitRequirementFilter(PreprocessingFilter):
-    """Expands implicit requirements into explicit items."""
-
-    def process(self, text: str, context: dict[str, Any] | None = None) -> str:
-        text_lower = text.lower()
-        additions: list[str] = []
-        seen: set[str] = set()
-        for keyword, reqs in IMPLICIT_REQUIREMENTS.items():
-            if keyword in text_lower and keyword not in seen:
-                seen.add(keyword)
-                additions.extend(reqs)
-        if additions:
-            text += " [implicit: " + "; ".join(additions) + "]"
-        return text
 
 
 class SegmentationFilter(PreprocessingFilter):
@@ -154,14 +131,10 @@ class EmbeddingEnricher(PreprocessingFilter):
 
 def build_filter_chain(domain: str) -> list[PreprocessingFilter]:
     """Build filter chain using Strategy pattern per domain."""
-    base: list[PreprocessingFilter] = [
+    return [
         NormalizationFilter(),
-        ImplicitRequirementFilter(),
         SegmentationFilter(),
     ]
-    if domain in ("web", "mobile"):
-        base.insert(1, DomainEnrichmentFilter())
-    return base
 
 
 # ============================================================================
@@ -181,7 +154,12 @@ class Preprocessor(PipelineStage):
         self._input_text = ""
 
     def receive_mission(self, input_data: object) -> None:
-        self._input_text = str(input_data)
+        if isinstance(input_data, dict) and "raw" in input_data:
+            self._input_text = input_data["raw"]
+            self.domain = input_data.get("intent", {}).get("domain", "web")
+        else:
+            self._input_text = str(input_data)
+            self.domain = "web"
         logger.debug("Preprocessor received: %.100s", self._input_text)
 
     def analyze(self) -> AnalysisResult:
