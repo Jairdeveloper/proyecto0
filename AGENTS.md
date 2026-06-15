@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Repo `@Proyecto0` — RECPL Compiler Bot. Shell-based bot que procesa lenguaje natural y genera scaffolding de codigo NestJS/Prisma. Pipeline v1 en Shell, pipeline v2.0 en Python (LangChain+LangGraph). El pipeline RECPL (preprocess → lexer → parser → semantic → IR → synthesis) es el producto. NestJS/Prisma es el formato de salida, no un proyecto separado.
+Repo `@Proyecto0` — RECPL Compiler Bot v2.0. Pipeline compilador en Python (LangChain+LangGraph) con 10 PipelineStages conectados via StateGraph. Shell v1.0 congelado como referencia. El pipeline RECPL (preprocess → lexer → parser → semantic → IR → synthesis) es el producto. NestJS/Prisma es el formato de salida, no un proyecto separado.
 ## ROLE
 
 Eres un agente especializado en <compiladores, teoria de lenguajes, ingenieria de prompt, ingenieria inversa.>.
@@ -192,28 +192,47 @@ Shell-based agent layer over the RECPL pipeline. Classifies intent, routes to to
 - **Scaffolding writes to `modules/<name>/`** — added to `.gitignore`
 - **`jq` es dependencia critica** — requerido por agent-robot (tool_respond, memory, tool_registry) para todo el parsing JSON. Instalar via binario estatico de jqlang/jq (NO el paquete npm `jq`, que es un wrapper Node.js incompleto)
 
-#### State of tasks
+#### State of tasks (Shell v1.0 — LEGACY, congelado)
 
 | ID | Component | Status |
 |----|-----------|--------|
-| TASK-001 | Alphabet/tokens | COMPLETED (in lexer.sh) |
+| TASK-001 | Alphabet/tokens | COMPLETED (lexer.sh) |
 | TASK-002 | DFA lexer | COMPLETED (lexer.sh) |
 | TASK-003 | Preprocessor | COMPLETED (preprocessor.sh) |
-| TASK-004 | BNF grammar | COMPLETED (in parser.sh) |
+| TASK-004 | BNF grammar | COMPLETED (parser.sh) |
 | TASK-005 | Recursive descent parser | COMPLETED (parser.sh) |
-| TASK-006 | Symbol table | COMPLETED (in semantic.sh) |
+| TASK-006 | Symbol table | COMPLETED (semantic.sh) |
 | TASK-007 | Semantic analyzer | COMPLETED (semantic.sh) |
 | TASK-008 | IR generator | COMPLETED (ir_generator.sh) |
-| TASK-009 | Tracer (three-address code) | PENDING |
+| TASK-009 | Tracer (three-address code) | OBSOLETO (ver Python v2.0 tracer) |
 | TASK-010 | Synthesis/PRINT | COMPLETED (synthesis.sh) |
 | TASK-011 | LOOP principal | COMPLETED (recpl.sh) |
-| TASK-012 | Scorer (pattern matching) | PENDING |
-| TASK-013 | Template scaffolding | COMPLETED (scaffold.sh + templates/) |
-| TASK-014 | Tests | COMPLETED (tests/run_tests.sh, 72 tests) |
+| TASK-012 | Scorer (pattern matching) | OBSOLETO (ver Python v2.0) |
+| TASK-013 | Template scaffolding | COMPLETED (scaffold.sh) |
+| TASK-014 | Tests | COMPLETED (72 tests) |
 | TASK-015 | Planner (multi-paso) | COMPLETED (planner.sh) |
 | TASK-016 | Memory multi-sesion | COMPLETED (memory.sh) |
 | TASK-017 | Search code tool | COMPLETED (tool_search_code.sh) |
 | TASK-018 | Test suite | COMPLETED (test_agent.sh, 13 tests) |
+
+#### State of tasks (Python v2.0 — PRODUCCION)
+
+| Component | Archivo(s) | Tests |
+|-----------|-----------|-------|
+| PipelineOrchestrator (StateGraph) | `orchestrator.py` | test_orchestrator_empty.py |
+| RequirementDecomposer | `nodes/requirement_decomposer.py` | test_requirement_decomposer.py |
+| Preprocessor | `nodes/preprocessor.py` | test_preprocessor_filters.py |
+| Lexer (DFA + trie) | `nodes/lexer.py`, `nodes/sub_dfa.py` | test_lexer_sub_dfas.py |
+| Parser (GLR multi-gramatica) | `nodes/parser.py` | test_parser_project.py, test_parser_ui.py |
+| SemanticAnalyzer | `nodes/semantic_analyzer.py` | test_semantic_visitor.py, test_scope_analyzer.py |
+| IR Generator | `nodes/ir_generator.py`, `nodes/ir_builder.py`, `nodes/ir_nodes.py` | test_ir_builder.py, test_ir_nodes.py, test_ir_dependencies.py |
+| Planner (hibrido) | `nodes/planner.py`, `nodes/plan_executor.py` | test_llm_planner.py, test_heuristic_planner.py, test_plan_executor.py |
+| Synthesis (6 generadores) | `nodes/synthesis.py`, `generators/` (12 archivos) | test_synthesis.py, test_react_generator.py, test_nestjs_generator.py, test_prisma_generator.py, test_docker_generator.py, test_generator_factory.py |
+| UI Generator (Builder pattern) | `nodes/ui_generator.py`, `generators/ui_component_builder.py`, `generators/responsive_engine.py`, `generators/design_tokens.py` | test_ui_builder.py, test_responsive_engine.py, test_accessibility_injector.py |
+| Validator (Chain of Responsibility) | `nodes/validator.py` | test_validator_chain.py, test_syntax_validator.py, test_type_checker.py, test_security_scanner.py |
+| Feedback Loop | `feedback_loop.py`, `metrics_store.py`, `nodes/ast_cache.py` | test_feedback_loop.py |
+| CLI | `compiler-bot/agentic` | — |
+| **Total** | **~65 archivos, ~9,886 lineas** | **463 tests (PASS)** |
 
 ### Active conventions
 
