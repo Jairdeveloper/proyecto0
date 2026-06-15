@@ -20,6 +20,9 @@ except ModuleNotFoundError:
     logger.warning("_sqlite3 C module not available; falling back to JSON file store")
 
 
+MAX_ENTRIES_PER_STAGE = 1000
+
+
 class MetricsStore:
     """Persistent metrics store using SQLite (preferred) or JSON files."""
 
@@ -82,9 +85,17 @@ class MetricsStore:
                     "INSERT INTO stage_metrics (stage, timestamp, metrics) VALUES (?, ?, ?)",
                     (stage, datetime.now().isoformat(), json.dumps(metrics)),
                 )
+                conn.execute(
+                    "DELETE FROM stage_metrics WHERE id IN ("
+                    "SELECT id FROM stage_metrics WHERE stage = ? "
+                    "ORDER BY id DESC LIMIT -1 OFFSET ?)",
+                    (stage, MAX_ENTRIES_PER_STAGE),
+                )
             return
         entries = self._json_read(stage)
         entries.append({"stage": stage, "metrics": metrics, "timestamp": datetime.now().isoformat()})
+        if len(entries) > MAX_ENTRIES_PER_STAGE:
+            entries = entries[-MAX_ENTRIES_PER_STAGE:]
         self._json_write(stage, entries)
 
     def get_recent(

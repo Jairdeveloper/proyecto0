@@ -5,6 +5,35 @@ Todas las cambios notables de este proyecto se documentan en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es/1.0.0/),
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] — 2026-06-14
+
+### Added
+- Python v2.0 declarado stack primario de producción (9,886 líneas, 463+ tests)
+- StateGraph completo con 10 PipelineStages conectados secuencialmente
+- CLI entrypoint `compiler-bot/agentic` con `--prompt`, `--file`, `--output`, `--stream`
+- 6 generadores de código: React, NextJS, Tailwind, Prisma, NestJS, Docker
+- UI Generator con Builder pattern (5 pasos), DesignTokens, ResponsiveEngine
+- Validator Pipeline con Chain of Responsibility (Syntax, Type, Security)
+- Feedback Loop: MetricsStore (SQLite/JSON), GlobalFeedbackLoop, ASTCache
+- 6 generadores multi-target (synthesis stage)
+- `VERSION` file en raíz del proyecto (2.0.0)
+- `ci.sh` con validación: syntax check → ruff → pytest → VERSION
+- Tests de integración end-to-end (6 escenarios)
+- Arquitectura `providers/` esquelete para LLM
+
+### Changed
+- Shell v1.0 congelado como referencia/legacy — no se añaden nuevas features
+- C Core archivado en `contrib/c-core-archive/`
+- Reportes de sprint individuales movidos a `docs/archive/`
+- `AGENTS.md` actualizado con tabla completa de componentes Python
+
+### Fixed
+- Path traversal en synthesis stage: `_sanitize_path()` bloquea `../`
+- MetricsStore: límite de 1000 entradas por stage (SQLite y JSON)
+- RequirementDecomposer: ASTCache LLM evita recomputación en inputs repetidos
+- FeedbackLoop legacy restaurado (clase faltante)
+- `base_stage.execute()` ahora captura métricas automáticamente
+
 ## [1.8.0] — 2026-06-13
 
 ### Added

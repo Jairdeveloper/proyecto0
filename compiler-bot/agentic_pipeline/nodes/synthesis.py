@@ -52,6 +52,14 @@ class SynthesisOrchestrator(PipelineStage):
             strategy="deterministic",
         )
 
+    @staticmethod
+    def _sanitize_path(path_str: str) -> Path | None:
+        """Return a Path if safe, None if path traversal is detected."""
+        resolved = Path(path_str).resolve()
+        if ".." in Path(path_str).parts:
+            return None
+        return resolved
+
     def act(self, plan: ActionPlan) -> StageOutput:
         ir_tree = self._input_data.get("ir_tree") if self._input_data else None
         commands = self._input_data.get("commands", []) if self._input_data else []
@@ -81,7 +89,11 @@ class SynthesisOrchestrator(PipelineStage):
                 errors.append(f"No target found for task '{task_id}'")
                 continue
             path_str = cmd.get("path", f"modules/{task_id}")
-            task_dir = Path(path_str)
+            safe_path = self._sanitize_path(path_str)
+            if safe_path is None:
+                errors.append(f"Path traversal blocked: '{path_str}'")
+                continue
+            task_dir = safe_path
             task_dir.mkdir(parents=True, exist_ok=True)
             ir_node = self._find_ir_node(ir_tree, task_id)
             if ir_node is None:

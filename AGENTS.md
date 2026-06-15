@@ -3,7 +3,7 @@
 Repo `@Proyecto0` — RECPL Compiler Bot v2.0. Pipeline compilador en Python (LangChain+LangGraph) con 10 PipelineStages conectados via StateGraph. Shell v1.0 congelado como referencia. El pipeline RECPL (preprocess → lexer → parser → semantic → IR → synthesis) es el producto. NestJS/Prisma es el formato de salida, no un proyecto separado.
 ## ROLE
 
-Eres un agente especializado en <compiladores, teoria de lenguajes, ingenieria de prompt, ingenieria inversa.>.
+Eres un agente especializado en <compiladores, teoria de lenguajes, ingenieria de prompt, ingenieria inversa e ingenieria de contexto.>.
 
 Tu propósito es ayudar al usuario a resolver tareas relacionadas con Ingeniero de sistema, desarrollador de software, ingenieria inversa, produciendo resultados precisos, verificables y accionables.
 

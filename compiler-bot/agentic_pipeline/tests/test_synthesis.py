@@ -1,5 +1,6 @@
 """Tests for SynthesisOrchestrator stage."""
 
+import os
 from pathlib import Path
 
 import pytest
@@ -111,3 +112,28 @@ class TestSynthesisOrchestrator:
         assert orchestrator._detect_target(IRAPI("x")) == "nestjs"
         assert orchestrator._detect_target(IRInfra("x")) == "docker"
         assert orchestrator._detect_target(IRConfig("x")) == "tailwind"
+
+    def test_sanitize_path_rejects_traversal(self, orchestrator):
+        assert orchestrator._sanitize_path("safe/path") is not None
+        assert orchestrator._sanitize_path("safe") is not None
+        assert orchestrator._sanitize_path("../etc/passwd") is None
+        assert orchestrator._sanitize_path("modules/../../../etc") is None
+
+    def test_act_rejects_path_traversal(self, orchestrator):
+        proj = IRProject("app")
+        proj.add(IRPage("Home"))
+        data = {
+            "ir_tree": proj,
+            "tasks": [{"id": "Home", "target": "react"}],
+            "commands": [
+                {
+                    "task_id": "Home",
+                    "path": "../../../tmp/evil",
+                }
+            ],
+        }
+        orchestrator.receive_mission(data)
+        plan = orchestrator.reflect_and_plan(orchestrator.analyze())
+        output = orchestrator.act(plan)
+        assert "Path traversal" in output.output_data["errors"][0]
+        assert not os.path.exists("/tmp/evil")

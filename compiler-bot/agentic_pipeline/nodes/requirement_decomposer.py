@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 
+from .ast_cache import ASTCache
 from ..base_stage import PipelineStage
 from ..feedback_loop import get_global_feedback
 from ..state_models import (
@@ -39,6 +40,7 @@ class RequirementDecomposer(PipelineStage):
         self._constraint_detector = ConstraintDetector()
         self._story_generator = StoryGenerator()
         self._feedback = get_global_feedback()
+        self._cache = ASTCache(maxsize=64)
         self._raw_text = ""
 
     def receive_mission(self, input_data: object) -> None:
@@ -68,34 +70,40 @@ class RequirementDecomposer(PipelineStage):
 
     def act(self, plan: ActionPlan) -> StageOutput:
         logger.debug("Executing RequirementDecomposer plan: %s", plan.steps)
+        graph = self._cache.get_or_compute(
+            self._raw_text,
+            lambda: self._build_graph(),
+        )
+        return StageOutput(
+            stage=self.context.stage,
+            output_data=graph.model_dump(),
+            metrics={
+                "entities": len(graph.entities),
+                "features": len(graph.features),
+                "constraints": len(graph.constraints),
+                "stories": len(graph.user_stories),
+            },
+        )
+
+    def _build_graph(self) -> RequirementGraph:
         domain = self._domain_classifier.classify(self._raw_text)
         entities = self._entity_extractor.extract(self._raw_text)
         features = self._feature_identifier.identify(self._raw_text)
         constraints = self._constraint_detector.detect(self._raw_text)
         stories = self._story_generator.generate(features, entities)
-        graph = RequirementGraph(
-            domain=domain,
-            entities=entities,
-            features=features,
-            constraints=constraints,
-            user_stories=stories,
-            raw_text=self._raw_text,
-        )
         logger.info(
             "RequirementGraph: domain=%s, entities=%d, features=%d",
             domain,
             len(entities),
             len(features),
         )
-        return StageOutput(
-            stage=self.context.stage,
-            output_data=graph.model_dump(),
-            metrics={
-                "entities": len(entities),
-                "features": len(features),
-                "constraints": len(constraints),
-                "stories": len(stories),
-            },
+        return RequirementGraph(
+            domain=domain,
+            entities=entities,
+            features=features,
+            constraints=constraints,
+            user_stories=stories,
+            raw_text=self._raw_text,
         )
 
     def learn_and_improve(self, feedback: object) -> None:
