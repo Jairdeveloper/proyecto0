@@ -27,6 +27,9 @@ class UIGenerator(PipelineStage):
     def __init__(self, context: StageContext) -> None:
         super().__init__(context)
         self._input_data: dict[str, Any] | None = None
+        self._output_dir: Path = Path(
+            context.config_overrides.get("output_dir", "modules"),
+        )
 
     def receive_mission(self, input_data: object) -> None:
         if isinstance(input_data, dict):
@@ -61,7 +64,7 @@ class UIGenerator(PipelineStage):
         generated_files: list[str] = []
         errors: list[str] = []
 
-        output_dir = Path("modules") / "ui"
+        output_dir = self._output_dir / "ui"
         output_dir.mkdir(parents=True, exist_ok=True)
 
         design_css = output_dir / "design-tokens.css"

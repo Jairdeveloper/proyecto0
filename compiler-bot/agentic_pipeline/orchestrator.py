@@ -1,80 +1,92 @@
+"""PipelineOrchestrator — StateGraph integration for RECPL v2.0."""
+
+from __future__ import annotations
+
 import logging
+from typing import Any, Callable
 
 from langgraph.graph import StateGraph
 
+from .base_stage import PipelineStage
 from .nodes.ir_generator import IRGenerator
 from .nodes.lexer import Lexer
 from .nodes.parser import ParserGLR
 from .nodes.planner import HybridPlanner
 from .nodes.preprocessor import Preprocessor
+from .nodes.requirement_decomposer import RequirementDecomposer
 from .nodes.semantic_analyzer import SemanticAnalyzer
 from .nodes.synthesis import SynthesisOrchestrator
 from .nodes.ui_generator import UIGenerator
 from .nodes.validator import ValidatorPipeline
-from .state_models import StageContext, Stage
+from .state_models import Stage, StageContext, StageOutput
 
 logger = logging.getLogger(__name__)
 
+NODE_MAP: dict[Stage, type[PipelineStage]] = {
+    Stage.REQUIREMENT_DECOMPOSER: RequirementDecomposer,
+    Stage.PREPROCESSOR: Preprocessor,
+    Stage.LEXER: Lexer,
+    Stage.PARSER: ParserGLR,
+    Stage.SEMANTIC_ANALYZER: SemanticAnalyzer,
+    Stage.IR_GENERATOR: IRGenerator,
+    Stage.PLANNER: HybridPlanner,
+    Stage.SYNTHESIS: SynthesisOrchestrator,
+    Stage.UI_GENERATOR: UIGenerator,
+    Stage.VALIDATOR: ValidatorPipeline,
+}
+
+StreamCallback = Callable[[str, StageOutput], None]
+
 
 class PipelineOrchestrator:
-    def __init__(self):
+    """StateGraph-based pipeline orchestrator for RECPL v2.0."""
+
+    def __init__(
+        self,
+        stream_callback: StreamCallback | None = None,
+        output_dir: str = "modules",
+    ) -> None:
+        self._stream_callback = stream_callback
+        self._output_dir = output_dir
         self.graph = StateGraph(StageContext)
         self._build()
 
-    def _build(self):
-        self.graph.set_entry_point("input")
-        self.graph.add_node("input", lambda x: x)
-        self.graph.add_node(
-            "preprocessor",
-            lambda ctx: Preprocessor(ctx).execute(ctx.input_data),
-        )
-        self.graph.add_node(
-            "lexer",
-            lambda ctx: Lexer(ctx).execute(ctx.input_data),
-        )
-        self.graph.add_node(
-            "parser",
-            lambda ctx: ParserGLR(ctx).execute(ctx.input_data),
-        )
-        self.graph.add_node(
-            "semantic_analyzer",
-            lambda ctx: SemanticAnalyzer(ctx).execute(ctx.input_data),
-        )
-        self.graph.add_node(
-            "ir_generator",
-            lambda ctx: IRGenerator(ctx).execute(ctx.input_data),
-        )
-        self.graph.add_node(
-            "planner",
-            lambda ctx: HybridPlanner(ctx).execute(ctx.input_data),
-        )
-        self.graph.add_node(
-            "synthesis",
-            lambda ctx: SynthesisOrchestrator(ctx).execute(ctx.input_data),
-        )
-        self.graph.add_node(
-            "ui_generator",
-            lambda ctx: UIGenerator(ctx).execute(ctx.input_data),
-        )
-        self.graph.add_node(
-            "validator",
-            lambda ctx: ValidatorPipeline(ctx).execute(ctx.input_data),
-        )
-        self.graph.add_edge("input", "preprocessor")
-        self.graph.add_edge("preprocessor", "lexer")
-        self.graph.add_edge("lexer", "parser")
-        self.graph.add_edge("parser", "semantic_analyzer")
-        self.graph.add_edge("semantic_analyzer", "ir_generator")
-        self.graph.add_edge("ir_generator", "planner")
-        self.graph.add_edge("planner", "synthesis")
-        self.graph.add_edge("synthesis", "ui_generator")
-        self.graph.add_edge("ui_generator", "validator")
-        self.graph.add_node("output", lambda x: x)
-        self.graph.add_edge("validator", "output")
-        self.graph.set_finish_point("output")
+    def _make_node(self, stage: Stage) -> Callable[[StageContext], dict[str, Any]]:
+        cls = NODE_MAP[stage]
+
+        def node_fn(ctx: StageContext) -> dict[str, Any]:
+            ctx.stage = stage
+            ctx.config_overrides["output_dir"] = self._output_dir
+            instance = cls(ctx)
+            output = instance.execute(ctx.input_data)
+            if self._stream_callback:
+                self._stream_callback(stage.value, output)
+            updated: dict[str, Any] = {"input_data": output.output_data}
+            if not output.success:
+                logger.warning(
+                    "Stage %s reported failure: %s", stage.value, output.error,
+                )
+            return updated
+
+        return node_fn
+
+    def _build(self) -> None:
+        stages = list(Stage)
+        self.graph.set_entry_point(stages[0].value)
+        for stage in stages:
+            self.graph.add_node(stage.value, self._make_node(stage))
+        for i in range(len(stages) - 1):
+            self.graph.add_edge(stages[i].value, stages[i + 1].value)
+        self.graph.set_finish_point(stages[-1].value)
         self.compiled = self.graph.compile()
 
-    async def run(self, user_input: str) -> dict:
-        ctx = StageContext(stage=Stage.PREPROCESSOR, input_data=user_input)
-        logger.info("PipelineOrchestrator running with input: %.100s", user_input)
-        return await self.compiled.ainvoke(ctx)
+    async def run(self, user_input: str) -> dict[str, Any]:
+        ctx = StageContext(stage=Stage.REQUIREMENT_DECOMPOSER, input_data=user_input)
+        logger.info("PipelineOrchestrator starting with input: %.100s", user_input)
+        result: dict[str, Any] = await self.compiled.ainvoke(ctx)
+        logger.info("PipelineOrchestrator finished")
+        output = result.get("input_data", {})
+        return {
+            "output": output,
+            "success": True,
+        }

@@ -22,7 +22,9 @@ class SynthesisOrchestrator(PipelineStage):
     def __init__(self, context: StageContext) -> None:
         super().__init__(context)
         self._input_data: dict[str, Any] | None = None
-        self._output_dir: Path = Path("modules")
+        self._output_dir: Path = Path(
+            context.config_overrides.get("output_dir", "modules"),
+        )
         self._formatter = CodeFormatter()
 
     def receive_mission(self, input_data: object) -> None:

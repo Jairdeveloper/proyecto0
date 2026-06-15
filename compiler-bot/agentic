@@ -1,0 +1,54 @@
+#!/usr/bin/env python3
+"""RECPL Compiler Bot v2.0 — CLI entrypoint."""
+
+from __future__ import annotations
+
+import argparse
+import asyncio
+import json
+import sys
+
+from agentic_pipeline.orchestrator import PipelineOrchestrator
+
+
+def _stream_callback(stage: str, output: object) -> None:
+    print(f"[{stage}] completed", file=sys.stderr)
+
+
+async def main() -> None:
+    parser = argparse.ArgumentParser(
+        description="RECPL Compiler Bot v2.0 — Natural language to NestJS/Prisma code",
+    )
+    parser.add_argument(
+        "--prompt", "-p", type=str, help="User requirement prompt",
+    )
+    parser.add_argument(
+        "--file", "-f", type=str, help="Read prompt from file",
+    )
+    parser.add_argument(
+        "--output", "-o", type=str, default="./output", help="Output directory",
+    )
+    parser.add_argument(
+        "--stream", action="store_true", help="Stream progress to stderr",
+    )
+    args = parser.parse_args()
+
+    if args.file:
+        with open(args.file) as f:
+            prompt = f.read()
+    elif args.prompt:
+        prompt = args.prompt
+    else:
+        parser.print_help()
+        sys.exit(1)
+
+    cb = _stream_callback if args.stream else None
+    orchestrator = PipelineOrchestrator(
+        stream_callback=cb, output_dir=args.output,
+    )
+    result = await orchestrator.run(prompt)
+    print(json.dumps(result, indent=2, default=str))
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
