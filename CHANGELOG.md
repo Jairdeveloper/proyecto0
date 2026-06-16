@@ -5,6 +5,23 @@ Todas las cambios notables de este proyecto se documentan en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es/1.0.0/),
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0] — 2026-06-16
+
+### Added
+- Nivel 1 completo (Solucionador de Problemas Conectado) del plan 100
+- Renombrado de componentes al frame agente: IntentStage→PerceptionUnit, HybridPlanner→ReasoningEngine, SynthesisOrchestrator→ActionExecutor, PipelineOrchestrator→AgentOrchestrator
+- ToolRegistry con 7 herramientas portadas del shell: read_file, write_file, run_command, search_code, generate_code, ask_user, explain
+- ConversationalMemory con persistencia JSON, sesiones multiples, export
+- AgentLoop con run(), run_interactive(), y registro automatico de herramientas
+- Backward compatibilidad: archivos legacy conservados como re-exportadores
+- 32 tests nuevos (tool_registry: 12, memory: 10, agent_loop: 7)
+- `docs/101_REP_DEV_AGENT_N1_1_0_DRAFT.md` — reporte de implementacion Nivel 1
+
+### Changed
+- Suite de tests: 524 → 556
+- `state_models.py`: nuevos valores PERCEPTION, REASONING, EXECUTION en Stage enum
+- `contracts.py`: nuevas entradas perception, reasoning, execution en STAGE_CONTRACTS
+
 ## [2.0.0] — 2026-06-14
 
 ### Added

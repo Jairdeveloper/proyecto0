@@ -19,5 +19,8 @@ output/
 # Editor
 .vscode/
 
+# Runtime state
+.recpl_memory/
+
 # MkDocs
 site/

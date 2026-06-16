@@ -1,4 +1,4 @@
-"""PipelineOrchestrator — StateGraph integration for RECPL v2.0."""
+"""AgentOrchestrator — StateGraph integration for RECPL v2.0."""
 
 from __future__ import annotations
 
@@ -9,14 +9,14 @@ from langgraph.graph import END, StateGraph
 
 from .base_stage import PipelineStage
 from .error_guard import ErrorGuard
-from .nodes.intent_stage import IntentStage
+from .nodes.perception_unit import PerceptionUnit
 from .nodes.ir_generator import IRGenerator
 from .nodes.lexer import Lexer
 from .nodes.parser import ParserGLR
-from .nodes.planner import HybridPlanner
+from .nodes.reasoning_engine import ReasoningEngine
 from .nodes.preprocessor import Preprocessor
+from .nodes.action_executor import ActionExecutor
 from .nodes.semantic_analyzer import SemanticAnalyzer
-from .nodes.synthesis import SynthesisOrchestrator
 from .nodes.ui_generator import UIGenerator
 from .nodes.validator import ValidatorPipeline
 from .state_models import Stage, StageContext, StageOutput
@@ -24,14 +24,14 @@ from .state_models import Stage, StageContext, StageOutput
 logger = logging.getLogger(__name__)
 
 NODE_MAP: dict[Stage, type[PipelineStage]] = {
-    Stage.INTENT: IntentStage,
+    Stage.INTENT: PerceptionUnit,
     Stage.PREPROCESSOR: Preprocessor,
     Stage.LEXER: Lexer,
     Stage.PARSER: ParserGLR,
     Stage.SEMANTIC_ANALYZER: SemanticAnalyzer,
     Stage.IR_GENERATOR: IRGenerator,
-    Stage.PLANNER: HybridPlanner,
-    Stage.SYNTHESIS: SynthesisOrchestrator,
+    Stage.PLANNER: ReasoningEngine,
+    Stage.SYNTHESIS: ActionExecutor,
     Stage.UI_GENERATOR: UIGenerator,
     Stage.VALIDATOR: ValidatorPipeline,
 }
@@ -39,8 +39,8 @@ NODE_MAP: dict[Stage, type[PipelineStage]] = {
 StreamCallback = Callable[[str, StageOutput], None]
 
 
-class PipelineOrchestrator:
-    """StateGraph-based pipeline orchestrator for RECPL v2.0."""
+class AgentOrchestrator:
+    """StateGraph-based agent orchestrator for RECPL v2.0."""
 
     def __init__(
         self,
@@ -94,11 +94,15 @@ class PipelineOrchestrator:
 
     async def run(self, user_input: str) -> dict[str, Any]:
         ctx = StageContext(stage=Stage.INTENT, input_data=user_input)
-        logger.info("PipelineOrchestrator starting with input: %.100s", user_input)
+        logger.info("AgentOrchestrator starting with input: %.100s", user_input)
         result: dict[str, Any] = await self.compiled.ainvoke(ctx)
-        logger.info("PipelineOrchestrator finished")
+        logger.info("AgentOrchestrator finished")
         output = result.get("input_data", {})
         return {
             "output": output,
             "success": True,
         }
+
+
+# Backward compat
+PipelineOrchestrator = AgentOrchestrator

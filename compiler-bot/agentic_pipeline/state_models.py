@@ -6,6 +6,7 @@ from datetime import datetime
 
 class Stage(Enum):
     INTENT = "intent"
+    PERCEPTION = "perception"
     REQUIREMENT_DECOMPOSER = "requirement_decomposer"
     PREPROCESSOR = "preprocessor"
     LEXER = "lexer"
@@ -13,7 +14,9 @@ class Stage(Enum):
     SEMANTIC_ANALYZER = "semantic_analyzer"
     IR_GENERATOR = "ir_generator"
     PLANNER = "planner"
+    REASONING = "reasoning"
     SYNTHESIS = "synthesis"
+    EXECUTION = "execution"
     UI_GENERATOR = "ui_generator"
     VALIDATOR = "validator"
 

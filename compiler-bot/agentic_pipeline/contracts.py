@@ -58,13 +58,16 @@ class ValidatorContract(BaseModel):
 
 STAGE_CONTRACTS: dict[str, type[BaseModel]] = {
     "intent": NLPContract,
+    "perception": NLPContract,
     "preprocessor": PreprocessorContract,
     "lexer": LexerContract,
     "parser": ParserContract,
     "semantic_analyzer": SemanticContract,
     "ir_generator": IRContract,
     "planner": PlannerContract,
+    "reasoning": PlannerContract,
     "synthesis": SynthesisContract,
+    "execution": SynthesisContract,
     "ui_generator": UIContract,
     "validator": ValidatorContract,
 }
