@@ -5,6 +5,18 @@ Todas las cambios notables de este proyecto se documentan en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es/1.0.0/),
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.0] — 2026-06-16
+
+### Added
+- Nivel 3 completo (Sistema Multiagente Colaborativo): Agent base class con Task/TaskResult/SharedContext/AsyncSharedContext
+- 4 agentes especializados: PerceptionAgent (spaCy + SentenceTransformers + WordNet), ReasoningAgent (GoalTreePlanner), ExecutionAgent (ToolRegistry), ValidatorAgent (WorldModel query)
+- SupervisorAgent con flujo percibir→razonar→ejecutar→validar y replanificacion en fallo
+- 15 tests multiagente (base, perception, reasoning, execution, validator, supervisor)
+- `docs/103_REP_DEV_AGENT_N3_1_0_DRAFT.md` — reporte de implementacion Nivel 3
+
+### Changed
+- Suite de tests: 556 → 572+ (15 nuevos N3, resto sin cambios)
+
 ## [2.2.0] — 2026-06-16
 
 ### Added
