@@ -58,6 +58,30 @@ class ToolRegistry:
             for t in self._tools.values()
         ]
 
+    @classmethod
+    def build_default(cls) -> ToolRegistry:
+        """Crea un ToolRegistry con todas las herramientas por defecto.
+
+        Equivalente a _build_default_tool_registry() en agent_loop.py.
+        """
+        from .tools.read_file import ReadFileTool
+        from .tools.write_file import WriteFileTool
+        from .tools.run_command import RunCommandTool
+        from .tools.search_code import SearchCodeTool
+        from .tools.generate_code import GenerateCodeTool
+        from .tools.ask_user import AskUserTool
+        from .tools.explain import ExplainTool
+
+        registry = cls()
+        registry.register(ReadFileTool())
+        registry.register(WriteFileTool())
+        registry.register(RunCommandTool())
+        registry.register(SearchCodeTool())
+        registry.register(GenerateCodeTool())
+        registry.register(AskUserTool())
+        registry.register(ExplainTool())
+        return registry
+
     async def execute(self, name: str, params: dict) -> ToolResult:
         tool = self.get_tool(name)
         if tool is None:

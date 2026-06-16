@@ -5,6 +5,24 @@ Todas las cambios notables de este proyecto se documentan en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es/1.0.0/),
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.0] — 2026-06-16
+
+### Added
+- Nivel 2.1 completo (Percepcion Enriquecida): SpacyProcessor con POS/lemma/dep/NER, SentenceTransformerClassifier con 5 intenciones por embeddings, WordNet disambiguacion con algoritmo de Lesk
+- Nivel 2.2 completo (Planificacion Estrategica): WorldModel con escaneo/query/apply_action, GoalTreePlanner con descomposicion/verificacion/replan (4 templates), Context Engineering con ContextWindow por stage
+- 6 nuevos archivos de test: test_spacy_processor, test_sentence_classifier, test_wordnet_disambiguation, test_world_model, test_goal_tree_planner, test_context_engineering
+- Dependencias: spacy>=3.7, sentence-transformers>=3.0, nltk>=3.8
+- `docs/102_REP_DEV_AGENT_N2_1_0_DRAFT.md` — reporte de implementacion Nivel 2
+
+### Changed
+- Suite de tests: 556 → 593
+- `preprocessor.py`: SpacyProcessor integrado en act() como etapa opcional
+- `perception_unit.py`: SentenceTransformerClassifier como enrichment semantico
+- `parser.py`: _select_grammar() usa WordNet para desambiguar terminos ambiguos
+- `reasoning_engine.py`: GoalTreePlanner integrado en act() con goal_tree en output
+- `orchestrator.py`: build_context() para contexto optimo por stage
+- `state_models.py`: ContextWindow dataclass
+
 ## [2.1.0] — 2026-06-16
 
 ### Added

@@ -30,6 +30,60 @@ STOP_WORDS_RE = re.compile(
 
 GRAMMAR_DIR = Path(__file__).parent.parent / "grammars"
 
+# ============================================================================
+# WORDNET DISAMBIGUATION (N2.1c)
+# ============================================================================
+
+DOMAIN_MAP: dict[str, dict[str, str]] = {
+    "software": {"grammar": "project", "description": "modulo de software"},
+    "entity":   {"grammar": "data",    "description": "entidad de datos"},
+    "ui":       {"grammar": "ui",      "description": "interfaz de usuario"},
+    "infra":    {"grammar": "infra",   "description": "infraestructura"},
+}
+
+
+def ensure_nltk_data() -> None:
+    """Descarga wordnet si no esta instalado."""
+    try:
+        from nltk.data import find as nltk_find
+        nltk_find("wordnet")
+    except LookupError:
+        import nltk
+        nltk.download("wordnet", quiet=True)
+        nltk.download("omw-1.4", quiet=True)
+
+
+def infer_domain(synset) -> str:
+    name = synset.name().lower()
+    if any(k in name for k in ("computer", "software", "program")):
+        return "software"
+    if any(k in name for k in ("entity", "person", "object")):
+        return "entity"
+    if any(k in name for k in ("interface", "gui", "window")):
+        return "ui"
+    if any(k in name for k in ("infrastructure", "network", "database")):
+        return "infra"
+    return "entity"
+
+
+def disambiguate_term(term: str, context: list[str]) -> dict:
+    """Algoritmo de Lesk: synset mas probable segun contexto."""
+    ensure_nltk_data()
+    from nltk.wsd import lesk
+    sentence = " ".join(context[-5:])
+    synset = lesk(sentence, term, lang="spa")
+    if synset:
+        domain = infer_domain(synset)
+        grammar_info = DOMAIN_MAP.get(domain, DOMAIN_MAP["entity"])
+        return {
+            "term": term,
+            "synset": synset.name(),
+            "definition": synset.definition(),
+            "domain": domain,
+            "grammar": grammar_info["grammar"],
+        }
+    return {"term": term, "synset": None, "domain": "unknown", "grammar": None}
+
 
 # ============================================================================
 # GRAMMAR LOADING
@@ -221,7 +275,42 @@ AST_BUILDERS["infra"] = _build_infra_ast
 # ============================================================================
 
 
-def _select_grammar(text: str) -> str:
+def _find_ambiguous_terms(tokens: list[dict]) -> list[str]:
+    """Identifica terminos que aparecen en multiples gramaticas."""
+    ambiguous = []
+    text_lower = " ".join(t.get("value", "") for t in tokens).lower()
+    for term in ("modulo", "entidad", "servicio", "pagina"):
+        count = text_lower.count(term)
+        if count > 0:
+            ambiguous.append(term)
+    return ambiguous
+
+
+def _resolve_ambiguous_grammar(tokens: list[dict], context: list[str] | None = None) -> str | None:
+    """Si los tokens sugieren multiples gramaticas, desambigua con WordNet."""
+    ambiguous_terms = _find_ambiguous_terms(tokens)
+    if not ambiguous_terms:
+        return None
+
+    ctx = context or []
+    for term in ambiguous_terms:
+        try:
+            result = disambiguate_term(term, ctx)
+            if result.get("grammar"):
+                return result["grammar"]
+        except Exception:
+            continue
+    return None
+
+
+def _select_grammar(text: str, tokens: list[dict] | None = None,
+                    context: list[str] | None = None) -> str:
+    # Intentar desambiguacion por WordNet primero (N2.1c)
+    if tokens and context:
+        resolved = _resolve_ambiguous_grammar(tokens, context)
+        if resolved:
+            return resolved
+
     text_lower = text.lower()
     if any(kw in text_lower for kw in ("entidad", "modelo", "entity", "atributo")):
         return "data"
@@ -270,7 +359,8 @@ class ParserGLR(PipelineStage):
                 self._tokens = tokens_raw
             else:
                 self._tokens = []
-            self._enriched = input_data.get("enriched", {})
+            enriched_raw = input_data.get("enriched")
+            self._enriched = enriched_raw if isinstance(enriched_raw, dict) else {}
         else:
             self._tokens = []
             self._enriched = {}
@@ -285,7 +375,8 @@ class ParserGLR(PipelineStage):
 
     def reflect_and_plan(self, analysis: AnalysisResult) -> ActionPlan:
         text = " ".join(t.get("value", "") for t in self._tokens)
-        grammar = self.grammar_name or _select_grammar(text)
+        context_sentences = [s.strip() for s in self._enriched.get("history", [])]
+        grammar = self.grammar_name or _select_grammar(text, self._tokens, context_sentences)
         logger.info("Selected grammar: %s", grammar)
         return ActionPlan(
             steps=[{"action": "parse", "grammar": grammar}],

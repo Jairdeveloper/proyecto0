@@ -29,7 +29,7 @@ class TestHybridPlanner:
 
     def test_reflect_and_plan(self, planner):
         result = planner.reflect_and_plan(planner.analyze())
-        assert len(result.steps) == 3
+        assert len(result.steps) >= 3  # N2.2b anade 'decompose_goal'
 
     def test_act_empty(self, planner):
         planner.receive_mission({})

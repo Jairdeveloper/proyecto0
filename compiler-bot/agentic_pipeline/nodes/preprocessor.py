@@ -122,6 +122,53 @@ class EmbeddingEnricher(PreprocessingFilter):
 
 
 # ============================================================================
+# SPACY PROCESSOR (N2.1a)
+# ============================================================================
+
+
+class SpacyProcessor:
+    """Procesador NLP con spaCy. Carga lazy — no afecta tiempo de inicio."""
+
+    _nlp = None
+
+    @classmethod
+    def get_nlp(cls):
+        if cls._nlp is None:
+            import spacy
+            cls._nlp = spacy.load("es_core_news_sm")
+        return cls._nlp
+
+    def process(self, text: str) -> dict | None:
+        try:
+            doc = self.get_nlp()(text)
+            return {
+                "tokens": [
+                    {
+                        "text": t.text,
+                        "pos": t.pos_,
+                        "lemma": t.lemma_,
+                        "dep": t.dep_,
+                        "head": t.head.text,
+                        "is_stop": t.is_stop,
+                    }
+                    for t in doc
+                ],
+                "entities": [
+                    {
+                        "text": ent.text,
+                        "label": ent.label_,
+                        "start": ent.start_char,
+                        "end": ent.end_char,
+                    }
+                    for ent in doc.ents
+                ],
+                "sentences": [str(s) for s in doc.sents],
+            }
+        except Exception:
+            return None
+
+
+# ============================================================================
 # FILTER CHAIN BUILDER
 # ============================================================================
 
@@ -179,10 +226,14 @@ class Preprocessor(PipelineStage):
 
     def act(self, plan: ActionPlan) -> StageOutput:
         result = self._input_text
-        context = {"domain": self.domain}
+        context_dict = {"domain": self.domain}
         for f in self.filters:
-            result = f.process(result, context)
+            result = f.process(result, context_dict)
             logger.debug("After %s: %.80s", f.__class__.__name__, result)
+
+        # spaCy enrichment (N2.1a, opcional)
+        spacy_output = SpacyProcessor().process(self._input_text)
+
         return StageOutput(
             stage=self.context.stage,
             output_data={
@@ -190,10 +241,13 @@ class Preprocessor(PipelineStage):
                 "filters_applied": len(self.filters),
                 "domain": self.domain,
                 "enriched": self._enriched or None,
+                "spacy": spacy_output,
+                "token_count": len(result.split()),
             },
             metrics={
                 "filters_applied": len(self.filters),
                 "input_len": len(self._input_text),
+                "spacy_enriched": spacy_output is not None,
             },
         )
 

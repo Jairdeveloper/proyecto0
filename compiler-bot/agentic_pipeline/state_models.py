@@ -4,6 +4,13 @@ from typing import Any, Optional
 from datetime import datetime
 
 
+class ContextWindow(BaseModel):
+    """Contexto optimizado para un stage especifico (N2.2c)."""
+    relevant_history: list[dict] = []
+    world_snapshot: dict = {}
+    task_focus: str = ""
+
+
 class Stage(Enum):
     INTENT = "intent"
     PERCEPTION = "perception"

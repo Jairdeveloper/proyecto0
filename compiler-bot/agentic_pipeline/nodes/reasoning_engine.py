@@ -1,11 +1,12 @@
-"""ReasoningEngine — Task model, TaskGraph, HeuristicPlanner, and stage."""
+"""ReasoningEngine — Task model, TaskGraph, HeuristicPlanner, GoalTreePlanner, stage."""
 
 from __future__ import annotations
 
 import logging
+from dataclasses import dataclass, field
 from enum import Enum
 from graphlib import TopologicalSorter
-from typing import Any
+from typing import Any, Literal, Optional
 
 from pydantic import BaseModel
 
@@ -13,6 +14,178 @@ from ..base_stage import PipelineStage
 from ..state_models import ActionPlan, AnalysisResult, StageContext, StageOutput
 
 logger = logging.getLogger(__name__)
+
+
+# ============================================================================
+# GoalTreePlanner (N2.2b)
+# ============================================================================
+
+
+@dataclass
+class Goal:
+    id: str
+    description: str
+    status: Literal["pending", "in_progress", "completed", "failed", "blocked"]
+    dependencies: list[str] = field(default_factory=list)
+    subtasks: list[Goal] = field(default_factory=list)
+    verification_criteria: list[str] = field(default_factory=list)
+    result: Any = None
+    error: str | None = None
+
+
+class GoalTreePlanner:
+    """Planificador estrategico con descomposicion, verificacion y replan."""
+
+    def __init__(self, memory: Optional[object] = None):
+        self.memory = memory
+        self._plan_templates = {
+            "create_module": self._plan_create_module,
+            "create_entity": self._plan_create_entity,
+            "create_crud": self._plan_create_crud,
+            "explain": self._plan_explain,
+        }
+
+    def decompose(self, objective: str, intent: str,
+                  entities: list[dict], world: object = None) -> Goal:
+        template_key = self._match_template(intent, entities)
+        builder = self._plan_templates.get(template_key, self._plan_generic)
+        return builder(objective, entities, world)
+
+    def verify(self, goal: Goal, world: object) -> bool:
+        if not goal.verification_criteria:
+            return True
+        for criterion in goal.verification_criteria:
+            if hasattr(world, "query"):
+                result = world.query(criterion)
+                if "Si" not in result and "Si," not in result:
+                    return False
+        return True
+
+    def replan(self, goal: Goal, world: object, error: str) -> Goal:
+        goal.status = "failed"
+        goal.error = error
+        fix = Goal(
+            id=f"{goal.id}_fix",
+            description=f"corregir: {error}",
+            status="pending",
+            dependencies=goal.dependencies,
+        )
+        goal.subtasks.append(fix)
+        return goal
+
+    def _match_template(self, intent: str, entities: list[dict]) -> str:
+        intent_lower = intent.lower()
+        if intent_lower == "explain":
+            return "explain"
+        types = {e.get("type", "") for e in entities}
+        if "module" in types or "modulo" in types:
+            return "create_module"
+        if "entity" in types or "entidad" in types:
+            return "create_entity"
+        if "crud" in types:
+            return "create_crud"
+        return "create_module"
+
+    def _extract_module_name(self, objective: str, entities: list[dict]) -> str:
+        for e in entities:
+            name = e.get("name", "")
+            if name:
+                return name
+        words = objective.lower().split()
+        if "modulo" in words:
+            idx = words.index("modulo")
+            if idx + 1 < len(words):
+                return words[idx + 1]
+        if "de" in words:
+            idx = words.index("de")
+            if idx + 1 < len(words):
+                return words[idx + 1]
+        return "app"
+
+    def _plan_create_module(self, objective: str, entities: list[dict],
+                            world: object = None) -> Goal:
+        module_name = self._extract_module_name(objective, entities)
+        return Goal(
+            id="create_module",
+            description=f"Crear modulo {module_name}",
+            status="pending",
+            verification_criteria=[
+                f"existe modules/{module_name}/{module_name}.module.ts?",
+                f"existe modules/{module_name}/{module_name}.controller.ts?",
+                f"existe modules/{module_name}/{module_name}.service.ts?",
+            ],
+            subtasks=[
+                Goal(id="create_dir", description=f"Crear directorio modules/{module_name}",
+                     status="pending",
+                     verification_criteria=[f"existe modules/{module_name}?"]),
+                Goal(id="create_module_file", description="Crear archivo .module.ts",
+                     status="pending", dependencies=["create_dir"]),
+                Goal(id="create_controller", description="Crear archivo .controller.ts",
+                     status="pending", dependencies=["create_dir"]),
+                Goal(id="create_service", description="Crear archivo .service.ts",
+                     status="pending", dependencies=["create_dir"]),
+            ],
+        )
+
+    def _plan_create_entity(self, objective: str, entities: list[dict],
+                            world: object = None) -> Goal:
+        entity_name = self._extract_module_name(objective, entities)
+        return Goal(
+            id="create_entity",
+            description=f"Crear entidad {entity_name}",
+            status="pending",
+            verification_criteria=[
+                f"existe prisma/schema/{entity_name}.prisma?",
+            ],
+            subtasks=[
+                Goal(id="create_entity_schema", description=f"Crear schema {entity_name}",
+                     status="pending",
+                     verification_criteria=[f"existe prisma/schema/{entity_name}.prisma?"]),
+            ],
+        )
+
+    def _plan_create_crud(self, objective: str, entities: list[dict],
+                          world: object = None) -> Goal:
+        name = self._extract_module_name(objective, entities)
+        return Goal(
+            id="create_crud",
+            description=f"Crear CRUD para {name}",
+            status="pending",
+            verification_criteria=[
+                f"existe modules/{name}/{name}.module.ts?",
+                f"existe modules/{name}/{name}.controller.ts?",
+                f"existe modules/{name}/{name}.service.ts?",
+                f"existe prisma/schema/{name}.prisma?",
+            ],
+            subtasks=[
+                Goal(id="crud_module", description=f"Crear modulo {name}",
+                     status="pending"),
+                Goal(id="crud_entity", description=f"Crear entidad {name}",
+                     status="pending", dependencies=["crud_module"]),
+                Goal(id="crud_service", description=f"Crear servicio CRUD {name}",
+                     status="pending", dependencies=["crud_entity"]),
+            ],
+        )
+
+    def _plan_explain(self, objective: str, entities: list[dict],
+                      world: object = None) -> Goal:
+        return Goal(
+            id="explain",
+            description=f"Explicar: {objective[:80]}",
+            status="pending",
+            verification_criteria=[],
+            subtasks=[],
+        )
+
+    def _plan_generic(self, objective: str, entities: list[dict],
+                      world: object = None) -> Goal:
+        return Goal(
+            id="generic",
+            description=objective[:100],
+            status="pending",
+            verification_criteria=[],
+            subtasks=[],
+        )
 
 
 # ============================================================================
@@ -163,6 +336,7 @@ class ReasoningEngine(PipelineStage):
         self._heuristic = HeuristicPlanner()
         self._task_graph = TaskGraph()
         self._enriched: dict = {}
+        self._goal_planner = GoalTreePlanner()
 
     def receive_mission(self, input_data: object) -> None:
         if isinstance(input_data, dict):
@@ -189,6 +363,7 @@ class ReasoningEngine(PipelineStage):
         return ActionPlan(
             steps=[
                 {"action": "build_task_graph"},
+                {"action": "decompose_goal"},  # N2.2b
                 {"action": "plan_execution_order"},
                 {"action": "assign_commands"},
             ],
@@ -200,6 +375,32 @@ class ReasoningEngine(PipelineStage):
         self._task_graph = TaskGraph()
         ir_tree = self._input_data.get("ir_tree") if self._input_data else None
         self._build_tasks_from_ir()
+
+        # Goal decomposition (N2.2b)
+        goal_result = None
+        if self._input_data:
+            objective = str(self._input_data.get("intent", {}).get("raw", ""))
+            intent_name = str(self._input_data.get("intent", {}).get("primary", ""))
+            entities_raw = self._input_data.get("entities", {})
+            entities_list = []
+            if isinstance(entities_raw, dict):
+                for key in ("modulos", "techs", "entities"):
+                    for item in entities_raw.get(key, []):
+                        if isinstance(item, dict):
+                            entities_list.append(item)
+                        elif isinstance(item, str):
+                            entities_list.append({"name": item, "type": key})
+            goal = self._goal_planner.decompose(objective, intent_name, entities_list)
+            goal_result = {
+                "goal_id": goal.id,
+                "goal_description": goal.description,
+                "subtasks": [
+                    {"id": s.id, "description": s.description, "status": s.status}
+                    for s in goal.subtasks
+                ],
+                "verification_criteria": goal.verification_criteria,
+            }
+
         complexity = self._heuristic.estimate_complexity(self._task_graph)
         ordered = self._heuristic.plan(self._task_graph)
         layers = self._heuristic.group_by_layer(ordered)
@@ -216,10 +417,12 @@ class ReasoningEngine(PipelineStage):
                 "is_acyclic": not self._task_graph.has_cycle(),
                 "ir_tree": ir_tree,
                 "enriched": self._enriched or None,
+                "goal_tree": goal_result,
             },
             metrics={
                 "task_count": len(ordered),
                 "complexity": complexity,
+                "goal_decomposed": goal_result is not None,
             },
         )
 
