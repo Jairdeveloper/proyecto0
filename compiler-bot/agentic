@@ -11,6 +11,7 @@ import sys
 from agentic_pipeline.debugger import PipelineDebugger
 from agentic_pipeline.feedback_loop import get_global_feedback
 from agentic_pipeline.orchestrator import PipelineOrchestrator
+from agentic_pipeline.prompt_chain.cli import add_chain_args, run_chain
 
 
 def _stream_callback(stage: str, output: object) -> None:
@@ -49,6 +50,7 @@ async def main() -> None:
         "--metrics", type=str, choices=["json", "table"], nargs="?",
         const="json", help="Print pipeline metrics summary (json|table)",
     )
+    add_chain_args(parser)
     args = parser.parse_args()
 
     if args.metrics:
@@ -80,7 +82,14 @@ async def main() -> None:
         parser.print_help()
         sys.exit(1)
 
-    if args.debug:
+    if args.chain:
+        result = await run_chain(
+            prompt=prompt,
+            output_dir=args.output,
+            debug_mode=args.debug,
+            show_output=args.show_output,
+        )
+    elif args.debug:
         debugger = PipelineDebugger(
             mode=args.debug,
             output_dir=args.output,

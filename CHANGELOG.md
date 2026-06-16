@@ -5,6 +5,23 @@ Todas las cambios notables de este proyecto se documentan en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es/1.0.0/),
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.0] — 2026-06-16
+
+### Added
+- Fase 3 (Chain Orchestrator): ChainOrchestrator con LangGraph StateGraph, 6 nodos (preprocess→intent→plan→generate→verify→format), routing condicional verify→retry/format, CLI `--chain` flag en `compiler-bot/agentic`
+- `prompt_chain/cli.py` — `add_chain_args()` + `run_chain()` para integracion CLI
+- `prompt_chain/orchestrator.py` — `ChainOrchestrator` class, `ChainState` TypedDict, `_ensure_prompts_registered()`, 6 nodos async, `_router_verify()` condicional
+- `tests/test_chain_orchestrator.py` — 8 tests (full flow, retry, max retries, fallback, debug callback, invalid input, CLI chain flag, CLI no-chain)
+- `docs/109_REP_DEV_PROMPT_CHAIN_F3_1_0_DRAFT.md` — reporte de implementacion Fase 3
+
+### Fixed
+- `_router_verify`: abort rutea a format en vez de END, asegurando que la cadena siempre produzca `final_output`
+- Imports no utilizados removidos de `orchestrator.py` (END, PromptRegistry, Any)
+
+### Changed
+- `compiler-bot/agentic`: importa `add_chain_args`/`run_chain`, anade `--chain` flag, routing condicional `if args.chain: ... elif args.debug: ... else: ...`
+- Suite de tests: 71 prompt chain tests (8 nuevos F3 + 63 F1+F2), todos PASS
+
 ## [2.3.0] — 2026-06-16
 
 ### Added
