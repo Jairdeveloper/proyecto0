@@ -1,21 +1,52 @@
-"""SupervisorAgent — orquesta agentes especializados (N3.4)."""
+"""SupervisorAgent — orquesta agentes especializados (N3.4) con ChainOrchestrator (F4)."""
 
 from __future__ import annotations
+
+from agentic_pipeline.prompt_chain.llm_backend import LLMBackend
 
 from .base_agent import Agent, SharedContext, Task, TaskResult
 
 
 class SupervisorAgent(Agent):
-    """Agente supervisor: coordina, delega y consolida."""
+    """Agente supervisor: coordina, delega y consolida.
+
+    Si se provee ``llm``, usa ``ChainOrchestrator`` para ejecutar el
+    prompt chain completo. Si no, delega a los sub-agentes internos.
+    """
 
     name = "supervisor"
     role = "coordinar, delegar y consolidar"
 
-    def __init__(self, context: SharedContext, agents: dict[str, Agent]):
+    def __init__(
+        self,
+        context: SharedContext,
+        agents: dict[str, Agent],
+        llm: LLMBackend | None = None,
+    ):
         super().__init__(context)
         self.agents = agents
+        self._llm = llm
 
     async def process(self, task: Task) -> TaskResult:
+        if self._llm is not None:
+            return await self._process_with_chain(task)
+        return await self._process_with_agents(task)
+
+    async def _process_with_chain(self, task: Task) -> TaskResult:
+        try:
+            from agentic_pipeline.prompt_chain.orchestrator import (
+                ChainOrchestrator,
+            )
+
+            orch = ChainOrchestrator(llm=self._llm)
+            result = await orch.run(task.description)
+            success = result.get("success", False)
+            return TaskResult(task.id, success, data=result)
+        except Exception as exc:
+            return TaskResult(task.id, False,
+                              error=f"Chain failed: {exc}")
+
+    async def _process_with_agents(self, task: Task) -> TaskResult:
         subtasks = self._decompose(task)
         max_retries = task.params.get("max_retries", 1)
 
@@ -27,7 +58,7 @@ class SupervisorAgent(Agent):
                 agent = self.agents.get(sub.agent)
                 if not agent:
                     return TaskResult(task.id, False,
-                                      error=f"Agente no encontrado: {sub.agent}")
+                                      error=f"Agent not found: {sub.agent}")
                 result = await agent.process(sub)
                 results[sub.id] = result
 
@@ -57,13 +88,16 @@ class SupervisorAgent(Agent):
                  dependencies=["execute"]),
         ]
 
-    def _replan_failed(self, failed_sub: Task, current_plan: list[Task]) -> list[Task]:
+    def _replan_failed(
+        self, failed_sub: Task, current_plan: list[Task],
+    ) -> list[Task]:
         new_plan: list[Task] = []
         skip = False
         for sub in current_plan:
             if sub.id == failed_sub.id:
                 new_plan.append(Task(
-                    f"{failed_sub.id}_retry", f"Reintentar: {failed_sub.description}",
+                    f"{failed_sub.id}_retry",
+                    f"Reintentar: {failed_sub.description}",
                     failed_sub.agent, params=failed_sub.params,
                 ))
                 skip = True

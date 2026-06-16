@@ -5,6 +5,21 @@ Todas las cambios notables de este proyecto se documentan en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es/1.0.0/),
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.5.0] — 2026-06-16
+
+### Added
+- Fase 4 (Sistema Multi-Agente Prompt-Driven): 5 agentes modificados para usar prompts del chain como primera opcion con fallback rule-based
+- SupervisorAgent: usa `ChainOrchestrator` cuando hay `llm`, mantiene delegacion clasica como fallback
+- PerceptionAgent: usa `intent_handler` (prompt INTENT) cuando hay `llm`, mantiene spaCy+SentenceTransformers como fallback
+- ReasoningAgent: usa `plan_handler` (prompt PLAN) cuando hay `llm`, mantiene GoalTreePlanner como fallback
+- ExecutionAgent: usa `generate_handler` (prompt GENERATE) para acciones de generacion cuando hay `llm`, mantiene ToolRegistry como fallback
+- ValidatorAgent: usa `verify_handler` (prompt VERIFY) cuando hay `llm`, mantiene WorldModel.query como fallback
+- `docs/110_REP_DEV_PROMPT_CHAIN_F4_1_0_DRAFT.md` — reporte de implementacion Fase 4
+
+### Changed
+- todos los agentes: `__init__` acepta `llm: LLMBackend | None` (default None, 100% backward compat)
+- Suite de tests: 86 totales (71 prompt chain + 15 multiagente), todos PASS, ruff 0 errores
+
 ## [2.4.0] — 2026-06-16
 
 ### Added
