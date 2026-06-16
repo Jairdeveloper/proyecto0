@@ -1,0 +1,3 @@
+# Synthesis
+
+::: nodes.synthesis.SynthesisOrchestrator

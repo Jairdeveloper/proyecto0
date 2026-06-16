@@ -41,7 +41,8 @@ ls modules/pagos/
 
 ```bash
 docker build -t recpl .
-docker run recpl --prompt "crea un modulo de pagos con NestJS"
+docker run recpl "crea un modulo de pagos con NestJS"     # prompt directo
+docker run recpl --prompt "crea un modulo" --output /app/modules  # flags explicitos
 ```
 
 ### Metricas

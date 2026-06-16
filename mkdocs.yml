@@ -1,0 +1,56 @@
+site_name: RECPL Pipeline v2.0
+site_description: API documentation for the RECPL compiler pipeline
+repo_url: https://github.com/Jairdeveloper/proyecto0
+docs_dir: docs
+site_dir: site
+
+theme:
+  name: material
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.expand
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [../compiler-bot/agentic_pipeline]
+          options:
+            show_source: true
+            show_root_heading: true
+            docstring_style: google
+
+nav:
+  - Home: index.md
+  - Pipeline:
+      - Overview: onboarding/01_pipeline.md
+      - New Stage: onboarding/02_new_stage.md
+      - Testing: onboarding/03_testing.md
+      - Debugging: onboarding/04_debugging.md
+  - API Reference:
+      - Base Stage: api/base_stage.md
+      - State Models: api/state_models.md
+      - Contracts: api/contracts.md
+      - Orchestrator: api/orchestrator.md
+      - Nodes:
+          - Intent Stage: api/nodes/intent_stage.md
+          - Preprocessor: api/nodes/preprocessor.md
+          - Lexer: api/nodes/lexer.md
+          - Parser: api/nodes/parser.md
+          - Semantic Analyzer: api/nodes/semantic_analyzer.md
+          - IR Generator: api/nodes/ir_generator.md
+          - Planner: api/nodes/planner.md
+          - Synthesis: api/nodes/synthesis.md
+          - UI Generator: api/nodes/ui_generator.md
+          - Validator: api/nodes/validator.md
+      - NLP:
+          - EnrichedInput: api/nlp/enriched_input.md
+          - Intent Classifier: api/nlp/intent_classifier.md
+          - NER Extractor: api/nlp/ner_extractor.md
+          - Slot Filler: api/nlp/slot_filler.md
+          - Ambiguity Detector: api/nlp/ambiguity_detector.md
+      - Generators: api/generators.md
+      - Feedback Loop: api/feedback_loop.md
+  - Index: INDEX.md
