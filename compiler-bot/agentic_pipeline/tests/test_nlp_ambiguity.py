@@ -17,6 +17,19 @@ class TestAmbiguityDetector:
         result = detector.detect(text, intent, entities, slots)
         assert not result.detected
 
+    def test_no_false_positive_on_modulo(self):
+        """'modulo' ends with 'lo' but is NOT a pronoun."""
+        clf = IntentClassifier()
+        ner = NERExtractor()
+        filler = SlotFiller()
+        detector = AmbiguityDetector()
+        text = "crea modulo"
+        intent = clf.classify(text)
+        entities = ner.extract(text)
+        slots = filler.fill(intent, entities)
+        result = detector.detect(text, intent, entities, slots)
+        assert not result.detected
+
     def test_low_confidence_detected(self):
         detector = AmbiguityDetector()
         clf = IntentClassifier()
@@ -45,6 +58,6 @@ class TestAmbiguityDetector:
         clf = IntentClassifier()
         from agentic_pipeline.nlp.enriched_input import Entities, Slots
 
-        intent = clf.classify("crealo")
-        result = detector.detect("crealo", intent, Entities(), Slots())
+        intent = clf.classify("crea lo que te pedi")
+        result = detector.detect("crea lo que te pedi", intent, Entities(), Slots())
         assert result.detected

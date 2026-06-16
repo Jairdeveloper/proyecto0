@@ -58,7 +58,7 @@ class AmbiguityDetector:
 
         text_lower = text.lower()
         for p in self.PRONOMBRES:
-            if re.search(rf"\b{p}\b", text_lower) or text_lower.endswith(p):
+            if re.search(rf"\b{p}\b", text_lower):
                 result.detected = True
                 result.elementos.append(
                     {

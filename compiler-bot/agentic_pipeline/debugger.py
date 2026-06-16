@@ -41,13 +41,13 @@ class PipelineDebugger:
     """Wraps PipelineOrchestrator with debug hooks.
 
     Modes:
-        trace      — print stage name, status, size, location, metrics
+        trace      — print full JSON output_data of each stage
         step       — like trace, but pauses between stages
-        timing     — show elapsed time per stage + summary bar chart
+        timing     — print JSON + elapsed time per stage + summary bar chart
         inspect    — save full StageOutput snapshots to debug_output/
 
-    When ``show_output=True`` all modes also print a preview of the
-    ``output_data`` that flows from this stage to the next.
+    When ``show_output=True`` inspect mode saves the full output_data
+    (instead of a summary) to the snapshot file.
     """
 
     def __init__(
@@ -101,16 +101,13 @@ class PipelineDebugger:
     def _loc(self, stage: str) -> str:
         return self._locations.get(stage, "?:?")
 
-    def _output_preview(self, data: object, max_len: int = 300) -> str:
+    def _output_preview(self, data: object) -> str:
         try:
             pretty = json.dumps(data, indent=2, default=str)
-            if len(pretty) > max_len:
-                pretty = pretty[:max_len] + "\n      ... (truncated)"
             indented = "\n      ".join(pretty.splitlines())
             return f"    ── output:\n      {indented}"
         except Exception:
-            text = str(data)[:max_len]
-            return f"    ── output: {text}"
+            return f"    ── output: {data!r}"
 
     def _trace_stage(self, stage: str, output: StageOutput) -> None:
         status = "OK" if output.success else "FAIL"
@@ -130,8 +127,7 @@ class PipelineDebugger:
                 f"    metrics: {metrics_str}",
                 file=sys.stderr,
             )
-        if self.show_output:
-            print(self._output_preview(output.output_data), file=sys.stderr)
+        print(self._output_preview(output.output_data), file=sys.stderr)
 
     def _step_stage(self, stage: str, output: StageOutput) -> None:
         status = "OK" if output.success else "FAIL"
@@ -145,8 +141,13 @@ class PipelineDebugger:
                 f"    error: {output.error}",
                 file=sys.stderr,
             )
-        if self.show_output:
-            print(self._output_preview(output.output_data), file=sys.stderr)
+        if output.metrics:
+            metrics_str = " ".join(f"{k}={v}" for k, v in output.metrics.items())
+            print(
+                f"    metrics: {metrics_str}",
+                file=sys.stderr,
+            )
+        print(self._output_preview(output.output_data), file=sys.stderr)
         if sys.stdin.isatty():
             try:
                 input("  Press Enter to continue... ")
@@ -163,12 +164,17 @@ class PipelineDebugger:
             f"  [{stage}] {status}  {elapsed:.3f}s  ← {self._loc(stage)}",
             file=sys.stderr,
         )
-        if self.show_output:
-            print(self._output_preview(output.output_data), file=sys.stderr)
+        if output.metrics:
+            metrics_str = " ".join(f"{k}={v}" for k, v in output.metrics.items())
+            print(
+                f"    metrics: {metrics_str}",
+                file=sys.stderr,
+            )
+        print(self._output_preview(output.output_data), file=sys.stderr)
 
     def _inspect_stage(self, stage: str, output: StageOutput) -> None:
         loc = self._loc(stage)
-        output_data = (
+        snap_output = (
             output.output_data
             if self.show_output
             else self._summarize(output.output_data)
@@ -178,17 +184,27 @@ class PipelineDebugger:
             "success": output.success,
             "error": output.error,
             "metrics": output.metrics,
-            "output_data": output_data,
+            "output_data": snap_output,
             "source_location": loc,
         }
         snap_path = self._snap_dir / f"{stage}.json"
         snap_path.write_text(json.dumps(snap, indent=2, default=str))
+        status = "OK" if output.success else "FAIL"
         print(
-            f"  [{stage}] snapshot → {snap_path}  ← {loc}",
+            f"  [{stage}] {status}  ← {loc}",
             file=sys.stderr,
         )
-        if self.show_output:
-            print(self._output_preview(output.output_data), file=sys.stderr)
+        if output.metrics:
+            metrics_str = " ".join(f"{k}={v}" for k, v in output.metrics.items())
+            print(
+                f"    metrics: {metrics_str}",
+                file=sys.stderr,
+            )
+        print(self._output_preview(output.output_data), file=sys.stderr)
+        print(
+            f"    snapshot → {snap_path}",
+            file=sys.stderr,
+        )
 
     def _print_timing_summary(self) -> None:
         total = sum(self._stage_times.values())

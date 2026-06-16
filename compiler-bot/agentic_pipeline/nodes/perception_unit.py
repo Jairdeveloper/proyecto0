@@ -165,6 +165,7 @@ class PerceptionUnit(PipelineStage):
             output["semantic_score"] = semantic_score
             output["semantic_confianza"] = semantic_confianza
 
+        ambiguity_detected = ambiguity.detected
         return StageOutput(
             stage=self.context.stage,
             output_data=output,
@@ -176,13 +177,10 @@ class PerceptionUnit(PipelineStage):
                 "slots_complete": slots.completado,
                 "semantic_intent": semantic_intent or intent.primary,
                 "semantic_score": semantic_score,
+                "ambiguity_detected": ambiguity_detected,
             },
-            success=not ambiguity.detected,
-            error=(
-                "; ".join(e["descripcion"] for e in ambiguity.elementos)
-                if ambiguity.detected
-                else None
-            ),
+            success=True,
+            error=None,
         )
 
     def learn_and_improve(self, feedback: object) -> None:
