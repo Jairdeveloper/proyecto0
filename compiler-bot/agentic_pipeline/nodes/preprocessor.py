@@ -68,9 +68,6 @@ class NormalizationFilter(PreprocessingFilter):
         return text
 
 
-
-
-
 class SegmentationFilter(PreprocessingFilter):
     """Splits text into sentence segments."""
 
@@ -152,14 +149,21 @@ class Preprocessor(PipelineStage):
         self.domain = domain
         self.filters = build_filter_chain(domain)
         self._input_text = ""
+        self._enriched: dict = {}
 
     def receive_mission(self, input_data: object) -> None:
         if isinstance(input_data, dict) and "raw" in input_data:
             self._input_text = input_data["raw"]
             self.domain = input_data.get("intent", {}).get("domain", "web")
+            self._enriched = {
+                k: input_data[k]
+                for k in ("intent", "entities", "slots", "ambiguity", "context")
+                if k in input_data
+            }
         else:
             self._input_text = str(input_data)
             self.domain = "web"
+            self._enriched = {}
         logger.debug("Preprocessor received: %.100s", self._input_text)
 
     def analyze(self) -> AnalysisResult:
@@ -185,6 +189,7 @@ class Preprocessor(PipelineStage):
                 "normalized_text": result,
                 "filters_applied": len(self.filters),
                 "domain": self.domain,
+                "enriched": self._enriched or None,
             },
             metrics={
                 "filters_applied": len(self.filters),

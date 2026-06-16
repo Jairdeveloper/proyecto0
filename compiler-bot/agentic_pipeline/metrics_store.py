@@ -93,7 +93,13 @@ class MetricsStore:
                 )
             return
         entries = self._json_read(stage)
-        entries.append({"stage": stage, "metrics": metrics, "timestamp": datetime.now().isoformat()})
+        entries.append(
+            {
+                "stage": stage,
+                "metrics": metrics,
+                "timestamp": datetime.now().isoformat(),
+            }
+        )
         if len(entries) > MAX_ENTRIES_PER_STAGE:
             entries = entries[-MAX_ENTRIES_PER_STAGE:]
         self._json_write(stage, entries)
@@ -123,9 +129,7 @@ class MetricsStore:
     def summary(self) -> dict[str, Any]:
         if HAS_SQLITE:
             with sqlite3.connect(str(self.db_path)) as conn:
-                total = conn.execute(
-                    "SELECT COUNT(*) FROM stage_metrics"
-                ).fetchone()[0]
+                total = conn.execute("SELECT COUNT(*) FROM stage_metrics").fetchone()[0]
                 stages = conn.execute(
                     "SELECT stage, COUNT(*) as cnt FROM stage_metrics "
                     "GROUP BY stage ORDER BY cnt DESC"
@@ -188,8 +192,7 @@ class MetricsStore:
         if HAS_SQLITE:
             with sqlite3.connect(str(self.db_path)) as conn:
                 rows = conn.execute(
-                    "SELECT token, weight FROM token_frequencies "
-                    "ORDER BY count DESC"
+                    "SELECT token, weight FROM token_frequencies ORDER BY count DESC"
                 ).fetchall()
             return {row[0]: row[1] for row in rows}
         path = self._data_dir / "token_frequencies.json"

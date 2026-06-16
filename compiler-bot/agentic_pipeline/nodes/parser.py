@@ -89,9 +89,12 @@ def _build_page_def(tree: Tree) -> PageNode | None:
                     c = _build_component_from_tree(sub)
                     if c is not None:
                         comps.append(c)
-        elif isinstance(child, Token) and child.type == "CNAME":
-            name = str(child)
-    page = PageNode(name)
+                elif isinstance(sub, Token) and sub.type in ("CNAME", "COMP_KEYWORD"):
+                    comps.append(ComponentNode(str(sub), str(sub)))
+        elif isinstance(child, Token) and child.type in ("CNAME", "COMP_KEYWORD"):
+            if not name:
+                name = str(child)
+    page = PageNode(name or "unnamed")
     for c in comps:
         page.add(c)
     return page
@@ -136,9 +139,10 @@ def _build_ui_ast(tree: Tree) -> ProjectNode:
 def _build_layout(tree: Tree) -> PageNode | None:
     name = ""
     for child in tree.children:
-        if isinstance(child, Tree) and child.data == "CNAME":
-            name = str(child.children[0]) if child.children else ""
-    return PageNode(name)
+        if isinstance(child, Token) and child.type in ("CNAME", "COMP_KEYWORD"):
+            if not name:
+                name = str(child)
+    return PageNode(name or "unnamed")
 
 
 AST_BUILDERS["ui"] = _build_ui_ast
@@ -301,16 +305,45 @@ class ParserGLR(PipelineStage):
         if plan.steps:
             grammar = plan.steps[0].get("grammar", grammar)
 
-        ast = self._build_ast_from_tokens(self._tokens)
-        logger.info("Built AST from %d tokens: %d nodes", len(self._tokens), len(ast.get("nodes", [])))
+        text = " ".join(t.get("value", "") for t in self._tokens)
+        ast = self._try_lark_parse(text, grammar)
+        if ast is None:
+            ast = self._build_ast_from_tokens(self._tokens)
+
+        nodes = ast.get("children", [])
+        logger.info(
+            "Built AST from %d tokens: %d nodes (grammar=%s)",
+            len(self._tokens),
+            len(nodes),
+            grammar,
+        )
         return StageOutput(
             stage=self.context.stage,
-            output_data={"ast": ast, "grammar": grammar},
+            output_data={
+                "ast": ast,
+                "grammar": grammar,
+                "enriched": self._enriched or None,
+            },
             metrics={
                 "tokens": len(self._tokens),
-                "ast_nodes": len(ast.get("nodes", [])),
+                "ast_nodes": len(nodes),
             },
         )
+
+    def _try_lark_parse(self, text: str, grammar: str) -> dict | None:
+        if grammar not in PARSERS or grammar not in AST_BUILDERS:
+            return None
+        try:
+            cleaned = _clean_text(text)
+            if not cleaned.strip():
+                return None
+            tree = PARSERS[grammar].parse(cleaned)
+            builder = AST_BUILDERS[grammar]
+            project_node = builder(tree)
+            return project_node.to_ir()
+        except Exception as e:
+            logger.debug("Lark parse failed for grammar '%s': %s", grammar, e)
+            return None
 
     def _build_ast_from_tokens(self, tokens: list[dict]) -> dict:
         actions = []
@@ -322,14 +355,9 @@ class ParserGLR(PipelineStage):
             elif cat in ("entity", "domain"):
                 entities.append(t.get("value", ""))
         return {
-            "type": "project" if entities else "unknown",
-            "actions": actions,
-            "entities": entities,
-            "nodes": [
-                {"type": "action", "value": a} for a in actions
-            ] + [
-                {"type": "entity", "value": e} for e in entities
-            ],
+            "node_type": "project",
+            "children": [{"node_type": "action", "value": a} for a in actions]
+            + [{"node_type": "entity", "value": e} for e in entities],
         }
 
     def learn_and_improve(self, feedback: object) -> None:

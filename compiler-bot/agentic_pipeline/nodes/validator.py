@@ -202,6 +202,7 @@ class ValidatorPipeline(PipelineStage):
         self._input_data: dict[str, Any] | None = None
         self._chain = self._build_chain()
         self._all_results: list[ValidationResult] = []
+        self._enriched: dict = {}
 
     @staticmethod
     def _build_chain() -> Validator:
@@ -214,8 +215,10 @@ class ValidatorPipeline(PipelineStage):
     def receive_mission(self, input_data: object) -> None:
         if isinstance(input_data, dict):
             self._input_data = input_data
+            self._enriched = input_data.get("enriched", {}) or {}
         else:
             self._input_data = {}
+            self._enriched = {}
 
     def analyze(self) -> AnalysisResult:
         files = self._input_data.get("generated_files", []) if self._input_data else []
@@ -273,6 +276,7 @@ class ValidatorPipeline(PipelineStage):
                 ],
                 "should_retry": should_retry,
                 "generated_files": files,
+                "enriched": self._enriched or None,
             },
             metrics={
                 "validations": len(self._all_results),

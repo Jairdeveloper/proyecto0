@@ -1,150 +1,134 @@
-# RECPL Compiler Bot
+# RECPL — Natural Language to NestJS/Prisma Scaffolding
 
-**RECPL** (READ-EVAL-PRINT Compiler Loop) es un bot shell que procesa instrucciones en lenguaje natural utilizando un pipeline compilador clasico basado en la teoria de Aho, Sethi y Ullman (Dragon Book).
+[![Python](https://img.shields.io/badge/python-3.11-blue)](https://python.org)
+[![Tests](https://img.shields.io/badge/tests-516_passing-green)](https://github.com/proyect0)
+[![Ruff](https://img.shields.io/badge/ruff-0_errors-brightgreen)](https://github.com/astral-sh/ruff)
+[![License](https://img.shields.io/badge/license-MIT-yellow)](LICENSE)
 
-```
-INPUT: "crea un modulo de pagos en NestJS"
-  ↓
-[ PREPROCESADOR ] → normaliza, lowercase, segmenta
-  ↓
-[ LEXER (READ) ]  → DFA con maximal munch → tokens JSON
-  ↓
-[ PARSER (EVAL) ] → LL(1) recursivo descendente → AST JSON
-  ↓
-[ SEMANTICO ]     → tabla de simbolos + type checking
-  ↓
-[ IR GENERATOR ]  → representacion intermedia canonica (IR.json)
-  ↓
-[ SYNTHESIS ]     → respuesta del bot + scaffolding de archivos
-  ↓
-OUTPUT: "Generando modulo Pagos en NestJS..."
-         + archivos generados en modules/pagos/
-```
-
-## Arquitectura
+**RECPL** (READ-EVAL-PRINT Compiler Loop) es un compilador de lenguaje
+natural a codigo. Toma instrucciones en espanol y genera scaffolding de
+modulos NestJS, entidades Prisma, componentes React, y mas.
 
 ```
-compiler-bot/
-├── frontend/               # ANALISIS (Front-end)
-│   ├── preprocessor.sh     # Normaliza input: trim, lowercase, split
-│   ├── lexer.sh            # DFA tokenizer con maximal munch
-│   ├── parser.sh           # Parser LL(1) recursivo descendente
-│   └── semantic.sh         # Tabla de simbolos + validacion semantica
-├── middleend/
-│   └── ir_generator.sh     # AST → IR.json canonico
-├── backend/                # SINTESIS (Back-end)
-│   ├── synthesis.sh        # IR.json → respuesta del bot
-│   └── scaffold.sh         # Templates → archivos en disco
-├── templates/              # Scaffolds reutilizables
-│   ├── module-nestjs/      # NestJS: module, controller, service
-│   ├── entity-nestjs/      # NestJS: entity class
-│   └── module-prisma/      # Prisma: modelo de datos
-├── recpl.sh                # LOOP principal (interactivo/batch)
-└── tests/
-    └── run_tests.sh        # 47 tests automatizados
+INPUT: "crea un modulo de pagos con NestJS y Prisma"
+  ↓
+[ Intent Stage ]    → clasifica intencion + extrae entidades
+[ Preprocessor ]    → normaliza, segmenta, enriquece
+[ Lexer (READ) ]    → DFA tokenizer con maximal munch
+[ Parser (EVAL) ]   → Lark parser (AST jerarquico)
+[ Semantic ]        → tabla de simbolos + type checking
+[ IR Generator ]    → representacion intermedia canonica
+[ Planner ]         → plan de ejecucion con dependencias
+[ Synthesis ]       → generacion de codigo (NestJS/Prisma/React/...)
+  ↓
+OUTPUT: modules/pagos/pagos.controller.ts, schema.prisma, ...
 ```
 
 ## Quick Start
 
-```sh
-# Modo interactivo
-./compiler-bot/recpl.sh
+```bash
+# 1. Instalar
+pip install -e compiler-bot/agentic_pipeline/
 
-# Modo batch
-echo "crea un modulo de pagos en NestJS" | ./compiler-bot/recpl.sh
+# 2. Ejecutar (CLI)
+./compiler-bot/agentic --prompt "crea un modulo de pagos con NestJS"
 
-# Pipeline completo paso a paso
-input=$(./compiler-bot/frontend/preprocessor.sh "crea un modulo de pagos en nestjs")
-./compiler-bot/frontend/lexer.sh "$input" | \
-  ./compiler-bot/frontend/parser.sh | \
-  ./compiler-bot/frontend/semantic.sh | \
-  ./compiler-bot/middleend/ir_generator.sh | \
-  ./compiler-bot/backend/synthesis.sh
-
-# Ejecutar tests
-./compiler-bot/tests/run_tests.sh
+# 3. Ver resultado
+ls modules/pagos/
 ```
+
+### Docker
+
+```bash
+docker build -t recpl .
+docker run recpl --prompt "crea un modulo de pagos con NestJS"
+```
+
+### Metricas
+
+```bash
+./compiler-bot/agentic --metrics table     # Dashboard de metricas del pipeline
+./scripts/pipeline_stats.sh                # Dashboard desde archivos JSON
+```
+
+## Arquitectura (Python v2.0)
+
+```
+compiler-bot/
+├── agentic                          # CLI entrypoint
+├── agentic_pipeline/
+│   ├── nodes/                       # 10 PipelineStages (StateGraph)
+│   │   ├── intent_stage.py          # NLP: clasificador + NER + slots
+│   │   ├── preprocessor.py          # Filtros en cadena (Chain of Responsibility)
+│   │   ├── lexer.py                 # DFA tokenizer + trie multi-word
+│   │   ├── parser.py                # Lark parser + AST builders
+│   │   ├── semantic_analyzer.py     # Visitor pattern + SymbolTable
+│   │   ├── ir_generator.py          # IR tree + serializacion (JSON/YAML/DOT)
+│   │   ├── planner.py               # TaskGraph + Heuristic/LLM planner
+│   │   ├── synthesis.py             # GeneratorFactory: 6 generadores
+│   │   ├── ui_generator.py          # UI components (Builder pattern)
+│   │   └── validator.py             # Chain of Responsibility (syntax+type+security)
+│   ├── generators/                  # 6 generadores de codigo
+│   │   ├── nestjs_generator.py
+│   │   ├── prisma_generator.py
+│   │   ├── react_generator.py
+│   │   ├── nextjs_generator.py
+│   │   ├── tailwind_generator.py
+│   │   └── docker_generator.py
+│   ├── grammars/                    # Gramaticas Lark
+│   ├── orchestrator.py              # StateGraph integrador
+│   ├── feedback_loop.py             # Metricas + ajuste de pesos
+│   └── tests/                       # 516 tests (pytest)
+├── recpl.sh                         # Shell v1.0 (legacy, reference)
+└── agent-robot/                     # Shell agent layer (legacy, reference)
+```
+
+## Generadores Soportados
+
+| Target | Generador | Archivos que produce |
+|--------|-----------|---------------------|
+| `nestjs` | NestJSGenerator | Controller, Service, Module, Entity |
+| `prisma` | PrismaGenerator | schema.prisma con modelos |
+| `react` | ReactGenerator | Componentes y paginas TSX |
+| `nextjs` | NextJSGenerator | Pages y components con App Router |
+| `tailwind` | TailwindGenerator | tailwind.config.js + globals.css |
+| `docker` | DockerGenerator | Dockerfile + docker-compose.yml |
 
 ## Lenguaje Soportado
 
-### Acciones
-
-| Verbo | Token | Ejemplo |
-|-------|-------|---------|
-| crear, generar, make, new | `ACTION_CREATE` | "crea modulo pagos" |
-| eliminar, borrar, delete, remove | `ACTION_DELETE` | "eliminar payments" |
-| actualizar, modificar, update, edit | `ACTION_UPDATE` | "actualizar usuarios" |
-| mostrar, listar, get, show, read | `ACTION_READ` | "listar productos" |
-
-### Ejemplos de Instrucciones
-
 ```
 > crea un modulo de pagos en NestJS
-> listar usuarios
-> eliminar modulo payments
-> actualizar entidad productos en prisma
-> crear modulo de usuarios en Prisma
-> mostrar payments
-> quit
+> crear entidad Usuario con nombre:string email:string edad:int
+> pagina login con formulario de registro
+> base de datos postgresql con docker
 ```
 
-## Scaffolding
+## Roadmap
 
-Las instrucciones `CREATE` generan archivos reales en `modules/<nombre>/`:
+| Sprint | Objetivo | Estado |
+|--------|----------|--------|
+| S15 | NLP + Intent pipeline | COMPLETED |
+| S16 | Integracion de generators | IN PROGRESS |
+| S17 | Performance + snapshot tests | PLANNED |
+| S18 | Docker demo + README | PLANNED |
+| S19 | Documentacion API + archive | PLANNED |
+| S20 | Onboarding + release v2.1.0 | PLANNED |
 
-```
-modules/pagos/
-├── pagos.controller.ts
-├── pagos.module.ts
-└── pagos.service.ts
-```
-
-Los templates usan placeholders `__NAME__` (PascalCase) y `__LOWERNAME__` (camelCase).
+Ver `docs/093_PLAN_DEV_SPRINT16_1_0_DRAFT.md` para detalle del Sprint 16.
 
 ## Tests
 
-```sh
-./compiler-bot/tests/run_tests.sh
+```bash
+cd compiler-bot/agentic_pipeline
+python -m pytest tests/ -v --tb=short
 ```
 
-Suite de 47 tests que cubren:
-
-| Area | Tests |
-|------|-------|
-| Sintaxis (bash -n) | 8 |
-| Preprocesador | 3 |
-| Lexer | 8 |
-| Parser | 5 |
-| Pipeline completo | 5 |
-| Errores semanticos | 2 |
-| LOOP batch | 4 |
-| Scaffolding | 3 |
-| Persistencia de estado | 1 |
-| Ejecutables | 8 |
-
-## Estado del Proyecto
-
-| Fase | Estado |
-|------|--------|
-| FASE-1: Nucleo RECPL (lexer + parser) | COMPLETED |
-| FASE-2: Semantica e IR | COMPLETED |
-| FASE-3: Synthesis y Output | COMPLETED |
-| FASE-4: Trazabilidad y Scoring | PENDING (opcional) |
-| FASE-5: Tests | COMPLETED (47 tests) |
+516 tests cubriendo todos los stages del pipeline.
 
 ## Documentacion
 
-Los documentos de especificacion y plan de accion estan en `docs/`:
+Ver `docs/` para planes, reportes y guias detalladas.
 
-- `006_PROP_DEV_COMPILER_BOT_1_0_DRAFT.md` — Propuesta y especificacion completa
-- `007_GUIDE_DEV_COMPILER_BOT_1_0_DRAFT.md` — Plan de accion detallado
-- `009_GUIDE_DEV_COMPILER_BOT_IMPL_REPORT_1_0_DRAFT.md` — Reporte de implementacion
+## Licencia
 
-## Convenciones
-
-Todos los scripts siguen `docs/000_GUIDE_DEV_SHELL_STYLE_1_0_DRAFT.md`:
-- No `set -e`, no `eval`
-- Variables siempre double-quoted
-- Indentacion 4 espacios
-- Funciones `snake_case`, constantes `SCREAMING_SNAKE_CASE`
-- Validacion: `bash -n` + `shellcheck`
+MIT

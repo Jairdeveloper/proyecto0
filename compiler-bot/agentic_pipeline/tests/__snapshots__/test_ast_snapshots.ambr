@@ -1,0 +1,34 @@
+# serializer version: 1
+# name: test_ast_entity_snapshot
+  dict({
+  })
+# ---
+# name: test_ast_page_snapshot
+  dict({
+    'children': list([
+      dict({
+        'children': list([
+          dict({
+            'component_type': 'formulario',
+            'name': 'formulario',
+            'node_type': 'component',
+          }),
+        ]),
+        'name': 'login',
+        'node_type': 'page',
+      }),
+    ]),
+    'node_type': 'project',
+  })
+# ---
+# name: test_ast_project_snapshot
+  dict({
+    'children': list([
+      dict({
+        'node_type': 'action',
+        'value': 'crea',
+      }),
+    ]),
+    'node_type': 'project',
+  })
+# ---

@@ -25,7 +25,11 @@ def _resolve_stage_locations() -> dict[str, str]:
     for stage, cls in NODE_MAP.items():
         try:
             module = inspect.getmodule(cls)
-            rel = os.path.relpath(module.__file__, start=os.getcwd()) if module and module.__file__ else "?"
+            rel = (
+                os.path.relpath(module.__file__, start=os.getcwd())
+                if module and module.__file__
+                else "?"
+            )
             _, line = inspect.getsourcelines(cls)
             locations[stage.value] = f"{rel}:{line}"
         except (OSError, TypeError):
@@ -51,10 +55,12 @@ class PipelineDebugger:
         mode: str = "trace",
         output_dir: str = "modules",
         show_output: bool = False,
+        debug_output_dir: Path | None = None,
     ) -> None:
         self.mode = mode
         self._output_dir = output_dir
         self.show_output = show_output
+        self._debug_output_dir = debug_output_dir or DEBUG_OUTPUT_DIR
         self._stage_times: dict[str, float] = {}
         self._orchestrator: PipelineOrchestrator | None = None
         self._locations = _resolve_stage_locations()
@@ -62,7 +68,7 @@ class PipelineDebugger:
     async def run(self, prompt: str) -> dict[str, Any]:
         session_id = datetime.now().strftime("%Y%m%d_%H%M%S")
         if self.mode == "inspect":
-            snap_dir = DEBUG_OUTPUT_DIR / session_id
+            snap_dir = self._debug_output_dir / session_id
             snap_dir.mkdir(parents=True, exist_ok=True)
             self._snap_dir = snap_dir
 
@@ -119,9 +125,7 @@ class PipelineDebugger:
                 file=sys.stderr,
             )
         if output.metrics:
-            metrics_str = " ".join(
-                f"{k}={v}" for k, v in output.metrics.items()
-            )
+            metrics_str = " ".join(f"{k}={v}" for k, v in output.metrics.items())
             print(
                 f"    metrics: {metrics_str}",
                 file=sys.stderr,

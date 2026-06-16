@@ -66,7 +66,9 @@ class PipelineOrchestrator:
             if not output.success:
                 ctx.last_error = output.error
                 logger.warning(
-                    "Stage %s reported failure: %s", stage.value, output.error,
+                    "Stage %s reported failure: %s",
+                    stage.value,
+                    output.error,
                 )
             else:
                 ctx.last_error = None

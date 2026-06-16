@@ -162,12 +162,15 @@ class HybridPlanner(PipelineStage):
         self._input_data: dict[str, Any] | None = None
         self._heuristic = HeuristicPlanner()
         self._task_graph = TaskGraph()
+        self._enriched: dict = {}
 
     def receive_mission(self, input_data: object) -> None:
         if isinstance(input_data, dict):
             self._input_data = input_data
+            self._enriched = input_data.get("enriched", {}) or {}
         else:
             self._input_data = {}
+            self._enriched = {}
 
     def analyze(self) -> AnalysisResult:
         dep_order = (
@@ -212,6 +215,7 @@ class HybridPlanner(PipelineStage):
                 "commands": commands,
                 "is_acyclic": not self._task_graph.has_cycle(),
                 "ir_tree": ir_tree,
+                "enriched": self._enriched or None,
             },
             metrics={
                 "task_count": len(ordered),

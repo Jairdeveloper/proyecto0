@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 
 import pytest
 
@@ -32,10 +31,10 @@ class TestPipelineDebugger:
         assert total >= 0
 
     @pytest.mark.asyncio
-    async def test_inspect_mode_creates_snapshots(self):
-        debugger = PipelineDebugger(mode="inspect")
+    async def test_inspect_mode_creates_snapshots(self, tmp_path):
+        debugger = PipelineDebugger(mode="inspect", debug_output_dir=tmp_path)
         await debugger.run("crea un modulo de pagos")
-        snaps = list(Path("debug_output").glob("**/*.json"))
+        snaps = list(tmp_path.glob("**/*.json"))
         names = [s.name for s in snaps]
         assert "intent.json" in names
         assert "preprocessor.json" in names
@@ -85,12 +84,13 @@ class TestPipelineDebugger:
         assert result is not None
 
     @pytest.mark.asyncio
-    async def test_inspect_with_show_output_has_full_data(self):
-        debugger = PipelineDebugger(mode="inspect", show_output=True)
+    async def test_inspect_with_show_output_has_full_data(self, tmp_path):
+        debugger = PipelineDebugger(mode="inspect", show_output=True, debug_output_dir=tmp_path)
         await debugger.run("crea un modulo")
-        snaps = list(Path("debug_output").glob("**/*.json"))
+        snaps = list(tmp_path.glob("**/*.json"))
         assert len(snaps) > 0
         import json
+
         data = json.loads(snaps[0].read_text())
         assert "output_data" in data
         assert "source_location" in data

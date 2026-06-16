@@ -26,12 +26,15 @@ class SynthesisOrchestrator(PipelineStage):
             context.config_overrides.get("output_dir", "modules"),
         )
         self._formatter = CodeFormatter()
+        self._enriched: dict = {}
 
     def receive_mission(self, input_data: object) -> None:
         if isinstance(input_data, dict):
             self._input_data = input_data
+            self._enriched = input_data.get("enriched", {}) or {}
         else:
             self._input_data = {}
+            self._enriched = {}
 
     def analyze(self) -> AnalysisResult:
         task_count = len(self._input_data.get("tasks", [])) if self._input_data else 0
@@ -119,6 +122,7 @@ class SynthesisOrchestrator(PipelineStage):
                 "errors": errors,
                 "warnings": warnings,
                 "task_count": len(tasks),
+                "enriched": self._enriched or None,
             },
             metrics={
                 "files_generated": len(generated_files),

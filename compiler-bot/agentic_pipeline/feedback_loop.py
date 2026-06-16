@@ -84,7 +84,8 @@ class GlobalFeedbackLoop:
                     "reason": f"error_rate={ratio:.2f}",
                 }
                 logger.info(
-                    "Lexer weight adjusted: reduce_complexity (error_rate=%.2f)", ratio,
+                    "Lexer weight adjusted: reduce_complexity (error_rate=%.2f)",
+                    ratio,
                 )
 
         if node_count > 50:
@@ -93,7 +94,8 @@ class GlobalFeedbackLoop:
                 "reason": f"high_node_count={node_count}",
             }
             logger.info(
-                "Lexer threshold increased: node_count=%d", node_count,
+                "Lexer threshold increased: node_count=%d",
+                node_count,
             )
 
     def get_lexer_adjustments(self) -> dict[str, Any]:

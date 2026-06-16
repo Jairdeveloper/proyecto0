@@ -82,13 +82,14 @@ class TestParserIntegration:
         result = p.execute(tokens)
         assert result.success is True
         ast = result.output_data["ast"]
-        assert len(ast.get("nodes", [])) >= 1
+        assert len(ast.get("children", [])) >= 1
 
     def test_realistic_scenario(self):
         ctx = StageContext(stage=Stage.PARSER, input_data="")
         p = ParserGLR(ctx)
         tokens = {
-            "tokens": UI_TOKENS + [
+            "tokens": UI_TOKENS
+            + [
                 {"value": "modulo", "type": "CNAME", "category": "entity"},
                 {"value": "pagos", "type": "CNAME", "category": "entity"},
             ]

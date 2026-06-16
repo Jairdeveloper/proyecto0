@@ -82,9 +82,7 @@ class TestPlannerContract:
 
 class TestSynthesisContract:
     def test_valid(self):
-        SynthesisContract.model_validate(
-            {"generated_files": [], "errors": []}
-        )
+        SynthesisContract.model_validate({"generated_files": [], "errors": []})
 
 
 class TestUIContract:
@@ -94,6 +92,4 @@ class TestUIContract:
 
 class TestValidatorContract:
     def test_valid(self):
-        ValidatorContract.model_validate(
-            {"results": [], "should_retry": False}
-        )
+        ValidatorContract.model_validate({"results": [], "should_retry": False})

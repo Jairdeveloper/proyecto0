@@ -108,5 +108,6 @@ class RequirementDecomposer(PipelineStage):
 
     def learn_and_improve(self, feedback: object) -> None:
         self._feedback.record_stage(
-            self.name, {"input_len": len(self._raw_text)},
+            self.name,
+            {"input_len": len(self._raw_text)},
         )

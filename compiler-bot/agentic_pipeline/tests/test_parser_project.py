@@ -221,15 +221,17 @@ class TestParserGLREdgeCases:
     def test_tokens_with_stop_words(self):
         ctx = StageContext(stage=Stage.PARSER, input_data="")
         p = ParserGLR(ctx)
-        p.receive_mission({
-            "tokens": [
-                {"value": "pagina", "type": "CNAME", "category": "domain"},
-                {"value": "de", "type": "STOP", "category": "stop"},
-                {"value": "login", "type": "CNAME", "category": "entity"},
-                {"value": "con", "type": "CONNECTOR", "category": "connector"},
-                {"value": "formulario", "type": "FORM", "category": "ui"},
-            ]
-        })
+        p.receive_mission(
+            {
+                "tokens": [
+                    {"value": "pagina", "type": "CNAME", "category": "domain"},
+                    {"value": "de", "type": "STOP", "category": "stop"},
+                    {"value": "login", "type": "CNAME", "category": "entity"},
+                    {"value": "con", "type": "CONNECTOR", "category": "connector"},
+                    {"value": "formulario", "type": "FORM", "category": "ui"},
+                ]
+            }
+        )
         assert len(p._tokens) == 5
 
 
@@ -239,7 +241,7 @@ class TestParserGLRMultiGrammar:
         p = ParserGLR(ctx, grammar="project")
         result = p.execute({"tokens": PAGE_TOKENS})
         assert result.success is True
-        assert len(result.output_data["ast"].get("nodes", [])) >= 1
+        assert len(result.output_data["ast"].get("children", [])) >= 1
 
     def test_data_grammar(self):
         ctx = StageContext(stage=Stage.PARSER, input_data="")

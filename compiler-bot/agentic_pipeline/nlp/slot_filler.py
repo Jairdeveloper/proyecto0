@@ -34,10 +34,7 @@ class SlotFiller:
             dominio=intent.domain,
         )
         required = self.REQUIRED.get(intent.primary, [])
-        slots.faltantes = [
-            s for s in required
-            if getattr(slots, s) is None
-        ]
+        slots.faltantes = [s for s in required if getattr(slots, s) is None]
         slots.completado = len(slots.faltantes) == 0
         return slots
 

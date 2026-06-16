@@ -1,0 +1,11 @@
+version: '3.8'
+
+services:
+  recpl:
+    build: .
+    container_name: recpl
+    image: recpl:latest
+    entrypoint: ["python3", "/app/agentic"]
+    command: ["--help"]
+    volumes:
+      - ./modules:/app/modules

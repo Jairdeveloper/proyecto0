@@ -119,9 +119,15 @@ class Lexer(PipelineStage):
         }
         self.trie = DEFAULT_TRIE
         self._text = ""
+        self._enriched: dict = {}
 
     def receive_mission(self, input_data: object) -> None:
-        self._text = str(input_data)
+        if isinstance(input_data, dict):
+            self._text = input_data.get("normalized_text", "") or ""
+            self._enriched = input_data.get("enriched", {}) or {}
+        else:
+            self._text = str(input_data)
+            self._enriched = {}
         logger.debug("Lexer received: %.100s", self._text)
 
     def analyze(self) -> AnalysisResult:
@@ -145,7 +151,10 @@ class Lexer(PipelineStage):
         logger.info("Lexer produced %d tokens", len(all_tokens))
         return StageOutput(
             stage=self.context.stage,
-            output_data={"tokens": [t.model_dump() for t in all_tokens]},
+            output_data={
+                "tokens": [t.model_dump() for t in all_tokens],
+                "enriched": self._enriched or None,
+            },
             metrics={"tokens_count": len(all_tokens)},
         )
 

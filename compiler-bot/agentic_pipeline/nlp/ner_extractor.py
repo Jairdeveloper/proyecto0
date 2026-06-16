@@ -4,18 +4,59 @@ from .enriched_input import Entities, Entity
 
 class NERExtractor:
     STOP_WORDS: set[str] = {
-        "algo", "algun", "una", "uno", "este", "esta", "esto",
-        "eso", "esa", "esos", "esas", "todo", "nada", "cada",
-        "mismo", "propio", "simple", "basico",
+        "algo",
+        "algun",
+        "una",
+        "uno",
+        "este",
+        "esta",
+        "esto",
+        "eso",
+        "esa",
+        "esos",
+        "esas",
+        "todo",
+        "nada",
+        "cada",
+        "mismo",
+        "propio",
+        "simple",
+        "basico",
     }
 
     TECH_WHITELIST: list[str] = [
-        "nestjs", "prisma", "react", "vue", "nextjs", "nuxt",
-        "express", "fastapi", "django", "flask", "spring",
-        "postgres", "mysql", "mongodb", "redis", "sqlite",
-        "docker", "kubernetes", "k8s", "aws", "gcp", "azure",
-        "stripe", "paypal", "jwt", "oauth", "tailwind",
-        "graphql", "rest", "grpc", "rabbitmq", "kafka",
+        "nestjs",
+        "prisma",
+        "react",
+        "vue",
+        "nextjs",
+        "nuxt",
+        "express",
+        "fastapi",
+        "django",
+        "flask",
+        "spring",
+        "postgres",
+        "mysql",
+        "mongodb",
+        "redis",
+        "sqlite",
+        "docker",
+        "kubernetes",
+        "k8s",
+        "aws",
+        "gcp",
+        "azure",
+        "stripe",
+        "paypal",
+        "jwt",
+        "oauth",
+        "tailwind",
+        "graphql",
+        "rest",
+        "grpc",
+        "rabbitmq",
+        "kafka",
     ]
 
     REQUIREMENT_PATTERNS: list[tuple[str, str]] = [
@@ -68,7 +109,12 @@ class NERExtractor:
             for match in re.finditer(pattern, text):
                 valor = match.group(1).strip()
                 is_neg = "sin" in pattern or "negacion" in tipo
-                found.append(Entity(
-                    nombre=valor, tipo=tipo, rol=tipo, negado=is_neg,
-                ))
+                found.append(
+                    Entity(
+                        nombre=valor,
+                        tipo=tipo,
+                        rol=tipo,
+                        negado=is_neg,
+                    )
+                )
         return found

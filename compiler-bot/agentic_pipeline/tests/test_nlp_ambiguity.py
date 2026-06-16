@@ -22,6 +22,7 @@ class TestAmbiguityDetector:
         clf = IntentClassifier()
         intent = clf.classify("xyz")
         from agentic_pipeline.nlp.enriched_input import Entities, Slots
+
         result = detector.detect("xyz", intent, Entities(), Slots())
         assert result.detected
 
@@ -43,6 +44,7 @@ class TestAmbiguityDetector:
         detector = AmbiguityDetector()
         clf = IntentClassifier()
         from agentic_pipeline.nlp.enriched_input import Entities, Slots
+
         intent = clf.classify("crealo")
         result = detector.detect("crealo", intent, Entities(), Slots())
         assert result.detected

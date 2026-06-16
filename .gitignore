@@ -11,3 +11,10 @@ __pycache__/
 *.egg-info/
 .ruff_cache/
 .pytest_cache/
+
+# Generated
+debug_output/
+output/
+
+# Editor
+.vscode/

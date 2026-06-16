@@ -24,15 +24,20 @@ class IRGenerator(PipelineStage):
         self._input_ir: dict[str, Any] | None = None
         self._builder: IRBuilder | None = None
         self._built_root: IRNode | None = None
+        self._enriched: dict = {}
 
     def receive_mission(self, input_data: object) -> None:
         if isinstance(input_data, dict):
             ast = input_data.get("ast", input_data)
             if isinstance(ast, dict):
                 self._input_ir = ast
-                return
-        self._input_ir = {"node_type": "project", "children": []}
-        logger.warning("IRGenerator received non-dict input, using empty IR")
+            else:
+                self._input_ir = {"node_type": "project", "children": []}
+            self._enriched = input_data.get("enriched", {}) or {}
+        else:
+            self._input_ir = {"node_type": "project", "children": []}
+            self._enriched = {}
+            logger.warning("IRGenerator received non-dict input, using empty IR")
 
     def analyze(self) -> AnalysisResult:
         node_count = len(self._input_ir.get("children", [])) if self._input_ir else 0
@@ -74,6 +79,7 @@ class IRGenerator(PipelineStage):
                 "validation_errors": errors,
                 "dependency_order": dep_order,
                 "node_count": len(self._built_root.children),
+                "enriched": self._enriched or None,
             },
             metrics={
                 "node_count": len(self._built_root.children),

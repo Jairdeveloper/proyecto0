@@ -13,6 +13,7 @@ class NLPContract(BaseModel):
 class PreprocessorContract(BaseModel):
     normalized_text: str
     domain: str
+    enriched: Optional[dict] = None
 
 
 class LexerContract(BaseModel):

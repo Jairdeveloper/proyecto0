@@ -38,7 +38,10 @@ class IntentStage(PipelineStage):
         entities = self._ner.extract(self._input_text)
         slots = self._slots.fill(intent, entities)
         ambiguity = self._ambiguity.detect(
-            self._input_text, intent, entities, slots,
+            self._input_text,
+            intent,
+            entities,
+            slots,
         )
 
         enriched = EnrichedInput(
@@ -66,7 +69,8 @@ class IntentStage(PipelineStage):
             success=not ambiguity.detected,
             error=(
                 "; ".join(e["descripcion"] for e in ambiguity.elementos)
-                if ambiguity.detected else None
+                if ambiguity.detected
+                else None
             ),
         )
 
