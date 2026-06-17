@@ -16,23 +16,25 @@ from agentic_pipeline.prompt_chain.prompt_template import (
 
 logger = logging.getLogger(__name__)
 
-FORMAT_TEMPLATE = register_prompt(PromptTemplate(
-    name="format",
-    system_prompt=(
-        "Eres un asistente de desarrollo. Genera un resumen claro "
-        "de lo que se ha creado o modificado para el usuario."
-    ),
-    template=(
-        "Solicitud original: {original_request}\n\n"
-        "Plan: {plan}\n\n"
-        "Archivos generados: {generated_files}\n\n"
-        "Validacion: {validation}"
-    ),
-    input_schema=OutputInput,
-    output_schema=OutputContract,
-    fallback_name="explain_tool",
-    temperature=0.5,
-))
+FORMAT_TEMPLATE = register_prompt(
+    PromptTemplate(
+        name="format",
+        system_prompt=(
+            "Eres un asistente de desarrollo. Genera un resumen claro "
+            "de lo que se ha creado o modificado para el usuario."
+        ),
+        template=(
+            "Solicitud original: {original_request}\n\n"
+            "Plan: {plan}\n\n"
+            "Archivos generados: {generated_files}\n\n"
+            "Validacion: {validation}"
+        ),
+        input_schema=OutputInput,
+        output_schema=OutputContract,
+        fallback_name="explain_tool",
+        temperature=0.5,
+    )
+)
 
 
 async def format_handler(
@@ -87,6 +89,9 @@ async def format_handler(
         output = result.structured  # type: ignore[assignment]
 
     if ctx:
-        ctx.set_output("format", output, contract=OutputContract)
+        try:
+            ctx.set_output("format", output, contract=OutputContract)
+        except Exception as exc:
+            logger.warning("format ctx.set_output failed: %s", exc)
 
     return output

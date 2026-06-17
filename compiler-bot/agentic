@@ -23,32 +23,52 @@ async def main() -> None:
         description="RECPL Compiler Bot v2.0 — Natural language to NestJS/Prisma code",
     )
     parser.add_argument(
-        "--prompt", "-p", type=str, help="User requirement prompt",
+        "--prompt",
+        "-p",
+        type=str,
+        help="User requirement prompt",
     )
     parser.add_argument(
-        "--file", "-f", type=str, help="Read prompt from file",
+        "--file",
+        "-f",
+        type=str,
+        help="Read prompt from file",
     )
     parser.add_argument(
-        "--output", "-o", type=str, default="./output", help="Output directory",
+        "--output",
+        "-o",
+        type=str,
+        default="./output",
+        help="Output directory",
     )
     parser.add_argument(
-        "--stream", action="store_true", help="Stream progress to stderr",
+        "--stream",
+        action="store_true",
+        help="Stream progress to stderr",
     )
     parser.add_argument(
-        "--debug", type=str, choices=["trace", "step", "timing", "inspect"],
+        "--debug",
+        type=str,
+        choices=["trace", "step", "timing", "inspect"],
         help="Debug mode: trace|step|timing|inspect",
     )
     parser.add_argument(
-        "--show-output", action="store_true",
+        "--show-output",
+        action="store_true",
         help="Print output_data preview for each stage (use with --debug)",
     )
     parser.add_argument(
-        "--dialog", action="store_true",
+        "--dialog",
+        action="store_true",
         help="Enable interactive dialog mode for ambiguous prompts",
     )
     parser.add_argument(
-        "--metrics", type=str, choices=["json", "table"], nargs="?",
-        const="json", help="Print pipeline metrics summary (json|table)",
+        "--metrics",
+        type=str,
+        choices=["json", "table"],
+        nargs="?",
+        const="json",
+        help="Print pipeline metrics summary (json|table)",
     )
     add_chain_args(parser)
     args = parser.parse_args()
@@ -56,6 +76,7 @@ async def main() -> None:
     if args.metrics:
         fb = get_global_feedback()
         summary = fb.summary()
+        pc_summary = fb.prompt_chain_summary()
         if args.metrics == "table":
             print("=== Pipeline Metrics Summary ===")
             print(f"Total records: {summary.get('total_records', 0)}")
@@ -63,14 +84,30 @@ async def main() -> None:
             if summary["total_records"] > 0:
                 rate = (
                     (summary["total_records"] - summary["total_errors"])
-                    * 100 / summary["total_records"]
+                    * 100
+                    / summary["total_records"]
                 )
                 print(f"Success rate:  {rate:.1f}%")
             print("Per-stage:")
             for stage, count in summary.get("stages", {}).items():
                 print(f"  {stage}: {count} records")
+            if pc_summary.get("per_stage"):
+                print()
+                print("Prompt Chain per-stage:")
+                for name, stats in pc_summary["per_stage"].items():
+                    print(
+                        f"  {name}: {stats['calls']} calls, "
+                        f"{stats['success_rate']}% success, "
+                        f"avg {stats['avg_duration_s']}s"
+                    )
+                print()
+                print(f"Overall success rate: {pc_summary['success_rate']}%")
+                print(f"Fallback rate: {pc_summary['fallback_rate']}%")
         else:
-            print(json.dumps(summary, indent=2))
+            output = dict(summary)
+            if pc_summary.get("per_stage"):
+                output["prompt_chain"] = pc_summary
+            print(json.dumps(output, indent=2))
         sys.exit(0)
 
     if args.file:
@@ -99,7 +136,8 @@ async def main() -> None:
     else:
         cb = _stream_callback if args.stream else None
         orchestrator = PipelineOrchestrator(
-            stream_callback=cb, output_dir=args.output,
+            stream_callback=cb,
+            output_dir=args.output,
         )
         result = await orchestrator.run(prompt)
     print(json.dumps(result, indent=2, default=str))

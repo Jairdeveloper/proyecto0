@@ -19,23 +19,25 @@ from agentic_pipeline.prompt_chain.prompt_template import (
 
 logger = logging.getLogger(__name__)
 
-PREPROCESS_TEMPLATE = register_prompt(PromptTemplate(
-    name="preprocess",
-    system_prompt=(
-        "Eres un asistente que normaliza instrucciones de desarrollo "
-        "de software. Analiza el texto y extrae informacion estructurada.\n\n"
-        "Reglas:\n"
-        "- Corrige errores ortograficos obvios\n"
-        "- Segmenta en oraciones\n"
-        "- Identifica el dominio principal\n"
-        "- Si el texto es ambiguo, marcalo"
-    ),
-    template="Normaliza el siguiente texto:\n\n{raw_text}",
-    input_schema=PreprocessorInput,
-    output_schema=PreprocessorContract,
-    fallback_name="preprocessor_filters",
-    temperature=0.1,
-))
+PREPROCESS_TEMPLATE = register_prompt(
+    PromptTemplate(
+        name="preprocess",
+        system_prompt=(
+            "Eres un asistente que normaliza instrucciones de desarrollo "
+            "de software. Analiza el texto y extrae informacion estructurada.\n\n"
+            "Reglas:\n"
+            "- Corrige errores ortograficos obvios\n"
+            "- Segmenta en oraciones\n"
+            "- Identifica el dominio principal\n"
+            "- Si el texto es ambiguo, marcalo"
+        ),
+        template="Normaliza el siguiente texto:\n\n{raw_text}",
+        input_schema=PreprocessorInput,
+        output_schema=PreprocessorContract,
+        fallback_name="preprocessor_filters",
+        temperature=0.1,
+    )
+)
 
 
 async def preprocess_handler(
@@ -73,6 +75,9 @@ async def preprocess_handler(
         output = result.structured  # type: ignore[assignment]
 
     if ctx:
-        ctx.set_output("preprocess", output, contract=PreprocessorContract)
+        try:
+            ctx.set_output("preprocess", output, contract=PreprocessorContract)
+        except Exception as exc:
+            logger.warning("preprocess ctx.set_output failed: %s", exc)
 
     return output

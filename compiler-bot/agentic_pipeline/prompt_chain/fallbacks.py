@@ -41,10 +41,15 @@ def _preprocess_fallback(raw_text: str, **kwargs: Any) -> dict:
         NormalizationFilter,
         SegmentationFilter,
     )
+
     nf = NormalizationFilter()
     sf = SegmentationFilter()
     normalized = nf.process(raw_text)
-    segments = sf.process(normalized)
+    segments_raw = sf.process(normalized)
+    if isinstance(segments_raw, str):
+        segments = [s.strip() for s in segments_raw.split("[SEG]") if s.strip()]
+    else:
+        segments = segments_raw
     return {
         "normalized": normalized,
         "domain": "backend",
@@ -92,8 +97,9 @@ def _plan_fallback(**kwargs: Any) -> dict:
     if module:
         entities.append({"name": module, "type": "module"})
 
+    objective = module or ""
     goal = planner.decompose(
-        description=module or "",
+        objective=objective,
         intent=intent,
         entities=entities,
     )
@@ -119,20 +125,23 @@ def _plan_fallback(**kwargs: Any) -> dict:
 
 def _generate_fallback(**kwargs: Any) -> dict:
     """Wrapper sobre GeneratorFactory + templates."""
-    from agentic_pipeline.generators.generator_factory import GeneratorFactory
+    from pathlib import Path
+
+    from agentic_pipeline.generators.base_generator import GeneratorFactory
 
     tasks = kwargs.get("tasks", [])
-    factory = GeneratorFactory()
     files = []
     errors = []
 
     for task in tasks:
+        target = task.get("target", task.get("type", ""))
         try:
-            result = factory.generate(task)
-            if isinstance(result, dict):
-                files.append(result)
-            elif isinstance(result, list):
-                files.extend(result)
+            generator = GeneratorFactory.get_generator(target)
+            created = generator.generate(task, Path("modules"))
+            for path in created:
+                files.append({"path": str(path), "content": ""})
+        except ValueError:
+            pass
         except Exception as exc:
             errors.append(f"Task {task.get('id', '?')} failed: {exc}")
 

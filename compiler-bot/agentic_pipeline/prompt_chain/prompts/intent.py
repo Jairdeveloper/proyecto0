@@ -16,24 +16,26 @@ from agentic_pipeline.prompt_chain.prompt_template import (
 
 logger = logging.getLogger(__name__)
 
-INTENT_TEMPLATE = register_prompt(PromptTemplate(
-    name="intent",
-    system_prompt=(
-        "Eres un analista de requisitos de software. Del texto dado, "
-        "identifica que accion se pide y con que detalles.\n\n"
-        "Acciones disponibles:\n"
-        "- CREATE: crear modulo, entidad, proyecto, crud\n"
-        "- READ: consultar, listar, mostrar, leer archivos\n"
-        "- UPDATE: modificar, actualizar, agregar campo, cambiar\n"
-        "- DELETE: eliminar, borrar, quitar, remover\n"
-        "- EXPLAIN: explicar, describir, como funciona"
-    ),
-    template="Texto normalizado: {normalized_text}\nDominio: {domain}",
-    input_schema=NLPInput,
-    output_schema=NLPContract,
-    fallback_name="intent_classifier",
-    temperature=0.2,
-))
+INTENT_TEMPLATE = register_prompt(
+    PromptTemplate(
+        name="intent",
+        system_prompt=(
+            "Eres un analista de requisitos de software. Del texto dado, "
+            "identifica que accion se pide y con que detalles.\n\n"
+            "Acciones disponibles:\n"
+            "- CREATE: crear modulo, entidad, proyecto, crud\n"
+            "- READ: consultar, listar, mostrar, leer archivos\n"
+            "- UPDATE: modificar, actualizar, agregar campo, cambiar\n"
+            "- DELETE: eliminar, borrar, quitar, remover\n"
+            "- EXPLAIN: explicar, describir, como funciona"
+        ),
+        template="Texto normalizado: {normalized_text}\nDominio: {domain}",
+        input_schema=NLPInput,
+        output_schema=NLPContract,
+        fallback_name="intent_classifier",
+        temperature=0.2,
+    )
+)
 
 
 async def intent_handler(
@@ -77,6 +79,9 @@ async def intent_handler(
         output = result.structured  # type: ignore[assignment]
 
     if ctx:
-        ctx.set_output("intent", output, contract=NLPContract)
+        try:
+            ctx.set_output("intent", output, contract=NLPContract)
+        except Exception as exc:
+            logger.warning("intent ctx.set_output failed: %s", exc)
 
     return output

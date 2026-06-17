@@ -19,23 +19,25 @@ from agentic_pipeline.prompt_chain.prompt_template import (
 
 logger = logging.getLogger(__name__)
 
-GENERATE_TEMPLATE = register_prompt(PromptTemplate(
-    name="generate",
-    system_prompt=(
-        "Eres un generador de codigo NestJS + Prisma.\n"
-        "Genera el codigo completo para cada tarea del plan.\n\n"
-        "Convenciones:\n"
-        "- NestJS: modulo, controller, service, DTO, entity\n"
-        "- Prisma: schema con modelo, campos, relaciones\n"
-        "- Typescript: tipado estricto, decoradores\n"
-        "- Incluye imports completos"
-    ),
-    template="Tareas: {tasks}\nArchivos existentes: {existing_files}",
-    input_schema=SynthesisInput,
-    output_schema=SynthesisContract,
-    fallback_name="generator_factory",
-    temperature=0.4,
-))
+GENERATE_TEMPLATE = register_prompt(
+    PromptTemplate(
+        name="generate",
+        system_prompt=(
+            "Eres un generador de codigo NestJS + Prisma.\n"
+            "Genera el codigo completo para cada tarea del plan.\n\n"
+            "Convenciones:\n"
+            "- NestJS: modulo, controller, service, DTO, entity\n"
+            "- Prisma: schema con modelo, campos, relaciones\n"
+            "- Typescript: tipado estricto, decoradores\n"
+            "- Incluye imports completos"
+        ),
+        template="Tareas: {tasks}\nArchivos existentes: {existing_files}",
+        input_schema=SynthesisInput,
+        output_schema=SynthesisContract,
+        fallback_name="generator_factory",
+        temperature=0.4,
+    )
+)
 
 
 async def generate_handler(
@@ -82,6 +84,9 @@ async def generate_handler(
         output = result.structured  # type: ignore[assignment]
 
     if ctx:
-        ctx.set_output("generate", output, contract=SynthesisContract)
+        try:
+            ctx.set_output("generate", output, contract=SynthesisContract)
+        except Exception as exc:
+            logger.warning("generate ctx.set_output failed: %s", exc)
 
     return output

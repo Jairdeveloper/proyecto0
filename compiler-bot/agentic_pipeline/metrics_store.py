@@ -204,3 +204,137 @@ class MetricsStore:
 
     def close(self) -> None:
         pass
+
+    # -- Prompt chain metrics (F5) -------------------------------------------
+
+    def record_prompt(self, prompt_name: str, metrics: dict[str, Any]) -> None:
+        """Registra metricas de una etapa del prompt chain.
+
+        Args:
+            prompt_name: Nombre del prompt (preprocess, intent, plan, etc.)
+            metrics: Dict con success, duration, llm_provider, llm_model,
+                     temperature, fallback_used, output_size, tokens_used.
+        """
+        full_metrics = dict(metrics)
+        full_metrics.setdefault("fallback_used", False)
+        full_metrics.setdefault("output_size", 0)
+        full_metrics.setdefault("tokens_used", 0)
+        self.record(f"prompt_chain:{prompt_name}", full_metrics)
+
+    def _get_prompt_entries(
+        self,
+        prompt_name: str,
+        limit: int = 20,
+    ) -> list[dict[str, Any]]:
+        return self.get_recent(f"prompt_chain:{prompt_name}", limit)
+
+    def get_prompt_success_rate(
+        self,
+        prompt_name: str,
+        n: int = 20,
+    ) -> float:
+        """Tasa de exito del prompt en las ultimas N ejecuciones (0.0-1.0)."""
+        entries = self._get_prompt_entries(prompt_name, n)
+        if not entries:
+            return 1.0
+        successes = sum(
+            1 for e in entries if e.get("metrics", {}).get("success", False)
+        )
+        return successes / len(entries)
+
+    def get_prompt_avg_duration(
+        self,
+        prompt_name: str,
+        n: int = 20,
+    ) -> float:
+        """Duracion promedio del prompt en segundos."""
+        entries = self._get_prompt_entries(prompt_name, n)
+        if not entries:
+            return 0.0
+        durations = [
+            e.get("metrics", {}).get("duration", 0.0)
+            for e in entries
+            if e.get("metrics", {}).get("duration") is not None
+        ]
+        if not durations:
+            return 0.0
+        return sum(durations) / len(durations)
+
+    def get_prompt_fallback_rate(
+        self,
+        prompt_name: str,
+        n: int = 20,
+    ) -> float:
+        """Tasa de fallback en las ultimas N ejecuciones (0.0-1.0)."""
+        entries = self._get_prompt_entries(prompt_name, n)
+        if not entries:
+            return 0.0
+        fallbacks = sum(
+            1 for e in entries if e.get("metrics", {}).get("fallback_used", False)
+        )
+        return fallbacks / len(entries)
+
+    def get_prompt_chain_summary(self) -> dict[str, Any]:
+        """Retorna resumen agregado de todos los prompts del chain.
+
+        Returns:
+            Dict con total_records, total_errors, success_rate, cache_hit_rate,
+            fallback_rate, y per-stage stats.
+        """
+        prompt_stages = [
+            "preprocess",
+            "intent",
+            "plan",
+            "generate",
+            "verify",
+            "format",
+        ]
+        per_stage: dict[str, dict[str, Any]] = {}
+        total_records = 0
+        total_errors = 0
+        total_fallbacks = 0
+
+        for name in prompt_stages:
+            stage_key = f"prompt_chain:{name}"
+            entries = self.get_recent(stage_key, MAX_ENTRIES_PER_STAGE)
+            if not entries:
+                continue
+            count = len(entries)
+            total_records += count
+            errors = sum(
+                1 for e in entries if not e.get("metrics", {}).get("success", True)
+            )
+            fallbacks = sum(
+                1 for e in entries if e.get("metrics", {}).get("fallback_used", False)
+            )
+            total_errors += errors
+            total_fallbacks += fallbacks
+
+            durations = [
+                e.get("metrics", {}).get("duration", 0.0)
+                for e in entries
+                if e.get("metrics", {}).get("duration") is not None
+            ]
+            avg_duration = sum(durations) / len(durations) if durations else 0.0
+            success_rate = (count - errors) / count if count > 0 else 1.0
+
+            per_stage[name] = {
+                "calls": count,
+                "success_rate": round(success_rate * 100, 1),
+                "avg_duration_s": round(avg_duration, 2),
+                "errors": errors,
+                "fallbacks": fallbacks,
+            }
+
+        overall_success_rate = (
+            (total_records - total_errors) / total_records if total_records > 0 else 1.0
+        )
+        fallback_rate = total_fallbacks / total_records if total_records > 0 else 0.0
+
+        return {
+            "total_records": total_records,
+            "total_errors": total_errors,
+            "success_rate": round(overall_success_rate * 100, 1),
+            "fallback_rate": round(fallback_rate * 100, 1),
+            "per_stage": per_stage,
+        }

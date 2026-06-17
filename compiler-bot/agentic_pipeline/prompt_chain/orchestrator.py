@@ -196,7 +196,8 @@ class ChainOrchestrator:
 
         try:
             intent_data = state["ctx"].get_fields(
-                "intent", ["intent", "module", "entity", "tech", "features"],
+                "intent",
+                ["intent", "module", "entity", "tech", "features"],
             )
             output = await plan_handler(
                 intent=intent_data["intent"],
@@ -243,7 +244,8 @@ class ChainOrchestrator:
 
         try:
             intent_data = state["ctx"].get_fields(
-                "intent", ["intent", "module", "entity", "tech", "features"],
+                "intent",
+                ["intent", "module", "entity", "tech", "features"],
             )
             generate_data = state["ctx"].get_fields("generate", ["files"])
             output = await verify_handler(
@@ -258,19 +260,25 @@ class ChainOrchestrator:
         except Exception as exc:
             logger.error("verify failed: %s", exc)
             state["errors"].append(f"verify: {exc}")
-            return {"verify_output": {"valid": False, "should_retry": False,
-                                      "checks": [], "suggestions": []}}
+            return {
+                "verify_output": {
+                    "valid": False,
+                    "should_retry": False,
+                    "checks": [],
+                    "suggestions": [],
+                }
+            }
 
     async def _node_format(self, state: ChainState) -> dict:
         """Ejecuta prompt FORMAT y escribe resultado final."""
         from agentic_pipeline.prompt_chain.prompts.format import format_handler
 
         try:
-            plan_data = state["ctx"].get_fields("plan", ["tasks",
-                                                          "execution_order"])
+            plan_data = state["ctx"].get_fields("plan", ["tasks", "execution_order"])
             generate_data = state["ctx"].get_fields("generate", ["files"])
             verify_data = state["ctx"].get_fields(
-                "verify", ["valid", "checks", "suggestions"],
+                "verify",
+                ["valid", "checks", "suggestions"],
             )
             output = await format_handler(
                 original_request=state["raw_input"],

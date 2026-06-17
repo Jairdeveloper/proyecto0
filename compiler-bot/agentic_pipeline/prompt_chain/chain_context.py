@@ -39,12 +39,14 @@ class ChainContext:
         if contract:
             contract.model_validate(data)
         self._data[stage] = data
-        self._history.append(ChainStep(
-            stage=stage,
-            output=data,
-            timestamp=datetime.now(timezone.utc).isoformat(),
-            success=True,
-        ))
+        self._history.append(
+            ChainStep(
+                stage=stage,
+                output=data,
+                timestamp=datetime.now(timezone.utc).isoformat(),
+                success=True,
+            )
+        )
 
     def get_fields(self, stage: str, fields: list[str]) -> dict:
         """Obtiene campos especificos de una etapa anterior.

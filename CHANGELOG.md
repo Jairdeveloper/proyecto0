@@ -20,6 +20,36 @@ y este proyecto se adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.
 - todos los agentes: `__init__` acepta `llm: LLMBackend | None` (default None, 100% backward compat)
 - Suite de tests: 86 totales (71 prompt chain + 15 multiagente), todos PASS, ruff 0 errores
 
+## [2.6.0] — 2026-06-17
+
+### Added
+- Fase 5 (Feedback Loop + Optimizacion): metrics_store extendido con metricas de prompts, PromptOptimizer, LLMCache con backend memory/sqlite
+- `prompt_chain/llm_cache.py` — LLMCache con hash SHA256, soporte backend memory y sqlite, stats (hit_rate, size)
+- `metrics_store.py` — `record_prompt()`, `get_prompt_success_rate()`, `get_prompt_avg_duration()`, `get_prompt_fallback_rate()`, `get_prompt_chain_summary()`
+- `feedback_loop.py` — PromptOptimizer con ajuste automatico de temperatura/model segun success_rate/duration/fallback_rate
+- `docs/111_REP_DEV_PROMPT_CHAIN_F5_1_0_DRAFT.md` — reporte de implementacion Fase 5
+- `docs/112_REP_DEV_BUGS_FIXES_1_0_DRAFT.md` — reporte de bugs y fixes del pipeline --chain (7 bugs documentados)
+- Dashboard `--metrics` extendido con seccion "Prompt Chain per-stage" en `compiler-bot/agentic`
+
+### Fixed
+- Bug #1 (fallbacks.py): `_preprocess_fallback` retornaba segments como string del `SegmentationFilter`; convertido a lista para cumplir `PreprocessorContract`
+- Bug #2 (llm_backend.py): OpenAI sentinel `object()` sin metodo `ainvoke`; guard clause con `hasattr()` antes de llamar
+- Bug #3 (prompts/*.py): ValidationError en `ctx.set_output` elimina la etapa del `ChainContext`; try/except en todos los 6 handlers
+- Bug #4 (cli.py): `--chain` retornaba `success: true` aunque todo falle; now lee `success` del resultado de la chain
+- Bug #5 (preprocess.py): Fallback rule-based retorna datos en formato legacy; resuelto via Fix #1 + Fix #3
+- Bug #6 (fallbacks.py): `_plan_fallback` usa `description` en vez de `objective` para `GoalTreePlanner.decompose()`; corregido keyword arg
+- Bug #7 (fallbacks.py): `_generate_fallback` importa `generator_factory` inexistente y usa API incorrecta; corregido import + llamada
+
+### Changed
+- `cli.py:run_chain()`: `success` propagado desde el resultado interno, no hardcodeado
+- `compiler-bot/agentic`: Dashboard `--metrics` incluye prompt chain per-stage stats
+
+### Added (tests)
+- `tests/test_metrics_store_prompt.py` — 6 tests para metricas de prompts
+- `tests/test_prompt_optimizer.py` — 5 tests para PromptOptimizer
+- `tests/test_llm_cache.py` — 8 tests para LLMCache (memory + sqlite, hash, stats)
+- Suite total: 105 tests (71 prompt chain + 15 multiagente + 19 F5), todos PASS, ruff 0 errores
+
 ## [2.4.0] — 2026-06-16
 
 ### Added

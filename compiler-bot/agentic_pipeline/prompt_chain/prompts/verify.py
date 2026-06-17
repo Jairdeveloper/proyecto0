@@ -19,28 +19,28 @@ from agentic_pipeline.prompt_chain.prompt_template import (
 
 logger = logging.getLogger(__name__)
 
-VERIFY_TEMPLATE = register_prompt(PromptTemplate(
-    name="verify",
-    system_prompt=(
-        "Eres un revisor de codigo NestJS/Prisma. Verifica que los "
-        "archivos generados cumplan los requisitos y las mejores practicas.\n\n"
-        "Criterios:\n"
-        "- Estructura de archivos correcta (modulo, controller, etc.)\n"
-        "- Imports necesarios presentes\n"
-        "- Naming conventions (PascalCase, camelCase)\n"
-        "- Relaciones Prisma correctas\n"
-        "- Decoradores NestJS correctos"
-    ),
-    template=(
-        "Requisitos: {requirements}\n\n"
-        "Archivos: {files}\n\n"
-        "Criterios: {criteria}"
-    ),
-    input_schema=ValidatorInput,
-    output_schema=ValidatorContract,
-    fallback_name="validator_pipeline",
-    temperature=0.1,
-))
+VERIFY_TEMPLATE = register_prompt(
+    PromptTemplate(
+        name="verify",
+        system_prompt=(
+            "Eres un revisor de codigo NestJS/Prisma. Verifica que los "
+            "archivos generados cumplan los requisitos y las mejores practicas.\n\n"
+            "Criterios:\n"
+            "- Estructura de archivos correcta (modulo, controller, etc.)\n"
+            "- Imports necesarios presentes\n"
+            "- Naming conventions (PascalCase, camelCase)\n"
+            "- Relaciones Prisma correctas\n"
+            "- Decoradores NestJS correctos"
+        ),
+        template=(
+            "Requisitos: {requirements}\n\nArchivos: {files}\n\nCriterios: {criteria}"
+        ),
+        input_schema=ValidatorInput,
+        output_schema=ValidatorContract,
+        fallback_name="validator_pipeline",
+        temperature=0.1,
+    )
+)
 
 
 async def verify_handler(
@@ -91,6 +91,9 @@ async def verify_handler(
         output = result.structured  # type: ignore[assignment]
 
     if ctx:
-        ctx.set_output("verify", output, contract=ValidatorContract)
+        try:
+            ctx.set_output("verify", output, contract=ValidatorContract)
+        except Exception as exc:
+            logger.warning("verify ctx.set_output failed: %s", exc)
 
     return output

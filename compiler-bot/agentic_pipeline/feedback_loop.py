@@ -62,6 +62,30 @@ class GlobalFeedbackLoop:
         self._legacy.record(stage, metrics)
         self._adjust_lexer_weights(stage, metrics)
 
+    # -- Prompt chain metrics (F5) -------------------------------------------
+
+    def record_prompt(self, prompt_name: str, metrics: dict[str, Any]) -> None:
+        """Registra metricas de una etapa del prompt chain."""
+        self._store.record_prompt(prompt_name, metrics)
+
+    def get_prompt_success_rate(self, prompt_name: str, n: int = 20) -> float:
+        """Tasa de exito del prompt en las ultimas N ejecuciones."""
+        return self._store.get_prompt_success_rate(prompt_name, n)
+
+    def get_prompt_avg_duration(self, prompt_name: str, n: int = 20) -> float:
+        """Duracion promedio del prompt en segundos."""
+        return self._store.get_prompt_avg_duration(prompt_name, n)
+
+    def get_prompt_fallback_rate(self, prompt_name: str, n: int = 20) -> float:
+        """Tasa de fallback del prompt."""
+        return self._store.get_prompt_fallback_rate(prompt_name, n)
+
+    def prompt_chain_summary(self) -> dict[str, Any]:
+        """Resumen agregado de todas las etapas del prompt chain."""
+        return self._store.get_prompt_chain_summary()
+
+    # -- Existing API ---------------------------------------------------------
+
     def get_adjustments(self, stage: str) -> dict[str, Any]:
         return self._adjustments.get(stage, {})
 
@@ -116,3 +140,61 @@ def get_global_feedback() -> GlobalFeedbackLoop:
     if _global_feedback is None:
         _global_feedback = GlobalFeedbackLoop()
     return _global_feedback
+
+
+# ── T5.2: PromptOptimizer ──
+
+
+class PromptOptimizer:
+    """Ajusta temperatura/model segun metricas historicas (F5).
+
+    Reglas:
+        - Si success_rate < 0.8 en ultimas 20 ejecuciones:
+          → reducir temperatura en 0.1 (min 0.0)
+        - Si avg_duration > 5s:
+          → cambiar a modelo mas rapido
+        - Si fallback_used > 50%:
+          → reducir temperatura, simplificar prompt
+    """
+
+    def __init__(self, metrics_store: MetricsStore) -> None:
+        self._store = metrics_store
+
+    def optimize(self, prompt_name: str) -> dict[str, Any]:
+        """Retorna parametros optimizados para el prompt.
+
+        Args:
+            prompt_name: Nombre del prompt a optimizar.
+
+        Returns:
+            Dict con parametros ajustados (temperature, model, etc.).
+        """
+        rate = self._store.get_prompt_success_rate(prompt_name)
+        duration = self._store.get_prompt_avg_duration(prompt_name)
+        fallback_rate = self._store.get_prompt_fallback_rate(prompt_name)
+
+        params: dict[str, Any] = {}
+
+        if rate < 0.8:
+            params["temperature"] = max(0.0, 0.3 - 0.1)
+
+        if duration > 5.0:
+            params["model"] = "gpt-4o-mini"
+
+        if fallback_rate > 0.5:
+            params["temperature"] = min(
+                params.get("temperature", 0.3),
+                0.2,
+            )
+
+        if params:
+            logger.info(
+                "PromptOptimizer[%s]: rate=%.2f dur=%.2fs fallback=%.2f → %s",
+                prompt_name,
+                rate,
+                duration,
+                fallback_rate,
+                params,
+            )
+
+        return params

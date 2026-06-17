@@ -207,11 +207,12 @@ class TestChainOrchestrator:
         orchestrator = ChainOrchestrator(llm=mock_llm)
         result = await orchestrator.run("crea modulo pagos")
 
-        # All LLM calls fail → fallbacks are invoked, but preprocess
-        # fallback has a known contract incompatibility (segments=str).
-        # The chain completes via format's error handler.
+        # All LLM calls fail → fallbacks are invoked.
+        # Con los 5 bugs fixeados, los 6 fallbacks rule-based completan
+        # el pipeline entero sin errores.
         assert isinstance(result, dict)
-        assert mock_llm.generate_structured.call_count == 1
+        assert result.get("success", False) is True
+        assert mock_llm.generate_structured.call_count == 6
 
     @pytest.mark.asyncio
     async def test_orchestrator_debug_callback(self):

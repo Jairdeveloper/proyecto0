@@ -11,7 +11,8 @@ logger = logging.getLogger(__name__)
 def add_chain_args(parser: argparse.ArgumentParser) -> None:
     """Anade argumentos de prompt chain al parser."""
     parser.add_argument(
-        "--chain", action="store_true",
+        "--chain",
+        action="store_true",
         help="Usar pipeline Prompt Chaining (en vez del clasico)",
     )
 
@@ -50,4 +51,5 @@ async def run_chain(
         debug_callback=debug_callback,
     )
     result = await orchestrator.run(prompt)
-    return {"output": result, "success": True}
+    success = result.get("success", True) if isinstance(result, dict) else True
+    return {"output": result, "success": success}

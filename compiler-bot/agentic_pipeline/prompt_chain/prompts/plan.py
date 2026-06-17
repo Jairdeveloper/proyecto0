@@ -16,36 +16,38 @@ from agentic_pipeline.prompt_chain.prompt_template import (
 
 logger = logging.getLogger(__name__)
 
-PLAN_TEMPLATE = register_prompt(PromptTemplate(
-    name="plan",
-    system_prompt=(
-        "Eres un arquitecto de software. Dado un objetivo y requisitos, "
-        "genera un plan de tareas ejecutable con dependencias.\n\n"
-        "Cada tarea debe tener:\n"
-        "- id unico (ej: \"t1\", \"t2\")\n"
-        "- tipo de accion\n"
-        "- target (modulo, archivo, entidad)\n"
-        "- parametros especificos\n"
-        "- dependencias (task ids que deben completarse antes)\n\n"
-        "Tipos de tarea disponibles:\n"
-        "- scaffold_module: crear estructura de modulo NestJS\n"
-        "- create_entity: crear entidad/schema Prisma\n"
-        "- generate_code: generar archivo de codigo especifico\n"
-        "- configure: modificar configuracion existente\n"
-        "- verify: verificar que todo este correcto"
-    ),
-    template=(
-        "Intencion: {intent}\n"
-        "Modulo: {module}\n"
-        "Entidad: {entity}\n"
-        "Tecnologias: {tech}\n"
-        "Features: {features}"
-    ),
-    input_schema=PlannerInput,
-    output_schema=PlannerContract,
-    fallback_name="goal_tree_planner",
-    temperature=0.3,
-))
+PLAN_TEMPLATE = register_prompt(
+    PromptTemplate(
+        name="plan",
+        system_prompt=(
+            "Eres un arquitecto de software. Dado un objetivo y requisitos, "
+            "genera un plan de tareas ejecutable con dependencias.\n\n"
+            "Cada tarea debe tener:\n"
+            '- id unico (ej: "t1", "t2")\n'
+            "- tipo de accion\n"
+            "- target (modulo, archivo, entidad)\n"
+            "- parametros especificos\n"
+            "- dependencias (task ids que deben completarse antes)\n\n"
+            "Tipos de tarea disponibles:\n"
+            "- scaffold_module: crear estructura de modulo NestJS\n"
+            "- create_entity: crear entidad/schema Prisma\n"
+            "- generate_code: generar archivo de codigo especifico\n"
+            "- configure: modificar configuracion existente\n"
+            "- verify: verificar que todo este correcto"
+        ),
+        template=(
+            "Intencion: {intent}\n"
+            "Modulo: {module}\n"
+            "Entidad: {entity}\n"
+            "Tecnologias: {tech}\n"
+            "Features: {features}"
+        ),
+        input_schema=PlannerInput,
+        output_schema=PlannerContract,
+        fallback_name="goal_tree_planner",
+        temperature=0.3,
+    )
+)
 
 
 async def plan_handler(
@@ -104,6 +106,9 @@ async def plan_handler(
         output = result.structured  # type: ignore[assignment]
 
     if ctx:
-        ctx.set_output("plan", output, contract=PlannerContract)
+        try:
+            ctx.set_output("plan", output, contract=PlannerContract)
+        except Exception as exc:
+            logger.warning("plan ctx.set_output failed: %s", exc)
 
     return output

@@ -98,6 +98,13 @@ class OpenAIBackend(LLMBackend):
         max_tokens: int = 4096,
     ) -> LLMResult:
         self._ensure_llm()
+        if not hasattr(self._llm, "ainvoke"):
+            return LLMResult(
+                provider="openai",
+                model=self._model,
+                success=False,
+                error="OpenAI backend unavailable (init failed)",
+            )
         t0 = time.time()
         try:
             from langchain_core.messages import HumanMessage, SystemMessage
@@ -135,6 +142,13 @@ class OpenAIBackend(LLMBackend):
         temperature: float = 0.3,
     ) -> LLMResult:
         self._ensure_llm()
+        if not hasattr(self._llm, "ainvoke"):
+            return LLMResult(
+                provider="openai",
+                model=self._model,
+                success=False,
+                error="OpenAI backend unavailable (init failed)",
+            )
         t0 = time.time()
         try:
             if output_schema is None:
@@ -146,8 +160,13 @@ class OpenAIBackend(LLMBackend):
                 f"Responde SOLO con JSON valido que cumpla este schema:\n"
                 f"{output_schema.model_json_schema()}"
             )
-            full_system = f"{system}\n\n{schema_instructions}" if system else schema_instructions
-            messages = [SystemMessage(content=full_system), HumanMessage(content=prompt)]
+            full_system = (
+                f"{system}\n\n{schema_instructions}" if system else schema_instructions
+            )
+            messages = [
+                SystemMessage(content=full_system),
+                HumanMessage(content=prompt),
+            ]
 
             response = await self._llm.ainvoke(messages)
             parsed = output_schema.model_validate_json(response.content)
@@ -185,8 +204,9 @@ class OllamaBackend(LLMBackend):
         base_url: str | None = None,
         model: str | None = None,
     ) -> None:
-        self._base_url = (base_url or os.getenv("AGENTIC_OLLAMA_URL",
-                                                 "http://localhost:11434")).rstrip("/")
+        self._base_url = (
+            base_url or os.getenv("AGENTIC_OLLAMA_URL", "http://localhost:11434")
+        ).rstrip("/")
         self._model = model or os.getenv("AGENTIC_OLLAMA_MODEL", "llama3")
 
     async def generate(
@@ -213,8 +233,7 @@ class OllamaBackend(LLMBackend):
                 payload["system"] = system
 
             async with httpx.AsyncClient(timeout=60.0) as client:
-                resp = await client.post(f"{self._base_url}/api/generate",
-                                         json=payload)
+                resp = await client.post(f"{self._base_url}/api/generate", json=payload)
                 resp.raise_for_status()
                 data = resp.json()
 
@@ -251,7 +270,9 @@ class OllamaBackend(LLMBackend):
             f"Responde SOLO con JSON valido que cumpla este schema:\n"
             f"{output_schema.model_json_schema()}"
         )
-        full_system = f"{system}\n\n{schema_instructions}" if system else schema_instructions
+        full_system = (
+            f"{system}\n\n{schema_instructions}" if system else schema_instructions
+        )
 
         result = await self.generate(prompt, full_system, temperature)
         if not result.success:
@@ -281,8 +302,9 @@ class VLLMBackend(LLMBackend):
         base_url: str | None = None,
         model: str | None = None,
     ) -> None:
-        self._base_url = (base_url or os.getenv("AGENTIC_VLLM_URL",
-                                                 "http://localhost:8000")).rstrip("/")
+        self._base_url = (
+            base_url or os.getenv("AGENTIC_VLLM_URL", "http://localhost:8000")
+        ).rstrip("/")
         self._model = model or os.getenv("AGENTIC_VLLM_MODEL", "")
 
     async def generate(
@@ -307,8 +329,9 @@ class VLLMBackend(LLMBackend):
             payload["messages"].append({"role": "user", "content": prompt})
 
             async with httpx.AsyncClient(timeout=60.0) as client:
-                resp = await client.post(f"{self._base_url}/v1/chat/completions",
-                                         json=payload)
+                resp = await client.post(
+                    f"{self._base_url}/v1/chat/completions", json=payload
+                )
                 resp.raise_for_status()
                 data = resp.json()
 
@@ -346,7 +369,9 @@ class VLLMBackend(LLMBackend):
             f"Responde SOLO con JSON valido que cumpla este schema:\n"
             f"{output_schema.model_json_schema()}"
         )
-        full_system = f"{system}\n\n{schema_instructions}" if system else schema_instructions
+        full_system = (
+            f"{system}\n\n{schema_instructions}" if system else schema_instructions
+        )
 
         result = await self.generate(prompt, full_system, temperature)
         if not result.success:
@@ -398,7 +423,10 @@ class FailoverLLMBackend(LLMBackend):
     ) -> LLMResult:
         for backend in self._backends:
             result = await backend.generate_structured(
-                prompt, system, output_schema, temperature,
+                prompt,
+                system,
+                output_schema,
+                temperature,
             )
             if result.success:
                 return result
