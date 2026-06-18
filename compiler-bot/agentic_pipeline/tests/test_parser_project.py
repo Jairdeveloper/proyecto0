@@ -9,7 +9,10 @@ from agentic_pipeline.nodes.ast_nodes import (
     PageNode,
     ProjectNode,
 )
+from agentic_pipeline.nodes.evaluation_visitor import EvaluationVisitor
+from agentic_pipeline.nodes.ir_export_visitor import IRExportVisitor
 from agentic_pipeline.nodes.parser import ParserGLR, _select_grammar
+from agentic_pipeline.nodes.validation_visitor import ValidationVisitor
 from agentic_pipeline.state_models import Stage, StageContext
 
 
@@ -21,7 +24,7 @@ from agentic_pipeline.state_models import Stage, StageContext
 class TestProjectNode:
     def test_empty_project(self):
         p = ProjectNode("test")
-        ir = p.to_ir()
+        ir = p.accept(IRExportVisitor())
         assert ir["node_type"] == "project"
         assert ir["children"] == []
 
@@ -29,13 +32,14 @@ class TestProjectNode:
         p = ProjectNode("test")
         page = PageNode("home")
         p.add(page)
-        ir = p.to_ir()
+        ir = p.accept(IRExportVisitor())
         assert len(ir["children"]) == 1
         assert ir["children"][0]["name"] == "home"
 
     def test_validate_no_errors(self):
         p = ProjectNode("test")
-        assert p.validate() == []
+        errors = p.accept(ValidationVisitor()).errors
+        assert errors == []
 
 
 class TestPageNode:
@@ -43,21 +47,21 @@ class TestPageNode:
         page = PageNode("login")
         comp = ComponentNode("form", "formulario")
         page.add(comp)
-        ir = page.to_ir()
+        ir = page.accept(IRExportVisitor())
         assert ir["name"] == "login"
         assert len(ir["children"]) == 1
         assert ir["children"][0]["component_type"] == "formulario"
 
     def test_page_no_components_validation_error(self):
         page = PageNode("empty")
-        errors = page.validate()
+        errors = page.accept(ValidationVisitor()).errors
         assert any("no components" in e for e in errors)
 
     def test_page_evaluate(self):
         page = PageNode("home")
         comp = ComponentNode("table", "tabla")
         page.add(comp)
-        ev = page.evaluate()
+        ev = page.accept(EvaluationVisitor())
         assert ev["type"] == "page"
         assert ev["name"] == "home"
         assert len(ev["components"]) == 1
@@ -66,14 +70,15 @@ class TestPageNode:
 class TestComponentNode:
     def test_component_ir(self):
         c = ComponentNode("form", "formulario")
-        ir = c.to_ir()
+        ir = c.accept(IRExportVisitor())
         assert ir["node_type"] == "component"
         assert ir["name"] == "form"
         assert ir["component_type"] == "formulario"
 
     def test_component_validate(self):
         c = ComponentNode("btn", "boton")
-        assert c.validate() == []
+        errors = c.accept(ValidationVisitor()).errors
+        assert errors == []
 
 
 class TestEntityNode:
@@ -81,14 +86,14 @@ class TestEntityNode:
         e = EntityNode("User")
         e.add_attribute("name", "string")
         e.add_attribute("age", "int")
-        ir = e.to_ir()
+        ir = e.accept(IRExportVisitor())
         assert ir["name"] == "User"
         assert len(ir["attributes"]) == 2
         assert ir["attributes"][0] == {"name": "name", "type": "string"}
 
     def test_entity_no_attributes_validation_error(self):
         e = EntityNode("Empty")
-        errors = e.validate()
+        errors = e.accept(ValidationVisitor()).errors
         assert any("no attributes" in e for e in errors)
 
 
@@ -96,7 +101,7 @@ class TestInfraNode:
     def test_infra_with_resources(self):
         node = InfraNode("postgres", "basededatos")
         node.add_resource({"name": "cpu", "value": "4"})
-        ir = node.to_ir()
+        ir = node.accept(IRExportVisitor())
         assert ir["name"] == "postgres"
         assert ir["infra_type"] == "basededatos"
         assert len(ir["resources"]) == 1

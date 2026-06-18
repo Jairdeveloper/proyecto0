@@ -16,6 +16,7 @@ from .ast_nodes import (
     PageNode,
     ProjectNode,
 )
+from .ir_export_visitor import IRExportVisitor
 
 logger = logging.getLogger(__name__)
 
@@ -431,7 +432,7 @@ class ParserGLR(PipelineStage):
             tree = PARSERS[grammar].parse(cleaned)
             builder = AST_BUILDERS[grammar]
             project_node = builder(tree)
-            return project_node.to_ir()
+            return project_node.accept(IRExportVisitor())
         except Exception as e:
             logger.debug("Lark parse failed for grammar '%s': %s", grammar, e)
             return None

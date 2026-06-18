@@ -7,7 +7,9 @@ from typing import Any
 
 from ..base_stage import PipelineStage
 from ..state_models import ActionPlan, AnalysisResult, StageContext, StageOutput
+from .ast_nodes import ASTNode
 from .ir_builder import IRBuilder
+from .ir_export_visitor import IRExportVisitor
 from .ir_serializer import get_serializer
 from .ir_nodes import IRNode
 
@@ -25,9 +27,14 @@ class IRGenerator(PipelineStage):
         self._builder: IRBuilder | None = None
         self._built_root: IRNode | None = None
         self._enriched: dict = {}
+        self._ast_node: ASTNode | None = None
 
     def receive_mission(self, input_data: object) -> None:
-        if isinstance(input_data, dict):
+        if isinstance(input_data, ASTNode):
+            self._ast_node = input_data
+            self._input_ir = input_data.accept(IRExportVisitor())
+            self._enriched = {}
+        elif isinstance(input_data, dict):
             ast = input_data.get("ast", input_data)
             if isinstance(ast, dict):
                 self._input_ir = ast

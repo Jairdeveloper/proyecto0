@@ -5,18 +5,21 @@ from __future__ import annotations
 from agentic_pipeline.prompt_chain.llm_backend import LLMBackend
 
 from ..world_model import WorldModel
+from .agent_mediator import (
+    AgentMessage,
+    ExecutionResult,
+    ReasoningResult,
+    ValidationResult,
+)
 from .base_agent import Agent, SharedContext, Task, TaskResult
 
 
 class ValidatorAgent(Agent):
-    """Agente especializado en verificar resultados de ejecucion.
-
-    Si se provee ``llm``, usa ``verify_handler`` del prompt chain.
-    Si no, usa ``WorldModel.query()`` (rule-based).
-    """
+    """Agente especializado en verificar resultados de ejecucion."""
 
     name = "validator_agent"
     role = "verificar que los archivos generados existen y son correctos"
+    subscriptions = ["reasoning.completed", "execution.completed"]
 
     def __init__(
         self,
@@ -27,6 +30,14 @@ class ValidatorAgent(Agent):
         super().__init__(context)
         self.world = world or WorldModel()
         self._llm = llm
+        self._last_reasoning: ReasoningResult | None = None
+        self._last_execution: ExecutionResult | None = None
+
+    def on_message(self, msg: AgentMessage) -> None:
+        if isinstance(msg.payload, ReasoningResult):
+            self._last_reasoning = msg.payload
+        elif isinstance(msg.payload, ExecutionResult):
+            self._last_execution = msg.payload
 
     async def process(self, task: Task) -> TaskResult:
         reasoning = self.context.subscribe("reasoning_result") or {}
@@ -34,31 +45,54 @@ class ValidatorAgent(Agent):
 
         if self._llm is not None:
             result_data = await self._process_with_prompt(
-                reasoning, execution,
+                reasoning,
+                execution,
             )
             if result_data is not None:
-                self.context.publish("validation_result", result_data)
+                if self.mediator:
+                    self.mediator.send(
+                        AgentMessage(
+                            sender=self.name,
+                            topic="validation.completed",
+                            payload=ValidationResult(
+                                all_passed=result_data.get("all_passed", False),
+                                criteria_checks=result_data.get("criteria_checks", []),
+                                total_criteria=result_data.get("total_criteria", 0),
+                                passed_criteria=result_data.get("passed_criteria", 0),
+                            ),
+                            correlation_id=task.id,
+                        )
+                    )
+                else:
+                    self.context.publish("validation_result", result_data)
                 return TaskResult(
-                    task.id, result_data.get("all_passed", False),
+                    task.id,
+                    result_data.get("all_passed", False),
                     data=result_data,
                 )
 
         return await self._process_rule_based(
-            task, reasoning, execution,
+            task,
+            reasoning,
+            execution,
         )
 
     async def _process_with_prompt(
-        self, reasoning: dict, execution: dict,
+        self,
+        reasoning: dict,
+        execution: dict,
     ) -> dict | None:
         try:
             from agentic_pipeline.prompt_chain.orchestrator import (
                 _ensure_prompts_registered,
             )
+
             _ensure_prompts_registered()
 
             from agentic_pipeline.prompt_chain.prompts.verify import (
                 verify_handler,
             )
+
             files = []
             if isinstance(execution, dict):
                 files_data = execution.get("files", execution.get("data", {}))
@@ -78,8 +112,7 @@ class ValidatorAgent(Agent):
                 "criteria_checks": output.get("checks", []),
                 "total_criteria": len(output.get("checks", [])),
                 "passed_criteria": sum(
-                    1 for c in output.get("checks", [])
-                    if c.get("passed", False)
+                    1 for c in output.get("checks", []) if c.get("passed", False)
                 ),
                 "file_checks": files,
             }
@@ -87,7 +120,10 @@ class ValidatorAgent(Agent):
             return None
 
     async def _process_rule_based(
-        self, task: Task, reasoning: dict, execution: dict,
+        self,
+        task: Task,
+        reasoning: dict,
+        execution: dict,
     ) -> TaskResult:
         criteria = reasoning.get("verification_criteria", [])
         if not criteria:
@@ -99,11 +135,13 @@ class ValidatorAgent(Agent):
         for criterion in criteria:
             answer = self.world.query(criterion)
             passed = "Si" in answer
-            validation_results.append({
-                "criterion": criterion,
-                "result": answer,
-                "passed": passed,
-            })
+            validation_results.append(
+                {
+                    "criterion": criterion,
+                    "result": answer,
+                    "passed": passed,
+                }
+            )
             if not passed:
                 all_passed = False
 
@@ -117,13 +155,28 @@ class ValidatorAgent(Agent):
             "all_passed": all_passed,
             "criteria_checks": validation_results,
             "total_criteria": len(criteria),
-            "passed_criteria": sum(
-                1 for v in validation_results if v["passed"]
-            ),
+            "passed_criteria": sum(1 for v in validation_results if v["passed"]),
             "file_checks": file_checks,
         }
 
-        self.context.publish("validation_result", result)
+        if self.mediator:
+            self.mediator.send(
+                AgentMessage(
+                    sender=self.name,
+                    topic="validation.completed",
+                    payload=ValidationResult(
+                        all_passed=all_passed,
+                        criteria_checks=validation_results,
+                        total_criteria=len(criteria),
+                        passed_criteria=sum(
+                            1 for v in validation_results if v["passed"]
+                        ),
+                    ),
+                    correlation_id=task.id,
+                )
+            )
+        else:
+            self.context.publish("validation_result", result)
         return TaskResult(
             task.id,
             success=all_passed,

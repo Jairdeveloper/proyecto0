@@ -7,6 +7,14 @@ from typing import Any
 
 from ..base_stage import PipelineStage
 from ..state_models import ActionPlan, AnalysisResult, StageContext, StageOutput
+from .ast_nodes import (
+    ComponentNode,
+    EntityNode,
+    InfraNode,
+    PageNode,
+    ProjectNode,
+)
+from .ast_visitor import IASTVisitor
 from .symbol_table import SymbolTable
 from .type_systems import TypeRegistry, get_default_registry
 
@@ -14,7 +22,77 @@ logger = logging.getLogger(__name__)
 
 
 # ============================================================================
-# SemanticVisitor — walks IR dict tree using Visitor pattern
+# SemanticAnalysisVisitor — walks ASTNode tree using IASTVisitor
+# ============================================================================
+
+
+class SemanticAnalysisVisitor(IASTVisitor):
+    """Visitor that walks ASTNode objects and collects semantic information.
+
+    Replaces the dict-based SemanticVisitor with a typed visitor
+    that operates on ASTNode instances via accept().
+    """
+
+    def __init__(
+        self,
+        symbol_table: SymbolTable,
+        registry: TypeRegistry | None = None,
+    ) -> None:
+        self.symbols = symbol_table
+        self.registry = registry or get_default_registry()
+        self.errors: list[str] = []
+        self.warnings: list[str] = []
+
+    def visit_project(self, node: ProjectNode) -> Any:
+        self.symbols.define("$project", {"type": "project", "name": node.name})
+        for child in node.children:
+            child.accept(self)
+
+    def visit_page(self, node: PageNode) -> Any:
+        self.symbols.enter_scope()
+        self.symbols.define(node.name, {"type": "page", "name": node.name})
+        errs = self.registry.validate("ui", "page", {"name": node.name})
+        self.errors.extend(errs)
+        for child in node.children:
+            child.accept(self)
+        self.symbols.exit_scope()
+
+    def visit_component(self, node: ComponentNode) -> Any:
+        self.symbols.define(
+            node.name,
+            {"type": "component", "component_type": node.component_type},
+        )
+        errs = self.registry.validate(
+            "ui", "component", {"name": node.name, "component_type": node.component_type},
+        )
+        self.errors.extend(errs)
+
+    def visit_entity(self, node: EntityNode) -> Any:
+        self.symbols.define(node.name, {"type": "entity", "attributes": node.attributes})
+        errs = self.registry.validate("data", "entity", {"name": node.name})
+        self.errors.extend(errs)
+
+    def visit_infra(self, node: InfraNode) -> Any:
+        self.symbols.define(
+            node.name,
+            {"type": "infra", "infra_type": node.infra_type},
+        )
+        errs = self.registry.validate(
+            "infra", "resource", {"name": node.name, "infra_type": node.infra_type},
+        )
+        self.errors.extend(errs)
+
+    def get_results(self) -> dict[str, Any]:
+        return {
+            "errors": self.errors,
+            "warnings": self.warnings,
+            "symbol_count": self.symbols.scope_depth(),
+            "scope_depth": self.symbols.scope_depth(),
+        }
+
+
+# ============================================================================
+# SemanticVisitor — walks IR dict tree using string-dispatch Visitor pattern
 # ============================================================================
 
 

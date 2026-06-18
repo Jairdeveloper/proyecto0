@@ -8,6 +8,8 @@ from typing import Any, Callable
 
 from langgraph.graph import END, StateGraph
 
+from .agents.agent_stage_adapter import AgentStageAdapter
+from .agents.base_agent import Agent
 from .base_stage import PipelineStage
 from .prompt_chain.command_base import Command, CommandResult
 from .error_guard import ErrorGuard
@@ -140,6 +142,72 @@ class AgentOrchestrator:
             )
         self.graph.set_finish_point(stages[-1].value)
         self.compiled = self.graph.compile()
+
+    def build_from_agents(self, agents: dict[str, Agent]) -> None:
+        """Build a StateGraph using AgentStageAdapters.
+
+        Each agent is wrapped as a PipelineStage and connected sequentially.
+        The adapter delegates to agent.process() internally.
+        """
+        agent_order = [
+            "perception_agent",
+            "reasoning_agent",
+            "execution_agent",
+            "validator_agent",
+        ]
+        stages: list[tuple[str, AgentStageAdapter]] = []
+        for agent_name in agent_order:
+            agent = agents.get(agent_name)
+            if not agent:
+                continue
+            ctx = StageContext(
+                stage=Stage.INTENT,
+                input_data="",
+                config_overrides={"output_dir": self._output_dir},
+            )
+            adapter = AgentStageAdapter(ctx, agent, agent_name)
+            stages.append((agent_name, adapter))
+
+        if not stages:
+            return
+
+        self.graph.set_entry_point(stages[0][0])
+        for name, adapter in stages:
+            self.graph.add_node(name, self._make_adapter_node(adapter))
+        for i in range(len(stages) - 1):
+            current = stages[i][0]
+            next_name = stages[i + 1][0]
+            self.graph.add_conditional_edges(
+                current,
+                ErrorGuard.should_continue,
+                {"continue": next_name, "abort": END},
+            )
+        self.graph.set_finish_point(stages[-1][0])
+        self.compiled = self.graph.compile()
+
+    def _make_adapter_node(
+        self,
+        adapter: AgentStageAdapter,
+    ) -> Callable[[StageContext], dict[str, Any]]:
+        def node_fn(ctx: StageContext) -> dict[str, Any]:
+            ctx.stage = Stage.INTENT
+            ctx.config_overrides["output_dir"] = self._output_dir
+            output = adapter.execute(ctx.input_data)
+            if self._stream_callback:
+                self._stream_callback(adapter.name, output)
+            updated: dict[str, Any] = {"input_data": output.output_data}
+            if not output.success:
+                ctx.last_error = output.error
+                logger.warning(
+                    "Agent adapter %s reported failure: %s",
+                    adapter.name,
+                    output.error,
+                )
+            else:
+                ctx.last_error = None
+            return updated
+
+        return node_fn
 
     async def run(self, user_input: str) -> dict[str, Any]:
         ctx = StageContext(stage=Stage.INTENT, input_data=user_input)

@@ -4,9 +4,12 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Any, Callable
+from typing import TYPE_CHECKING, Any, Callable
 
 from .event_bus import EventBus
+
+if TYPE_CHECKING:
+    from .agent_mediator import AgentMessage, IAgentMediator
 
 
 @dataclass
@@ -50,11 +53,6 @@ class SharedContext:
 
     @property
     def event_bus(self) -> EventBus:
-        """EventBus interno para pub/sub desacoplado entre agentes.
-
-        Los agentes pueden suscribirse a topics de otros agentes
-        via event_bus.subscribe() y publicar via event_bus.publish().
-        """
         return self._event_bus
 
     def get_snapshot(self) -> dict:
@@ -87,11 +85,21 @@ class Agent(ABC):
 
     name: str = ""
     role: str = ""
+    subscriptions: list[str] = []
 
-    def __init__(self, context: SharedContext, **kwargs: Any):
+    def __init__(
+        self,
+        context: SharedContext,
+        mediator: IAgentMediator | None = None,
+        **kwargs: Any,
+    ):
         self.context = context
+        self.mediator = mediator
         for k, v in kwargs.items():
             setattr(self, k, v)
+
+    def on_message(self, msg: AgentMessage) -> None:
+        pass
 
     @abstractmethod
     async def process(self, task: Task) -> TaskResult: ...
