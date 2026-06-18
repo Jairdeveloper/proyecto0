@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import logging
+import time
 from typing import Any, Callable
 
 from langgraph.graph import END, StateGraph
 
 from .base_stage import PipelineStage
+from .prompt_chain.command_base import Command, CommandResult
 from .error_guard import ErrorGuard
 from .nodes.perception_unit import PerceptionUnit
 from .nodes.ir_generator import IRGenerator
@@ -29,8 +31,9 @@ logger = logging.getLogger(__name__)
 # ============================================================================
 
 
-def build_context(stage: Stage, full_context: dict,
-                  world: object = None) -> ContextWindow:
+def build_context(
+    stage: Stage, full_context: dict, world: object = None
+) -> ContextWindow:
     """Construye el contexto optimo para cada stage."""
     history = full_context.get("history", [])
     world_snapshot = world.snapshot() if world and hasattr(world, "snapshot") else {}
@@ -48,7 +51,9 @@ def build_context(stage: Stage, full_context: dict,
             task_focus="decompose goal with current world state",
         )
     if stage in (Stage.SYNTHESIS, Stage.EXECUTION):
-        files_list = world_snapshot.get("files", []) if isinstance(world_snapshot, dict) else []
+        files_list = (
+            world_snapshot.get("files", []) if isinstance(world_snapshot, dict) else []
+        )
         return ContextWindow(
             relevant_history=[],
             world_snapshot={"files": files_list},
@@ -150,3 +155,99 @@ class AgentOrchestrator:
 
 # Backward compat
 PipelineOrchestrator = AgentOrchestrator
+
+
+class PipelineMacroCommand(Command):
+    """MacroCommand que ejecuta el pipeline RECPL completo.
+
+    Encapsula todos los PipelineStage en un solo Command,
+    permitiendo su uso con CommandHistory, logging, y replay.
+    """
+
+    name = "pipeline"
+
+    def __init__(
+        self,
+        stages: list[type[PipelineStage]],
+        output_dir: str = "modules",
+        stream_callback: StreamCallback | None = None,
+    ) -> None:
+        self._stages = stages
+        self._output_dir = output_dir
+        self._stream_callback = stream_callback
+
+    async def execute(self) -> CommandResult:
+        """Ejecuta todos los stages secuencialmente."""
+        from .command_base import CommandResult
+
+        t0 = time.time()
+        input_data: object = ""
+        last_error: str | None = None
+
+        for stage_cls in self._stages:
+            stage_enum = self._stage_to_enum(stage_cls)
+            ctx = StageContext(
+                stage=stage_enum,
+                input_data=input_data,
+                config_overrides={"output_dir": self._output_dir},
+            )
+            instance = stage_cls(ctx)
+            try:
+                output = instance.execute(input_data)
+                if self._stream_callback:
+                    self._stream_callback(stage_cls.__name__, output)
+                if not output.success:
+                    last_error = output.error
+                    logger.warning(
+                        "PipelineMacro stage %s failed: %s",
+                        stage_cls.__name__,
+                        output.error,
+                    )
+                    break
+                input_data = output.output_data
+            except Exception as exc:
+                last_error = str(exc)
+                logger.error(
+                    "PipelineMacro stage %s exception: %s",
+                    stage_cls.__name__,
+                    exc,
+                )
+                break
+
+        duration = time.time() - t0
+        return CommandResult(
+            success=last_error is None,
+            data=input_data if isinstance(input_data, dict) else {"output": input_data},
+            error=last_error,
+            duration=duration,
+            command_name=self.name,
+        )
+
+    @staticmethod
+    def _stage_to_enum(stage_cls: type[PipelineStage]) -> Stage:
+        """Mapea clase PipelineStage a su enum Stage."""
+        from .nodes.preprocessor import Preprocessor
+        from .nodes.lexer import Lexer
+        from .nodes.parser import ParserGLR
+        from .nodes.semantic_analyzer import SemanticAnalyzer
+        from .nodes.ir_generator import IRGenerator
+        from .nodes.reasoning_engine import ReasoningEngine
+        from .nodes.action_executor import ActionExecutor
+        from .nodes.ui_generator import UIGenerator
+        from .nodes.validator import ValidatorPipeline
+        from .nodes.intent_stage import IntentStage
+        from .state_models import Stage
+
+        mapping: dict[type[PipelineStage], Stage] = {
+            IntentStage: Stage.INTENT,
+            Preprocessor: Stage.PREPROCESSOR,
+            Lexer: Stage.LEXER,
+            ParserGLR: Stage.PARSER,
+            SemanticAnalyzer: Stage.SEMANTIC_ANALYZER,
+            IRGenerator: Stage.IR_GENERATOR,
+            ReasoningEngine: Stage.PLANNER,
+            ActionExecutor: Stage.SYNTHESIS,
+            UIGenerator: Stage.UI_GENERATOR,
+            ValidatorPipeline: Stage.VALIDATOR,
+        }
+        return mapping.get(stage_cls, Stage.PREPROCESSOR)

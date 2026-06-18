@@ -20,6 +20,22 @@ y este proyecto se adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.
 - todos los agentes: `__init__` acepta `llm: LLMBackend | None` (default None, 100% backward compat)
 - Suite de tests: 86 totales (71 prompt chain + 15 multiagente), todos PASS, ruff 0 errores
 
+## [2.8.0] — 2026-06-18
+
+### Added
+- Fase 2 del refactor de patrones GoF (Command Pattern): `prompt_chain/command_base.py` con `Command` (ABC), `CommandResult`, `MacroCommand` con ejecución secuencial y stop-on-failure
+- `prompt_chain/command_history.py` — `CommandHistory` con registro, filtro por éxito/fallo/nombre, replay de fallos, tasa de éxito
+- `prompt_chain/commands.py` — 6 Prompt*Command wrappers: `PreprocessCommand`, `IntentCommand`, `PlanCommand`, `GenerateCommand`, `VerifyCommand`, `FormatCommand`
+- `tools/command_adapter.py` — `ToolCommand(Command)`: adaptador para tools existentes via ToolRegistry como Command
+- `orchestrator.py` — `PipelineMacroCommand`: encapsula el pipeline RECPL completo como un solo Command
+- 20 tests nuevos: execute, history, macro, failure logging, ToolCommand adapter
+- `docs/118_REP_DEV_FASE2_COMMAND_REFACTOR_1_0_DRAFT.md` — reporte de implementacion Fase 2
+
+### Changed
+- `prompt_chain/__init__.py` exporta `Command`, `CommandResult`, `MacroCommand`, `CommandHistory`
+- `tools/__init__.py` exporta `ToolCommand`, `ToolResult`
+- Suite de tests: 74 tests (54 Fase 1 + 20 Fase 2), todos PASS, ruff 0 errores
+
 ## [2.7.0] — 2026-06-18
 
 ### Added
