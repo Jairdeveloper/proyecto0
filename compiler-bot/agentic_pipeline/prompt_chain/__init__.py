@@ -13,6 +13,11 @@ from agentic_pipeline.prompt_chain.handler_base import (
     PromptRequest,
     PromptResponse,
 )
+from agentic_pipeline.prompt_chain.observer_base import (
+    StageEvent,
+    StageObserver,
+    StageSubject,
+)
 
 __all__ = [
     "PromptHandler",
@@ -22,4 +27,7 @@ __all__ = [
     "CommandResult",
     "MacroCommand",
     "CommandHistory",
+    "StageEvent",
+    "StageObserver",
+    "StageSubject",
 ]

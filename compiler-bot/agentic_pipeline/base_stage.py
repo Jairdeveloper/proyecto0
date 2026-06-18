@@ -3,7 +3,8 @@ import time
 from abc import ABC, abstractmethod
 
 from .contracts import STAGE_CONTRACTS
-from .feedback_loop import get_global_feedback
+from .feedback_loop import MetricsObserver as _MetricsObserver
+from .prompt_chain.observer_base import StageEvent, StageSubject
 from .state_models import StageContext, AnalysisResult, ActionPlan, StageOutput
 
 logger = logging.getLogger(__name__)
@@ -11,6 +12,12 @@ logger = logging.getLogger(__name__)
 
 class PipelineStage(ABC):
     name: str
+    subject: StageSubject = StageSubject()
+    """StageSubject compartido por todas las subclases.
+
+    Los observers (MetricsObserver, DebugObserver, etc.) se
+    registran aqui para recibir eventos de todos los stages.
+    """
 
     def __init__(self, context: StageContext):
         self.context = context
@@ -46,24 +53,34 @@ class PipelineStage(ABC):
             if contract and output.success:
                 contract.model_validate(output.output_data)
             duration = time.time() - t0
-            metrics = {
-                "duration_seconds": round(duration, 4),
-                "success": output.success,
-                "error": output.error,
-                **output.metrics,
-            }
-            get_global_feedback().record_stage(self.name, metrics)
+            event = StageEvent(
+                stage=self.name,
+                duration=round(duration, 4),
+                success=output.success,
+                output=(
+                    output.output_data
+                    if isinstance(output.output_data, dict)
+                    else {}
+                ),
+                error=output.error,
+                metadata=output.metrics,
+            )
+            self.subject.notify(event)
         except Exception as exc:
             duration = time.time() - t0
             logger.error("Stage %s failed after %.2fs: %s", self.name, duration, exc)
-            get_global_feedback().record_stage(
-                self.name,
-                {
-                    "duration_seconds": round(duration, 4),
-                    "success": False,
-                    "error": str(exc),
-                },
+            event = StageEvent(
+                stage=self.name,
+                duration=round(duration, 4),
+                success=False,
+                error=str(exc),
             )
+            self.subject.notify(event)
             raise
         self.learn_and_improve(output.feedback)
         return output
+
+
+# Attach MetricsObserver by default so existing stages keep recording
+# metrics via GlobalFeedbackLoop without modifying subclasses.
+PipelineStage.subject.attach(_MetricsObserver())

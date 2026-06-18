@@ -5,10 +5,12 @@ from __future__ import annotations
 import json
 import logging
 import os
+from collections.abc import Callable
 from typing import Any
 
 from .config import config
 from .metrics_store import MetricsStore
+from .prompt_chain.observer_base import StageEvent
 
 logger = logging.getLogger(__name__)
 
@@ -140,6 +142,106 @@ def get_global_feedback() -> GlobalFeedbackLoop:
     if _global_feedback is None:
         _global_feedback = GlobalFeedbackLoop()
     return _global_feedback
+
+
+# ============================================================================
+# Observer Pattern — Observers for StageSubject
+# ============================================================================
+
+
+class MetricsObserver:
+    """StageObserver que registra metricas en GlobalFeedbackLoop.
+
+    Conecta el StageSubject del pipeline con el sistema de metricas
+    existente, preservando la funcionalidad de record_stage().
+    """
+
+    def __init__(
+        self,
+        feedback: GlobalFeedbackLoop | None = None,
+    ) -> None:
+        self._feedback = feedback or get_global_feedback()
+
+    def on_event(self, event: StageEvent) -> None:
+        metrics: dict[str, Any] = {
+            "duration_seconds": event.duration,
+            "success": event.success,
+            "error": event.error,
+            **event.metadata,
+        }
+        self._feedback.record_stage(event.stage, metrics)
+
+
+class DebugObserver:
+    """StageObserver que invoca un callback de debug por evento."""
+
+    def __init__(
+        self,
+        callback: Callable[[str, dict], None] | None = None,
+    ) -> None:
+        self._callback = callback
+
+    def on_event(self, event: StageEvent) -> None:
+        if self._callback:
+            self._callback(event.stage, event.output)
+
+
+class PromptOptimizerObserver:
+    """StageObserver que registra metricas de prompts en MetricsStore."""
+
+    def __init__(self, store: MetricsStore | None = None) -> None:
+        self._store = store or MetricsStore()
+
+    def on_event(self, event: StageEvent) -> None:
+        prompt_stages = {
+            "preprocess", "intent", "plan", "generate", "verify", "format",
+        }
+        if event.stage not in prompt_stages:
+            return
+        self._store.record_prompt(event.stage, {
+            "success": event.success,
+            "duration": event.duration,
+            "error": event.error,
+            "fallback_used": event.metadata.get("fallback_used", False),
+        })
+
+
+class DashboardObserver:
+    """StageObserver que mantiene un buffer de eventos recientes.
+
+    Almacena los ultimos 1000 eventos en un deque para consumo
+    del dashboard en tiempo real. El broadcast a WebSocket clients
+    es un stub preparado para integracion futura.
+    """
+
+    def __init__(self, max_events: int = 1000) -> None:
+        from collections import deque
+
+        self._recent_events: deque[StageEvent] = deque(maxlen=max_events)
+        self._ws_clients: list[Any] = []
+
+    def on_event(self, event: StageEvent) -> None:
+        self._recent_events.append(event)
+        self._broadcast(event)
+
+    def _broadcast(self, event: StageEvent) -> None:
+        for ws in self._ws_clients:
+            try:
+                ws.send_json({
+                    "stage": event.stage,
+                    "duration": event.duration,
+                    "success": event.success,
+                    "timestamp": event.timestamp,
+                })
+            except Exception:
+                self._ws_clients.remove(ws)
+
+    def get_recent(self, limit: int = 100) -> list[StageEvent]:
+        return list(self._recent_events)[-limit:]
+
+    @property
+    def event_count(self) -> int:
+        return len(self._recent_events)
 
 
 # ── T5.2: PromptOptimizer ──

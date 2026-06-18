@@ -6,6 +6,8 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Any, Callable
 
+from .event_bus import EventBus
+
 
 @dataclass
 class Task:
@@ -28,12 +30,14 @@ class TaskResult:
 class SharedContext:
     """Bus de contexto compartido entre agentes (N3.3)."""
 
-    def __init__(self):
+    def __init__(self, event_bus: EventBus | None = None):
         self._data: dict[str, Any] = {}
         self._subscribers: dict[str, list[Callable]] = {}
+        self._event_bus = event_bus or EventBus()
 
     def publish(self, topic: str, data: Any) -> None:
         self._data[topic] = data
+        self._event_bus.publish(topic, data)
         for cb in self._subscribers.get(topic, []):
             cb(topic, data)
 
@@ -44,6 +48,15 @@ class SharedContext:
             self._subscribers[topic].append(callback)
         return self._data.get(topic)
 
+    @property
+    def event_bus(self) -> EventBus:
+        """EventBus interno para pub/sub desacoplado entre agentes.
+
+        Los agentes pueden suscribirse a topics de otros agentes
+        via event_bus.subscribe() y publicar via event_bus.publish().
+        """
+        return self._event_bus
+
     def get_snapshot(self) -> dict:
         return dict(self._data)
 
@@ -51,12 +64,13 @@ class SharedContext:
 class AsyncSharedContext(SharedContext):
     """Bus de contexto con pub/sub asincrono (N3.3)."""
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, event_bus: EventBus | None = None):
+        super().__init__(event_bus)
         self._channels: dict[str, list[Callable]] = {}
 
     async def publish(self, topic: str, data: Any) -> None:
         self._data[topic] = data
+        await self._event_bus.publish_async(topic, data)
         for cb in self._channels.get(topic, []):
             await cb(topic, data)
 

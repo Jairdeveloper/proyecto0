@@ -9,6 +9,7 @@ PromptHandler is an abstract handler with:
 from __future__ import annotations
 
 import logging
+import time
 from abc import ABC, abstractmethod
 from typing import Any, Callable
 
@@ -17,6 +18,10 @@ from pydantic import BaseModel
 from agentic_pipeline.prompt_chain.chain_context import ChainContext
 from agentic_pipeline.prompt_chain.fallbacks import execute_fallback
 from agentic_pipeline.prompt_chain.llm_backend import LLMBackend, build_llm_backend
+from agentic_pipeline.prompt_chain.observer_base import (
+    StageEvent,
+    StageSubject,
+)
 from agentic_pipeline.prompt_chain.prompt_template import PromptRegistry
 
 logger = logging.getLogger(__name__)
@@ -58,9 +63,11 @@ class PromptHandler(ABC):
         self,
         llm: LLMBackend | None = None,
         debug_callback: Callable[[str, dict], None] | None = None,
+        subject: StageSubject | None = None,
     ) -> None:
         self._llm = llm or build_llm_backend()
         self._debug_callback = debug_callback
+        self._subject = subject
 
     @abstractmethod
     def _build_prompt_kwargs(
@@ -84,6 +91,7 @@ class PromptHandler(ABC):
         ctx: ChainContext,
     ) -> PromptResponse:
         """Procesa el request: LLM → fallback → publica en ctx → delega."""
+        t0 = time.time()
         try:
             ctx_data = self._get_ctx_data(ctx)
             kwargs = self._build_prompt_kwargs(request, ctx_data)
@@ -111,6 +119,9 @@ class PromptHandler(ABC):
                 except Exception as exc:
                     logger.warning("%s ctx.set_output failed: %s", self.name, exc)
 
+            duration = time.time() - t0
+            self._notify_observers(output, duration, success=True)
+
             if self._debug_callback:
                 self._debug_callback(self.name, output)
 
@@ -120,8 +131,33 @@ class PromptHandler(ABC):
             return PromptResponse(success=True, output=output)
 
         except Exception as exc:
+            duration = time.time() - t0
             logger.error("%s handler failed: %s", self.name, exc)
+            self._notify_observers({}, duration, success=False, error=str(exc))
             return PromptResponse(success=False, output={}, error=str(exc))
+
+    def _notify_observers(
+        self,
+        output: dict,
+        duration: float,
+        success: bool,
+        error: str | None = None,
+    ) -> None:
+        """Publica un StageEvent en el subject si esta configurado.
+
+        Reemplaza funcionalmente al debug_callback directo, permitiendo
+        que multiples observers (MetricsObserver, DebugObserver, etc.)
+        reaccionen al mismo evento.
+        """
+        if self._subject:
+            event = StageEvent(
+                stage=self.name,
+                duration=round(duration, 4),
+                success=success,
+                output=output,
+                error=error,
+            )
+            self._subject.notify(event)
 
     def _get_ctx_data(self, ctx: ChainContext) -> dict[str, Any]:
         """Extrae campos del contexto de etapas anteriores."""

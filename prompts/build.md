@@ -417,3 +417,212 @@ El núcleo del diseño (pipeline compilador con stages separados) es sólido y e
 its stateful extension LangGraph, Crew AI, The Google Agent Developer
 Kit (Google ADK).
 EL requerimiento de escalamiento nace de la necesidad de cumplir con el siguiente prompt, sugerido por un usuario de la plataforma, prompt:(nuevo dominio minimo viable) "Diseña una página web moderna, profesional y totalmente responsive para un servicio de acortamiento de enlaces. La página debe tener una interfaz limpia con un formulario principal donde el usuario pueda introducir una URL larga y obtener un enlace corto. Incluye una sección de estadísticas que muestre clics, fecha de creación, país y dispositivo de acceso. Agrega autenticación de usuarios, panel de control, historial de enlaces, códigos QR para cada enlace y opciones de enlaces personalizados. Utiliza una paleta de colores moderna, tipografía clara y animaciones sutiles. Prioriza velocidad, accesibilidad, experiencia de usuario y diseño SaaS profesional. " Se requiere que el pipeline/agente cumpla o sea capaz de resolver este tipo de solicitudes.
+
+help        
+Help
+Se ha hecho un estudio del alcanse que puede tener Proyecto0 en cuanto a la utilidad y aporte al desarrollo de software y se espera que tenga un alcanse a gran escala. Se han reunido el CEO, CTO y project lead y se han hecho las siguientes observaciones respecto a Proyecto 0. Lee los archivos siguientes de manera detallada'/home/john/proyects/proyect0/misc/ADR-001-architecture-foundation.md', '/home/john/proyects/proyect0/misc/ADR.md', '/home/john/proyects/proyect0/misc/AIC.md', '/home/john/proyects/proyect0/misc/TJS.md', '/home/john/proyects/proyect0/misc/WDS.md' Se tomara como referencia y marco las iso's ISO 12207, este sistema no serÃ¡ un chatbot Es: Un orquestador SDLC basado en ISO 12207 + agentes especializados. lee:'/home/john/proyects/proyect0/misc/iso.md', Dame un resumen de tu perspectiva respecto a la implementacion final que se espera de Proyecto0. Utiliza tu conocimiento y [Pasted ~64 lines]. Escribe la propuesta en un archivo .md
+
+El patron que usaremos para crear esstos microprocesos sera el **Chain of responsability**. Utiliza tu conocimiento y pensamiento profunda para entender esta definición.
+Contexto:
+Poblaremos cada microproceso con las herramientas del pipeline, es decir el pipeline transformalo en un microproceso bajo este patron.
+
+Intención
+Evitar acoplar el emisor de una solicitud con su receptor, dando a más de un objeto la oportunidad de gestionar dicha solicitud. Encadenar los objetos receptores y pasar la solicitud a lo largo de la cadena hasta que uno de ellos la procese.
+Enviar solicitudes mediante una única canalización de procesamiento que contenga múltiples posibles manejadores.
+Una lista enlazada orientada a objetos con recorrido recursivo.
+Problema
+
+Existe un número potencialmente variable de objetos manejadores (handlers), elementos de procesamiento o nodos, así como un flujo de solicitudes que deben ser atendidas. Es necesario procesar estas solicitudes de manera eficiente sin establecer de forma rígida las relaciones y el orden de prioridad entre los manejadores, ni definir explícitamente un mapeo fijo entre cada solicitud y el manejador que debe procesarla.
+
+Discusión
+
+Encapsula los elementos de procesamiento dentro de una abstracción de tipo “pipeline”; y haz que los clientes “envíen y se desentiendan” de sus solicitudes en la entrada del pipeline.
+
+El patrón encadena los objetos receptores entre sí, y luego pasa los mensajes de solicitud de un objeto a otro hasta que llega a un objeto capaz de manejar el mensaje. El número y tipo de objetos manejadores no se conoce de antemano; pueden configurarse dinámicamente. El mecanismo de encadenamiento utiliza composición recursiva para permitir que un número ilimitado de manejadores puedan enlazarse.
+
+La Cadena de Responsabilidad simplifica las interconexiones entre objetos. En lugar de que emisores y receptores mantengan referencias a todos los posibles receptores, cada emisor conserva una única referencia a la cabeza de la cadena, y cada receptor mantiene una única referencia a su sucesor inmediato en la cadena.
+
+Asegúrate de que exista una “red de seguridad” para capturar cualquier solicitud que no haya sido gestionada.
+
+No uses Chain of Responsibility cuando cada solicitud sea atendida por un único manejador, o cuando el objeto cliente ya sepa qué objeto de servicio debe manejar la solicitud.
+
+Estructura
+
+Las clases derivadas saben cómo satisfacer las solicitudes del cliente. Si el objeto “actual” no está disponible o no es suficiente, entonces delega en la clase base, que a su vez delega en el siguiente objeto, y el ciclo continúa.
+
+Cadena de Responsabilidad
+
+Varios manejadores pueden contribuir al procesamiento de cada solicitud. La solicitud puede propagarse a lo largo de toda la cadena, siendo el último eslabón cuidadoso de no delegar en un “siguiente” nulo.
+
+Ejemplo
+
+El patrón Chain of Responsibility evita el acoplamiento entre el emisor de una solicitud y su receptor, dando a más de un objeto la oportunidad de manejarla. Los cajeros automáticos (ATM) utilizan la Cadena de Responsabilidad en el mecanismo de dispensación de dinero.
+
+Lista de comprobación
+La clase base mantiene un puntero "next".
+Cada clase derivada implementa su contribución para el manejo de la solicitud.
+Si la solicitud necesita ser “pasada adelante”, la clase derivada “llama de vuelta” a la clase base, que delega en el puntero "next".
+El cliente (o algún tercero) crea y enlaza la cadena (lo cual puede incluir un enlace desde el último nodo hasta la raíz de la cadena).
+El cliente “lanza y se desentiende” de cada solicitud en la raíz de la cadena.
+La delegación recursiva produce la ilusión de magia.
+Reglas generales
+
+Chain of Responsibility, *Command*, *Mediator* y *Observer* abordan cómo desacoplar emisores y receptores, pero con diferentes compromisos (trade-offs). Chain of Responsibility pasa una solicitud del emisor a lo largo de una cadena de posibles receptores.
+
+Chain of Responsibility puede usar Command para representar las solicitudes como objetos.
+
+Chain of Responsibility se aplica a menudo junto con Composite. En ese caso, el padre de un componente puede actuar como su sucesor.
+
+**Command** 
+Intent 
+• Encapsulate a request as an object, thereby letting you parameterize 
+clients with different requests, queue or log requests, and support 
+undoable operations. 
+• Promote "invocation of a method on an object" to full object status 
+• An object-oriented callback 
+Problem 
+Need to issue requests to objects without knowing anything about 
+the operation being requested or the receiver of the request. 
+Discussion 
+Command decouples the object that invokes the operation from the 
+one that knows how to perform it. To achieve this separation, the 
+designer creates an abstract base class that maps a receiver (an object) 
+with an action (a pointer to a member function). The base class contains 
+an execute method that simply calls the action on the receiver. 
+All clients of Command objects treat each object as a "black box" by 
+simply invoking the object's virtual execute method whenever the 
+client requires the object's "service". 
+A Command class holds some subset of the following: an object, a 
+method to be applied to the object, and the arguments to be passed when 
+the method is applied. The Command's "execute" method then causes 
+the pieces to come together. 
+Sequences of Command objects can be assembled into composite (or 
+macro) commands. 
+Structure 
+The client that creates a command is not the same client that 
+executes it. This separation provides flexibility in the timing and 
+sequencing of commands. Materializing commands as objects means 
+32 | Command 
+they can be passed, staged, shared, loaded in a table, and otherwise 
+instrumented or manipulated like any other object. 
+Command objects can be thought of as "tokens" that are created by 
+one client that knows what need to be done, and passed to another client 
+that has the resources for doing it. 
+Example 
+The Command pattern allows requests to be encapsulated as objects, 
+thereby allowing clients to be parameterized with different requests. 
+The "check" at a diner is an example of a Command pattern. The 
+waiter or waitress takes an order or command from a customer and 
+encapsulates that order by writing it on the check. The order is then 
+queued for a short order cook. Note that the pad of "checks" used by 
+each waiter is not dependent on the menu, and therefore they can 
+support commands to cook many different items.  
+Command  | 33 
+Check list 
+1. Define a Command interface with a method signature like execute. 
+2. Create one or more derived classes that encapsulate some subset of 
+the following: a "receiver" object, the method to invoke, the 
+arguments to pass. 
+3. Instantiate a Command object for each deferred execution request. 
+4. Pass the Command object from the creator (aka sender) to the 
+invoker (aka receiver). 
+5. The invoker decides when to execute. 
+Rules of thumb 
+Chain of Responsibility, Command, Mediator, and Observer, address 
+how you can decouple senders and receivers, but with different trade
+offs. Command normally specifies a sender-receiver connection with a 
+subclass. 
+Chain of Responsibility can use Command to represent requests as 
+objects. 
+Command and Memento act as magic tokens to be passed around 
+and invoked at a later time. In Command, the token represents a request; 
+in Memento, it represents the internal state of an object at a particular 
+34 | Command 
+time. Polymorphism is important to Command, but not to Memento 
+because its interface is so narrow that a memento can only be passed as 
+a value. 
+Command can use Memento to maintain the state required for an 
+undo operation. 
+MacroCommands can be implemented with Composite. 
+A Command that must be copied before being placed on a history 
+list acts as a Prototype. 
+Two important aspects of the Command pattern: interface separation 
+(the invoker is isolated from the receiver), time separation (stores a 
+ready-to-go processing request that's to be stated later).
+
+Observer 
+Intent 
+• Define a one-to-many dependency between objects so that when one 
+object changes state, all its dependents are notified and updated 
+automatically. 
+• Encapsulate the core (or common or engine) components in a 
+Subject abstraction, and the variable (or optional or user interface) 
+components in an Observer hierarchy. 
+• The "View" part of Model-View-Controller. 
+Problem 
+A large monolithic design does not scale well as new graphing or 
+monitoring requirements are levied. 
+Discussion 
+Define an object that is the "keeper" of the data model and/or 
+business logic (the Subject). Delegate all "view" functionality to 
+decoupled and distinct Observer objects. Observers register themselves 
+with the Subject as they are created. Whenever the Subject changes, it 
+broadcasts to all registered Observers that it has changed, and each 
+Observer queries the Subject for that subset of the Subject's state that it 
+is responsible for monitoring. 
+The protocol described above specifies a "pull" interaction model. 
+Instead of the Subject "pushing" what has changed to all Observers, 
+each Observer is responsible for "pulling" its particular "window of 
+interest" from the Subject. The "push" model compromises reuse, while 
+the "pull" model is less efficient. 
+Issues that are discussed, but left to the discretion of the designer, 
+include: implementing event compression (only sending a single change 
+broadcast after a series of consecutive changes has occurred), having a 
+single Observer monitoring multiple Subjects, and ensuring that a 
+Subject notify its Observers when it is about to go away. 
+84 | Observer 
+The Observer pattern captures the lion's share of the Model-View
+Controller architecture that has been a part of the Smalltalk community 
+for years. 
+Structure 
+Subject represents the core (or independent or common or engine) 
+abstraction. Observer represents the variable (or dependent or optional 
+or user interface) abstraction. The Subject prompts the Observer objects 
+to do their thing. Each Observer can call back to the Subject as needed. 
+Example 
+The Observer defines a one-to-many relationship so that when one 
+object changes state, the others are notified and updated automatically. 
+Some auctions demonstrate this pattern. Each bidder possesses a 
+numbered paddle that is used to indicate a bid. The auctioneer starts the 
+bidding, and "observes" when a paddle is raised to accept the bid. The 
+acceptance of the bid changes the bid price which is broadcast to all of 
+the bidders in the form of a new bid.  
+Observer  | 85 
+Check list 
+1. Differentiate between the core (or independent) functionality and the 
+optional (or dependent) functionality. 
+2. Model the independent functionality with a "subject" abstraction. 
+3. Model the dependent functionality with an "observer" hierarchy. 
+4. The Subject is coupled only to the Observer base class. 
+5. The client configures the number and type of Observers. 
+6. Observers register themselves with the Subject. 
+7. The Subject broadcasts events to all registered Observers. 
+8. The Subject may "push" information at the Observers, or, the 
+Observers may "pull" the information they need from the Subject. 
+Rules of thumb 
+Chain of Responsibility, Command, Mediator, and Observer, address 
+how you can decouple senders and receivers, but with different trade
+offs. Chain of Responsibility passes a sender request along a chain of 
+potential receivers. Command normally specifies a sender-receiver 
+connection with a subclass. Mediator has senders and receivers 
+86 | Observer 
+reference each other indirectly. Observer defines a very decoupled 
+interface that allows for multiple receivers to be configured at run-time. 
+Mediator and Observer are competing patterns. The difference 
+between them is that Observer distributes communication by 
+introducing "observer" and "subject" objects, whereas a Mediator object 
+encapsulates the communication between other objects. We've found it 
+easier to make reusable Observers and Subjects than to make reusable 
+Mediators. 
+On the other hand, Mediator can leverage Observer for dynamically 
+registering colleagues and communicating with them.

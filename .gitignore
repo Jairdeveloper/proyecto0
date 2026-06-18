@@ -24,3 +24,5 @@ output/
 
 # MkDocs
 site/
+misc/
+./prompts/

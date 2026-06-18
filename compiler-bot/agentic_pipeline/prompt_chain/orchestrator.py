@@ -11,12 +11,14 @@ from __future__ import annotations
 import logging
 from collections.abc import Callable
 
+from agentic_pipeline.feedback_loop import DebugObserver
 from agentic_pipeline.prompt_chain.chain_context import ChainContext
 from agentic_pipeline.prompt_chain.handler_base import (
     PromptHandler,
     PromptRequest,
 )
 from agentic_pipeline.prompt_chain.llm_backend import LLMBackend, build_llm_backend
+from agentic_pipeline.prompt_chain.observer_base import StageSubject
 from agentic_pipeline.prompt_chain.prompts.format import FormatHandler
 from agentic_pipeline.prompt_chain.prompts.generate import GenerateHandler
 from agentic_pipeline.prompt_chain.prompts.intent import IntentHandler
@@ -44,10 +46,14 @@ def _ensure_prompts_registered() -> None:
 
 
 class ChainOrchestrator:
-    """Orquestador del prompt chain con Chain of Responsibility.
+    """Orquestador del prompt chain con Chain of Responsibility + Observer.
 
     Construye una cadena de 6 PromptHandler y ejecuta el flujo
     completo con soporte de reintentos post-verificacion.
+
+    Cada handler publica StageEvent en un StageSubject interno que
+    tiene un DebugObserver adjunto, reemplazando el debug_callback
+    directo de versiones anteriores.
     """
 
     def __init__(
@@ -60,14 +66,17 @@ class ChainOrchestrator:
         self._llm = llm or build_llm_backend()
         self._debug_callback = debug_callback
         self._max_retries = max_retries
+        self._subject = StageSubject()
+        if debug_callback:
+            self._subject.attach(DebugObserver(debug_callback))
         self._chain = self._build_main_chain()
         self._gen_handler: PromptHandler = GenerateHandler(
             self._llm,
-            self._debug_callback,
+            subject=self._subject,
         )
         self._ver_handler: PromptHandler = VerifyHandler(
             self._llm,
-            self._debug_callback,
+            subject=self._subject,
         )
 
     async def run(self, raw_input: str) -> dict:
@@ -102,17 +111,17 @@ class ChainOrchestrator:
             await self._gen_handler.handle(request, ctx)
 
         # Format (always runs once at the end)
-        fmt = FormatHandler(self._llm, self._debug_callback)
+        fmt = FormatHandler(self._llm, subject=self._subject)
         result = await fmt.handle(request, ctx)
 
         return result.output
 
     def _build_main_chain(self) -> PromptHandler:
         """Construye la cadena principal: pre → intent → plan → gen → verify."""
-        pre = PreprocessHandler(self._llm, self._debug_callback)
-        intent = IntentHandler(self._llm, self._debug_callback)
-        plan = PlanHandler(self._llm, self._debug_callback)
-        gen = GenerateHandler(self._llm, self._debug_callback)
-        verify = VerifyHandler(self._llm, self._debug_callback)
+        pre = PreprocessHandler(self._llm, subject=self._subject)
+        intent = IntentHandler(self._llm, subject=self._subject)
+        plan = PlanHandler(self._llm, subject=self._subject)
+        gen = GenerateHandler(self._llm, subject=self._subject)
+        verify = VerifyHandler(self._llm, subject=self._subject)
         pre.set_next(intent).set_next(plan).set_next(gen).set_next(verify)
         return pre
