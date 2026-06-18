@@ -18,17 +18,22 @@ class PipelineStage(ABC):
     @abstractmethod
     def receive_mission(self, input_data: object) -> None: ...
 
-    @abstractmethod
-    def analyze(self) -> AnalysisResult: ...
+    def analyze(self) -> AnalysisResult:
+        return AnalysisResult(
+            observations=[],
+            detected_patterns=[],
+            risks=[],
+            complexity_score=0.0,
+        )
 
-    @abstractmethod
-    def reflect_and_plan(self, analysis: AnalysisResult) -> ActionPlan: ...
+    def reflect_and_plan(self, analysis: AnalysisResult) -> ActionPlan:
+        return ActionPlan(steps=[], strategy="deterministic")
 
     @abstractmethod
     def act(self, plan: ActionPlan) -> StageOutput: ...
 
-    @abstractmethod
-    def learn_and_improve(self, feedback: object) -> None: ...
+    def learn_and_improve(self, feedback: object) -> None:
+        pass
 
     def execute(self, input_data: object) -> StageOutput:
         self.receive_mission(input_data)

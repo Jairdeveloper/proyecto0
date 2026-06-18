@@ -101,15 +101,23 @@ class TestChainOrchestrator:
 
     def setup_method(self) -> None:
         import agentic_pipeline.prompt_chain.prompts as _pkg
+
         _ = _pkg
         PromptRegistry.clear()
-        for mod_name in ["preprocess", "intent", "plan", "generate", "verify",
-                          "format"]:
+        for mod_name in [
+            "preprocess",
+            "intent",
+            "plan",
+            "generate",
+            "verify",
+            "format",
+        ]:
             mod = importlib.import_module(
                 f"agentic_pipeline.prompt_chain.prompts.{mod_name}",
             )
             importlib.reload(mod)
         import agentic_pipeline.prompt_chain.orchestrator as orch_mod
+
         orch_mod._PROMOTES_REGISTERED = False
 
     @pytest.mark.asyncio
@@ -153,7 +161,7 @@ class TestChainOrchestrator:
             _make_result(_GENERATE_DATA),
             _make_result(_VERIFY_RETRY),  # 1st verify → retry
             _make_result(_GENERATE_DATA),  # retry generate
-            _make_result(_VERIFY_VALID),   # 2nd verify → format
+            _make_result(_VERIFY_VALID),  # 2nd verify → format
             _make_result(_FORMAT_DATA),
         ]
 
@@ -180,10 +188,10 @@ class TestChainOrchestrator:
             _make_result(_PREPROCESS_DATA),
             _make_result(_INTENT_DATA),
             _make_result(_PLAN_DATA),
-            _make_result(_GENERATE_DATA),   # attempt 1 → attempt_count=1
-            _make_result(verify_retry),     # verify → 1 < 2 → retry
-            _make_result(_GENERATE_DATA),   # attempt 2 → attempt_count=2
-            _make_result(verify_retry),     # verify → 2 >= 2 → format
+            _make_result(_GENERATE_DATA),  # attempt 1 → attempt_count=1
+            _make_result(verify_retry),  # verify → 1 < 2 → retry
+            _make_result(_GENERATE_DATA),  # attempt 2 → attempt_count=2
+            _make_result(verify_retry),  # verify → 2 >= 2 → format
             _make_result(_FORMAT_DATA),
         ]
 
@@ -233,15 +241,20 @@ class TestChainOrchestrator:
 
         callback = MagicMock()
 
-        orchestrator = ChainOrchestrator(llm=mock_llm,
-                                          debug_callback=callback)
+        orchestrator = ChainOrchestrator(llm=mock_llm, debug_callback=callback)
         result = await orchestrator.run("crea modulo pagos")
 
         assert result is not None
         assert callback.call_count == 6
         called_stages = [call.args[0] for call in callback.call_args_list]
-        assert called_stages == ["preprocess", "intent", "plan", "generate",
-                                  "verify", "format"]
+        assert called_stages == [
+            "preprocess",
+            "intent",
+            "plan",
+            "generate",
+            "verify",
+            "format",
+        ]
 
     @pytest.mark.asyncio
     async def test_orchestrator_invalid_input(self):

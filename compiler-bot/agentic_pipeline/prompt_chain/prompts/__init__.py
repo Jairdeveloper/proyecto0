@@ -7,20 +7,19 @@ en PromptRegistry via register_prompt() en cada submodulo.
 from __future__ import annotations
 
 # Cada import ejecuta register_prompt() en el modulo correspondiente
-from agentic_pipeline.prompt_chain.prompts import (  # noqa: F401
-    format as _format,
-    generate as _generate,
-    intent as _intent,
-    plan as _plan,
-    preprocess as _preprocess,
-    verify as _verify,
-)
+# y expone las clases handler
+from agentic_pipeline.prompt_chain.prompts.format import FormatHandler  # noqa: F401
+from agentic_pipeline.prompt_chain.prompts.generate import GenerateHandler  # noqa: F401
+from agentic_pipeline.prompt_chain.prompts.intent import IntentHandler  # noqa: F401
+from agentic_pipeline.prompt_chain.prompts.plan import PlanHandler  # noqa: F401
+from agentic_pipeline.prompt_chain.prompts.preprocess import PreprocessHandler  # noqa: F401
+from agentic_pipeline.prompt_chain.prompts.verify import VerifyHandler  # noqa: F401
 
 __all__ = [
-    "preprocess",
-    "intent",
-    "plan",
-    "generate",
-    "verify",
-    "format",
+    "PreprocessHandler",
+    "IntentHandler",
+    "PlanHandler",
+    "GenerateHandler",
+    "VerifyHandler",
+    "FormatHandler",
 ]

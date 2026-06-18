@@ -20,6 +20,22 @@ y este proyecto se adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.
 - todos los agentes: `__init__` acepta `llm: LLMBackend | None` (default None, 100% backward compat)
 - Suite de tests: 86 totales (71 prompt chain + 15 multiagente), todos PASS, ruff 0 errores
 
+## [2.7.0] — 2026-06-18
+
+### Added
+- Fase 1 del refactor de patrones GoF (Chain of Responsibility): `prompt_chain/handler_base.py` con `PromptHandler(ABC)`, `PromptRequest`, `PromptResponse`. Implementa `set_next()` para encadenamiento y `handle()` con ciclo LLM→fallback→ctx→delegación
+- 6 handlers refactorizados de funciones a clases que heredan de `PromptHandler`: `PreprocessHandler`, `IntentHandler`, `PlanHandler`, `GenerateHandler`, `VerifyHandler`, `FormatHandler` (~200 líneas de boilerplate eliminadas)
+- `PipelineStage` simplificado: `analyze()`, `reflect_and_plan()`, `learn_and_improve()` con defaults no-abstract (Template Method pattern). Subclases solo necesitan `receive_mission()` + `act()`
+- `ChainOrchestrator` simplificado de 321→95 líneas: reemplazado LangGraph StateGraph por cadena CoR directa con retry loop. Misma API pública
+- 10 tests nuevos CoR: chain building, delegación, safety net, set_next fluent API
+- `docs/117_REP_DEV_FASE1_COR_REFACTOR_1_0_DRAFT.md` — reporte de implementacion Fase 1
+
+### Changed
+- `prompt_chain/prompts/__init__.py` exporta clases handler en vez de módulos
+- `prompt_chain/__init__.py` exporta `PromptHandler`, `PromptRequest`, `PromptResponse`
+- Todos los tests de handlers adaptados a API clase-handler (44 tests actualizados)
+- Suite de tests: 54 tests Fase 1 (10 nuevos + 44 actualizados), todos PASS, ruff 0 errores
+
 ## [2.6.0] — 2026-06-17
 
 ### Added

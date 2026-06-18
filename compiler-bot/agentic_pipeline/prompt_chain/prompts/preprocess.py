@@ -3,23 +3,24 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
-from agentic_pipeline.prompt_chain.chain_context import ChainContext
 from agentic_pipeline.prompt_chain.contracts import (
     PreprocessorContract,
     PreprocessorInput,
 )
-from agentic_pipeline.prompt_chain.fallbacks import execute_fallback
-from agentic_pipeline.prompt_chain.llm_backend import LLMBackend, build_llm_backend
+from agentic_pipeline.prompt_chain.handler_base import (
+    PromptHandler,
+    PromptRequest,
+)
 from agentic_pipeline.prompt_chain.prompt_template import (
     PromptTemplate,
-    PromptRegistry,
     register_prompt,
 )
 
 logger = logging.getLogger(__name__)
 
-PREPROCESS_TEMPLATE = register_prompt(
+register_prompt(
     PromptTemplate(
         name="preprocess",
         system_prompt=(
@@ -40,44 +41,16 @@ PREPROCESS_TEMPLATE = register_prompt(
 )
 
 
-async def preprocess_handler(
-    raw_text: str,
-    llm: LLMBackend | None = None,
-    ctx: ChainContext | None = None,
-) -> dict:
-    """Ejecuta PREPROCESS prompt con fallback rule-based.
+class PreprocessHandler(PromptHandler):
+    """Handler para la etapa PREPROCESS."""
 
-    Args:
-        raw_text: Texto crudo del usuario.
-        llm: Backend LLM (opcional, se autoconfigura si no se provee).
-        ctx: ChainContext opcional para publicar resultado.
+    name = "preprocess"
+    output_contract = PreprocessorContract
+    input_fields: list[str] = []
 
-    Returns:
-        Dict validado contra PreprocessorContract.
-    """
-    if llm is None:
-        llm = build_llm_backend()
-
-    template = PromptRegistry.get("preprocess")
-    prompt = template.render(raw_text=raw_text)
-
-    result = await llm.generate_structured(
-        prompt=prompt,
-        system=template.system_prompt,
-        output_schema=template.output_schema,
-        temperature=template.temperature,
-    )
-
-    if not result.success:
-        logger.info("LLM preprocess failed, using fallback")
-        output = execute_fallback("preprocessor_filters", raw_text=raw_text)
-    else:
-        output = result.structured  # type: ignore[assignment]
-
-    if ctx:
-        try:
-            ctx.set_output("preprocess", output, contract=PreprocessorContract)
-        except Exception as exc:
-            logger.warning("preprocess ctx.set_output failed: %s", exc)
-
-    return output
+    def _build_prompt_kwargs(
+        self,
+        request: PromptRequest,
+        ctx_data: dict[str, Any],
+    ) -> dict[str, Any]:
+        return {"raw_text": request.raw_input}

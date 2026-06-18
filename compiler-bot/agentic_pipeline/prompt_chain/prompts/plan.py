@@ -3,20 +3,21 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
-from agentic_pipeline.prompt_chain.chain_context import ChainContext
 from agentic_pipeline.prompt_chain.contracts import PlannerContract, PlannerInput
-from agentic_pipeline.prompt_chain.fallbacks import execute_fallback
-from agentic_pipeline.prompt_chain.llm_backend import LLMBackend, build_llm_backend
+from agentic_pipeline.prompt_chain.handler_base import (
+    PromptHandler,
+    PromptRequest,
+)
 from agentic_pipeline.prompt_chain.prompt_template import (
     PromptTemplate,
-    PromptRegistry,
     register_prompt,
 )
 
 logger = logging.getLogger(__name__)
 
-PLAN_TEMPLATE = register_prompt(
+register_prompt(
     PromptTemplate(
         name="plan",
         system_prompt=(
@@ -50,65 +51,22 @@ PLAN_TEMPLATE = register_prompt(
 )
 
 
-async def plan_handler(
-    intent: str,
-    module: str | None = None,
-    entity: str | None = None,
-    tech: list[str] | None = None,
-    features: list[str] | None = None,
-    llm: LLMBackend | None = None,
-    ctx: ChainContext | None = None,
-) -> dict:
-    """Ejecuta PLAN prompt con fallback rule-based.
+class PlanHandler(PromptHandler):
+    """Handler para la etapa PLAN."""
 
-    Args:
-        intent: Intencion detectada (CREATE, READ, etc.).
-        module: Nombre del modulo (opcional).
-        entity: Nombre de entidad (opcional).
-        tech: Lista de tecnologias (opcional).
-        features: Lista de features (opcional).
-        llm: Backend LLM opcional.
-        ctx: ChainContext opcional para publicar resultado.
+    name = "plan"
+    output_contract = PlannerContract
+    input_fields = ["intent", "module", "entity", "tech", "features"]
 
-    Returns:
-        Dict validado contra PlannerContract.
-    """
-    if llm is None:
-        llm = build_llm_backend()
-
-    template = PromptRegistry.get("plan")
-    prompt = template.render(
-        intent=intent,
-        module=module,
-        entity=entity,
-        tech=tech or [],
-        features=features or [],
-    )
-
-    result = await llm.generate_structured(
-        prompt=prompt,
-        system=template.system_prompt,
-        output_schema=template.output_schema,
-        temperature=template.temperature,
-    )
-
-    if not result.success:
-        logger.info("LLM plan failed, using fallback")
-        output = execute_fallback(
-            "goal_tree_planner",
-            intent=intent,
-            module=module,
-            entity=entity,
-            tech=tech,
-            features=features,
-        )
-    else:
-        output = result.structured  # type: ignore[assignment]
-
-    if ctx:
-        try:
-            ctx.set_output("plan", output, contract=PlannerContract)
-        except Exception as exc:
-            logger.warning("plan ctx.set_output failed: %s", exc)
-
-    return output
+    def _build_prompt_kwargs(
+        self,
+        request: PromptRequest,
+        ctx_data: dict[str, Any],
+    ) -> dict[str, Any]:
+        return {
+            "intent": ctx_data.get("intent", ""),
+            "module": ctx_data.get("module"),
+            "entity": ctx_data.get("entity"),
+            "tech": ctx_data.get("tech", []),
+            "features": ctx_data.get("features", []),
+        }

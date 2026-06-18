@@ -3,20 +3,21 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
-from agentic_pipeline.prompt_chain.chain_context import ChainContext
 from agentic_pipeline.prompt_chain.contracts import OutputContract, OutputInput
-from agentic_pipeline.prompt_chain.fallbacks import execute_fallback
-from agentic_pipeline.prompt_chain.llm_backend import LLMBackend, build_llm_backend
+from agentic_pipeline.prompt_chain.handler_base import (
+    PromptHandler,
+    PromptRequest,
+)
 from agentic_pipeline.prompt_chain.prompt_template import (
     PromptTemplate,
-    PromptRegistry,
     register_prompt,
 )
 
 logger = logging.getLogger(__name__)
 
-FORMAT_TEMPLATE = register_prompt(
+register_prompt(
     PromptTemplate(
         name="format",
         system_prompt=(
@@ -37,61 +38,38 @@ FORMAT_TEMPLATE = register_prompt(
 )
 
 
-async def format_handler(
-    original_request: str,
-    plan: dict,
-    generated_files: list[dict],
-    validation: dict,
-    llm: LLMBackend | None = None,
-    ctx: ChainContext | None = None,
-) -> dict:
-    """Ejecuta FORMAT prompt con fallback rule-based.
+class FormatHandler(PromptHandler):
+    """Handler para la etapa FORMAT."""
 
-    Args:
-        original_request: Texto original del usuario.
-        plan: Plan de tareas ejecutado.
-        generated_files: Archivos generados.
-        validation: Resultado de la validacion.
-        llm: Backend LLM opcional.
-        ctx: ChainContext opcional para publicar resultado.
+    name = "format"
+    output_contract = OutputContract
+    input_fields = [
+        "tasks",
+        "execution_order",
+        "files",
+        "valid",
+        "checks",
+        "suggestions",
+    ]
 
-    Returns:
-        Dict validado contra OutputContract.
-    """
-    if llm is None:
-        llm = build_llm_backend()
-
-    template = PromptRegistry.get("format")
-    prompt = template.render(
-        original_request=original_request,
-        plan=plan,
-        generated_files=generated_files,
-        validation=validation,
-    )
-
-    result = await llm.generate_structured(
-        prompt=prompt,
-        system=template.system_prompt,
-        output_schema=template.output_schema,
-        temperature=template.temperature,
-    )
-
-    if not result.success:
-        logger.info("LLM format failed, using fallback")
-        output = execute_fallback(
-            "explain_tool",
-            original_request=original_request,
-            plan=plan,
-            generated_files=generated_files,
-            validation=validation,
-        )
-    else:
-        output = result.structured  # type: ignore[assignment]
-
-    if ctx:
-        try:
-            ctx.set_output("format", output, contract=OutputContract)
-        except Exception as exc:
-            logger.warning("format ctx.set_output failed: %s", exc)
-
-    return output
+    def _build_prompt_kwargs(
+        self,
+        request: PromptRequest,
+        ctx_data: dict[str, Any],
+    ) -> dict[str, Any]:
+        plan = {
+            "tasks": ctx_data.get("tasks", []),
+            "execution_order": ctx_data.get("execution_order", []),
+        }
+        generated_files = ctx_data.get("files", [])
+        validation = {
+            "valid": ctx_data.get("valid", False),
+            "checks": ctx_data.get("checks", []),
+            "suggestions": ctx_data.get("suggestions", []),
+        }
+        return {
+            "original_request": request.raw_input,
+            "plan": plan,
+            "generated_files": generated_files,
+            "validation": validation,
+        }

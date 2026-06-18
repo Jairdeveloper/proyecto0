@@ -7,6 +7,8 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
+from agentic_pipeline.prompt_chain.chain_context import ChainContext
+from agentic_pipeline.prompt_chain.handler_base import PromptRequest
 from agentic_pipeline.prompt_chain.llm_backend import LLMResult
 from agentic_pipeline.prompt_chain.prompt_template import PromptRegistry
 
@@ -14,6 +16,7 @@ from agentic_pipeline.prompt_chain.prompt_template import PromptRegistry
 class TestVerifyPrompt:
     def setup_method(self) -> None:
         import agentic_pipeline.prompt_chain.prompts as _pkg
+
         _ = _pkg
         PromptRegistry.clear()
         _mod = importlib.import_module(
@@ -21,15 +24,27 @@ class TestVerifyPrompt:
         )
         importlib.reload(_mod)
 
+    def _make_ctx(
+        self,
+        intent: dict,
+        files: list[dict],
+    ) -> ChainContext:
+        ctx = ChainContext()
+        ctx.set_output("preprocess", {"normalized": "", "domain": "backend"})
+        ctx.set_output("intent", intent)
+        ctx.set_output("plan", {"tasks": [], "execution_order": []})
+        ctx.set_output("generate", {"files": files, "errors": []})
+        return ctx
+
     @pytest.mark.asyncio
     async def test_verify_valid_files(self):
-        from agentic_pipeline.prompt_chain.prompts.verify import verify_handler
+        from agentic_pipeline.prompt_chain.prompts.verify import VerifyHandler
 
         mock_llm = AsyncMock()
         mock_llm.generate_structured.return_value = LLMResult(
             content='{"valid": true, "checks": [{"check": "estructura",'
-                     '"passed": true, "detail": ""}],'
-                     '"should_retry": false, "suggestions": []}',
+            '"passed": true, "detail": ""}],'
+            '"should_retry": false, "suggestions": []}',
             structured={
                 "valid": True,
                 "checks": [{"check": "estructura", "passed": True, "detail": ""}],
@@ -41,27 +56,35 @@ class TestVerifyPrompt:
             model="test",
             duration=0.1,
         )
-        result = await verify_handler(
-            requirements={"intent": "CREATE", "module": "pagos"},
+        handler = VerifyHandler(llm=mock_llm)
+        request = PromptRequest(raw_input="crea modulo pagos")
+        ctx = self._make_ctx(
+            intent={"intent": "CREATE", "module": "pagos"},
             files=[{"path": "test.ts", "content": "// ok"}],
-            llm=mock_llm,
         )
+        response = await handler.handle(request, ctx)
+        result = response.output
         assert result["valid"] is True
         assert result["should_retry"] is False
 
     @pytest.mark.asyncio
     async def test_verify_missing_imports(self):
-        from agentic_pipeline.prompt_chain.prompts.verify import verify_handler
+        from agentic_pipeline.prompt_chain.prompts.verify import VerifyHandler
 
         mock_llm = AsyncMock()
         mock_llm.generate_structured.return_value = LLMResult(
             content='{"valid": false, "checks": [{"check": "imports",'
-                     '"passed": false, "detail": "Falta import Injectable"}],'
-                     '"should_retry": true, "suggestions": ["Anade Injectable"]}',
+            '"passed": false, "detail": "Falta import Injectable"}],'
+            '"should_retry": true, "suggestions": ["Anade Injectable"]}',
             structured={
                 "valid": False,
-                "checks": [{"check": "imports", "passed": False,
-                            "detail": "Falta import Injectable"}],
+                "checks": [
+                    {
+                        "check": "imports",
+                        "passed": False,
+                        "detail": "Falta import Injectable",
+                    }
+                ],
                 "should_retry": True,
                 "suggestions": ["Anade Injectable"],
             },
@@ -70,27 +93,35 @@ class TestVerifyPrompt:
             model="test",
             duration=0.1,
         )
-        result = await verify_handler(
-            requirements={"intent": "CREATE"},
+        handler = VerifyHandler(llm=mock_llm)
+        request = PromptRequest(raw_input="crea modulo pagos")
+        ctx = self._make_ctx(
+            intent={"intent": "CREATE"},
             files=[{"path": "test.ts", "content": "// no import"}],
-            llm=mock_llm,
         )
+        response = await handler.handle(request, ctx)
+        result = response.output
         assert result["valid"] is False
         assert result["should_retry"] is True
 
     @pytest.mark.asyncio
     async def test_verify_should_retry(self):
-        from agentic_pipeline.prompt_chain.prompts.verify import verify_handler
+        from agentic_pipeline.prompt_chain.prompts.verify import VerifyHandler
 
         mock_llm = AsyncMock()
         mock_llm.generate_structured.return_value = LLMResult(
             content='{"valid": false, "checks": [{"check": "estructura",'
-                     '"passed": false, "detail": "Archivo no existe"}],'
-                     '"should_retry": true, "suggestions": ["Regenerar archivo"]}',
+            '"passed": false, "detail": "Archivo no existe"}],'
+            '"should_retry": true, "suggestions": ["Regenerar archivo"]}',
             structured={
                 "valid": False,
-                "checks": [{"check": "estructura", "passed": False,
-                            "detail": "Archivo no existe"}],
+                "checks": [
+                    {
+                        "check": "estructura",
+                        "passed": False,
+                        "detail": "Archivo no existe",
+                    }
+                ],
                 "should_retry": True,
                 "suggestions": ["Regenerar archivo"],
             },
@@ -99,23 +130,26 @@ class TestVerifyPrompt:
             model="test",
             duration=0.1,
         )
-        result = await verify_handler(
-            requirements={"intent": "CREATE"},
+        handler = VerifyHandler(llm=mock_llm)
+        request = PromptRequest(raw_input="crea modulo pagos")
+        ctx = self._make_ctx(
+            intent={"intent": "CREATE"},
             files=[{"path": "missing.ts", "content": ""}],
-            llm=mock_llm,
         )
+        response = await handler.handle(request, ctx)
+        result = response.output
         assert result["should_retry"] is True
 
     @pytest.mark.asyncio
     async def test_verify_suggestions(self):
-        from agentic_pipeline.prompt_chain.prompts.verify import verify_handler
+        from agentic_pipeline.prompt_chain.prompts.verify import VerifyHandler
 
         mock_llm = AsyncMock()
         mock_llm.generate_structured.return_value = LLMResult(
             content='{"valid": true, "checks": [{"check": "naming",'
-                     '"passed": true, "detail": ""}],'
-                     '"should_retry": false,'
-                     '"suggestions": ["Considera usar DTOs"]}',
+            '"passed": true, "detail": ""}],'
+            '"should_retry": false,'
+            '"suggestions": ["Considera usar DTOs"]}',
             structured={
                 "valid": True,
                 "checks": [{"check": "naming", "passed": True, "detail": ""}],
@@ -127,24 +161,28 @@ class TestVerifyPrompt:
             model="test",
             duration=0.1,
         )
-        result = await verify_handler(
-            requirements={"intent": "CREATE"},
+        handler = VerifyHandler(llm=mock_llm)
+        request = PromptRequest(raw_input="crea modulo pagos")
+        ctx = self._make_ctx(
+            intent={"intent": "CREATE"},
             files=[{"path": "ok.ts", "content": "// ok"}],
-            llm=mock_llm,
         )
+        response = await handler.handle(request, ctx)
+        result = response.output
         assert len(result["suggestions"]) > 0
 
     @pytest.mark.asyncio
     async def test_verify_llm_fails_fallback(self):
-        from agentic_pipeline.prompt_chain.prompts.verify import verify_handler
+        from agentic_pipeline.prompt_chain.prompts.verify import VerifyHandler
 
         mock_llm = AsyncMock()
         mock_llm.generate_structured.return_value = LLMResult(
-            success=False, error="LLM unavailable",
+            success=False,
+            error="LLM unavailable",
         )
 
         with patch(
-            "agentic_pipeline.prompt_chain.prompts.verify.execute_fallback",
+            "agentic_pipeline.prompt_chain.handler_base.execute_fallback",
         ) as mock_fb:
             mock_fb.return_value = {
                 "valid": True,
@@ -152,11 +190,14 @@ class TestVerifyPrompt:
                 "should_retry": False,
                 "suggestions": [],
             }
-            result = await verify_handler(
-                requirements={},
+            handler = VerifyHandler(llm=mock_llm)
+            request = PromptRequest(raw_input="crea modulo pagos")
+            ctx = self._make_ctx(
+                intent={"intent": "CREATE"},
                 files=[],
-                llm=mock_llm,
             )
+            response = await handler.handle(request, ctx)
 
+        result = response.output
         assert result["valid"] is True
         mock_fb.assert_called_once()

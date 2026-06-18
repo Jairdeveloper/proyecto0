@@ -3,23 +3,24 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
-from agentic_pipeline.prompt_chain.chain_context import ChainContext
 from agentic_pipeline.prompt_chain.contracts import (
     ValidatorContract,
     ValidatorInput,
 )
-from agentic_pipeline.prompt_chain.fallbacks import execute_fallback
-from agentic_pipeline.prompt_chain.llm_backend import LLMBackend, build_llm_backend
+from agentic_pipeline.prompt_chain.handler_base import (
+    PromptHandler,
+    PromptRequest,
+)
 from agentic_pipeline.prompt_chain.prompt_template import (
     PromptTemplate,
-    PromptRegistry,
     register_prompt,
 )
 
 logger = logging.getLogger(__name__)
 
-VERIFY_TEMPLATE = register_prompt(
+register_prompt(
     PromptTemplate(
         name="verify",
         system_prompt=(
@@ -43,57 +44,27 @@ VERIFY_TEMPLATE = register_prompt(
 )
 
 
-async def verify_handler(
-    requirements: dict,
-    files: list[dict],
-    criteria: list[str] | None = None,
-    llm: LLMBackend | None = None,
-    ctx: ChainContext | None = None,
-) -> dict:
-    """Ejecuta VERIFY prompt con fallback rule-based.
+class VerifyHandler(PromptHandler):
+    """Handler para la etapa VERIFY."""
 
-    Args:
-        requirements: Requisitos originales (intent, module, etc.).
-        files: Archivos generados con path y content.
-        criteria: Criterios de verificacion especificos.
-        llm: Backend LLM opcional.
-        ctx: ChainContext opcional para publicar resultado.
+    name = "verify"
+    output_contract = ValidatorContract
+    input_fields = ["intent", "module", "entity", "tech", "features", "files"]
 
-    Returns:
-        Dict validado contra ValidatorContract.
-    """
-    if llm is None:
-        llm = build_llm_backend()
-
-    template = PromptRegistry.get("verify")
-    prompt = template.render(
-        requirements=requirements,
-        files=files,
-        criteria=criteria or [],
-    )
-
-    result = await llm.generate_structured(
-        prompt=prompt,
-        system=template.system_prompt,
-        output_schema=template.output_schema,
-        temperature=template.temperature,
-    )
-
-    if not result.success:
-        logger.info("LLM verify failed, using fallback")
-        output = execute_fallback(
-            "validator_pipeline",
-            requirements=requirements,
-            files=files,
-            criteria=criteria,
-        )
-    else:
-        output = result.structured  # type: ignore[assignment]
-
-    if ctx:
-        try:
-            ctx.set_output("verify", output, contract=ValidatorContract)
-        except Exception as exc:
-            logger.warning("verify ctx.set_output failed: %s", exc)
-
-    return output
+    def _build_prompt_kwargs(
+        self,
+        request: PromptRequest,
+        ctx_data: dict[str, Any],
+    ) -> dict[str, Any]:
+        requirements = {
+            "intent": ctx_data.get("intent", ""),
+            "module": ctx_data.get("module"),
+            "entity": ctx_data.get("entity"),
+            "tech": ctx_data.get("tech", []),
+            "features": ctx_data.get("features", []),
+        }
+        return {
+            "requirements": requirements,
+            "files": ctx_data.get("files", []),
+            "criteria": ctx_data.get("criteria", []),
+        }
