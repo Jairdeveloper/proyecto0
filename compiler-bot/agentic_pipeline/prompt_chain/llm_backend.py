@@ -16,6 +16,7 @@ from agentic_pipeline.circuit_breaker import CircuitBreakerOpenError
 if TYPE_CHECKING:
     from agentic_pipeline.circuit_breaker import CircuitBreaker, ExponentialBackoff
     from agentic_pipeline.prompt_chain.llm_cache import LLMCache
+    from agentic_pipeline.security.token_bucket import TokenBucket
 
 logger = logging.getLogger(__name__)
 
@@ -39,6 +40,7 @@ class LLMBackend(ABC):
         self._cache: LLMCache | None = None
         self._circuit_breaker: CircuitBreaker | None = None
         self._backoff: ExponentialBackoff | None = None
+        self._rate_limiter: TokenBucket | None = None
 
     def set_cache(self, cache: LLMCache | None) -> None:
         """Inyecta cache de respuestas LLM."""
@@ -52,6 +54,10 @@ class LLMBackend(ABC):
         """Inyecta circuit breaker + exponential backoff para resiliencia."""
         self._circuit_breaker = cb
         self._backoff = backoff
+
+    def set_rate_limiter(self, limiter: TokenBucket | None) -> None:
+        """Inyecta TokenBucket rate limiter para control de tasa de API."""
+        self._rate_limiter = limiter
 
     @abstractmethod
     async def generate(
@@ -100,10 +106,13 @@ class OpenAIBackend(LLMBackend):
         fn: Any,
         max_retries: int = 3,
     ) -> Any:
-        """Execute fn with circuit breaker protection and exponential backoff retry."""
+        """Execute fn with circuit breaker, rate limiter, and exponential backoff retry."""
         last_exc: Exception | None = None
         for attempt in range(max_retries):
             try:
+                if self._rate_limiter is not None:
+                    while not self._rate_limiter.consume():
+                        await asyncio.sleep(0.1)
                 if self._circuit_breaker is not None:
                     return await self._circuit_breaker.call_async(fn)
                 return await fn()

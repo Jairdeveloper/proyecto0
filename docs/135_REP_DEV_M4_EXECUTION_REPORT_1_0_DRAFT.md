@@ -4,11 +4,12 @@
 - **Tipo:** REP (Reporte)
 - **Área:** DEV
 - **Módulo:** agentic_pipeline
-- **Versión:** 1.1
+- **Versión:** 1.2
 - **Estado:** DRAFT
-- **Tags:** `execution-report`, `m4`, `fixtures`, `conftest`, `testing`, `security`, `bandit`, `blocked-patterns`
-- **Fuente:** `docs/130_PLAN_DEV_MIGRATION_EXECUTION_1_0_DRAFT.md` (M4.1–M4.2)
+- **Tags:** `execution-report`, `m4`, `fixtures`, `conftest`, `testing`, `security`, `bandit`, `blocked-patterns`, `rate-limiter`, `token-bucket`
+- **Fuente:** `docs/130_PLAN_DEV_MIGRATION_EXECUTION_1_0_DRAFT.md` (M4.1–M4.3)
 - **Changelog:**
+  - 1.2 — 2026-06-19: Añadido M4.3 — TokenBucket rate limiter
   - 1.1 — 2026-06-19: Añadido M4.2 — SecurityScanner + BanditScanner
   - 1.0 — 2026-06-19: Versión inicial — M4.1 Fixtures compartidas
 
@@ -150,10 +151,94 @@ $ pytest tests/test_validator_chain.py tests/test_observer_pattern.py tests/test
 
 ---
 
-## 6. Estado de M4
+## 6. M4.3 — TokenBucket rate limiter (S4)
+
+### Motivo
+
+Las llamadas a la API del LLM no tenían control de tasa. En pipelines con múltiples stages que llaman al LLM en paralelo, era posible exceder los rate limits de OpenAI (ej. 5000 RPM en gpt-4o-mini) y recibir errores 429. Se implementó un TokenBucket thread-safe para limitar la tasa de llamadas.
+
+### Archivos creados/modificados
+
+| Acción | Archivo | Cambio |
+|--------|---------|--------|
+| 📄 Crear | `security/token_bucket.py` | `TokenBucket` thread-safe con `consume()` y `available` |
+| 🔧 Modificar | `prompt_chain/llm_backend.py` | `_rate_limiter` + `set_rate_limiter()` + integración en `_call_with_retry()` |
+
+### TokenBucket
+
+```python
+class TokenBucket:
+    def __init__(self, capacity: int = 60, refill_rate: float = 1.0):
+        self.capacity = capacity
+        self.refill_rate = refill_rate
+        self.tokens = float(capacity)
+        self.last_refill = time.time()
+        self._lock = threading.Lock()
+
+    def consume(self, tokens: int = 1) -> bool:
+        with self._lock:
+            now = time.time()
+            elapsed = now - self.last_refill
+            self.tokens = min(self.capacity, self.tokens + elapsed * self.refill_rate)
+            self.last_refill = now
+            if self.tokens >= tokens:
+                self.tokens -= tokens
+                return True
+            return False
+```
+
+- `capacity`: máximo de tokens acumulables (burst)
+- `refill_rate`: tokens/segundo que se regeneran
+- `consume()`: thread-safe via `threading.Lock`
+
+### Integración en LLMBackend
+
+Se agregó al `LLMBackend` base:
+- `_rate_limiter: TokenBucket | None`
+- `set_rate_limiter(limiter)` — setter para inyectar
+
+En `OpenAIBackend._call_with_retry()`, antes de ejecutar la función se verifica el rate limiter:
+```python
+if self._rate_limiter is not None:
+    while not self._rate_limiter.consume():
+        await asyncio.sleep(0.1)
+```
+
+Si el bucket está vacío, espera 100ms y reintenta hasta conseguir un token. Esto garantiza que nunca se supere la tasa configurada.
+
+### Verificación
+
+```bash
+$ ruff check security/token_bucket.py prompt_chain/llm_backend.py
+# EXIT: 0
+
+$ python -c "
+from agentic_pipeline.security.token_bucket import TokenBucket
+tb = TokenBucket(capacity=10, refill_rate=10.0)
+assert tb.consume(5) == True
+assert tb.consume(5) == True
+assert tb.consume(1) == False
+print('OK')
+"
+
+$ pytest tests/test_llm_backend.py -v --tb=short -o "addopts="
+# 8 passed
+```
+
+| Verificación | Resultado |
+|-------------|-----------|
+| `ruff check` — 0 errores | ✅ PASS |
+| `TokenBucket.consume()` retorna True con tokens disponibles | ✅ PASS |
+| `TokenBucket.consume()` retorna False sin tokens | ✅ PASS |
+| `set_rate_limiter()` acepta `TokenBucket | None` | ✅ PASS |
+| LLMBackend tests (8 tests) | ✅ PASS |
+
+---
+
+## 7. Estado de M4
 
 | Sub-tarea | Estado |
 |-----------|--------|
 | **M4.1 — Fixtures compartidas (T2)** | **✅ COMPLETADO** |
 | **M4.2 — SecurityScanner + BanditScanner (S1)** | **✅ COMPLETADO** |
-| M4.3 — TokenBucket rate limiter (S4) | ⏳ Pendiente |
+| **M4.3 — TokenBucket rate limiter (S4)** | **✅ COMPLETADO** |
