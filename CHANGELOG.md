@@ -5,6 +5,11 @@ Todas las cambios notables de este proyecto se documentan en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es/1.0.0/),
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.8.2] — 2026-06-19
+
+### Added
+- `docs/137_PROP_DEV_METRICS_DASHBOARD_AND_VERSION_ALIGNMENT_1_0_DRAFT.md`: propuesta de implementacion para dashboard de metricas y alineacion de versionado antes de release/CI confiable.
+
 ## [2.8.1] — 2026-06-19
 
 ### Added
