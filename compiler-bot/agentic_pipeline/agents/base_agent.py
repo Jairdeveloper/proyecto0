@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any, Callable
+from typing import TYPE_CHECKING, Any
 
-from .event_bus import EventBus
+from agentic_pipeline.agents.event_bus import EventBus
 
 if TYPE_CHECKING:
-    from .agent_mediator import AgentMessage, IAgentMediator
+    from agentic_pipeline.agents.agent_mediator import AgentMessage, IAgentMediator
 
 
 @dataclass

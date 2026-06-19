@@ -6,8 +6,7 @@ import json
 from abc import ABC, abstractmethod
 from typing import Any
 
-from .ir_nodes import IRNode
-
+from agentic_pipeline.nodes.ir_nodes import IRNode
 
 # ============================================================================
 # Serializer interface (Bridge Implementor)

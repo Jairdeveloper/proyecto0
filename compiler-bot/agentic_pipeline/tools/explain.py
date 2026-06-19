@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from ..tool_registry import Tool, ToolResult, Parameter
+from agentic_pipeline.tool_registry import Parameter, Tool, ToolResult
 
 
 class ExplainTool(Tool):

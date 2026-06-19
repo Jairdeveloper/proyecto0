@@ -6,10 +6,10 @@ import logging
 from pathlib import Path
 from typing import Any
 
-from ..base_stage import PipelineStage
-from ..generators.base_generator import GeneratorFactory
-from ..generators.code_formatter import CodeFormatter
-from ..state_models import ActionPlan, AnalysisResult, StageContext, StageOutput
+from agentic_pipeline.base_stage import PipelineStage
+from agentic_pipeline.generators.base_generator import GeneratorFactory
+from agentic_pipeline.generators.code_formatter import CodeFormatter
+from agentic_pipeline.state_models import ActionPlan, AnalysisResult, StageContext, StageOutput
 
 logger = logging.getLogger(__name__)
 
@@ -66,6 +66,22 @@ class ActionExecutor(PipelineStage):
         ir_tree = self._input_data.get("ir_tree") if self._input_data else None
         commands = self._input_data.get("commands", []) if self._input_data else []
         tasks = self._input_data.get("tasks", []) if self._input_data else []
+        enriched = self._input_data.get("enriched", {}) if self._input_data else {}
+        goal_tree = self._input_data.get("goal_tree") if self._input_data else None
+
+        if not tasks and goal_tree:
+            subtasks = goal_tree.get("subtasks", [])
+            nombre = enriched.get("slots", {}).get("nombre", "app")
+            tasks = [{
+                "id": s["id"],
+                "description": s["description"],
+                "target": "nestjs",
+            } for s in subtasks]
+            commands = [{
+                "task_id": s["id"],
+                "type": "scaffold",
+                "path": f"modules/{nombre}",
+            } for s in subtasks]
 
         generated_files: list[str] = []
         errors: list[str] = []
@@ -121,6 +137,8 @@ class ActionExecutor(PipelineStage):
                 "errors": errors,
                 "warnings": warnings,
                 "task_count": len(tasks),
+                "ir_tree": ir_tree,
+                "tasks": tasks,
                 "enriched": self._enriched or None,
             },
             metrics={

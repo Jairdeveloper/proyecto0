@@ -5,13 +5,13 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from ..base_stage import PipelineStage
-from ..state_models import ActionPlan, AnalysisResult, StageContext, StageOutput
-from .ast_nodes import ASTNode
-from .ir_builder import IRBuilder
-from .ir_export_visitor import IRExportVisitor
-from .ir_serializer import get_serializer
-from .ir_nodes import IRNode
+from agentic_pipeline.base_stage import PipelineStage
+from agentic_pipeline.nodes.ast_nodes import ASTNode
+from agentic_pipeline.nodes.ir_builder import IRBuilder
+from agentic_pipeline.nodes.ir_export_visitor import IRExportVisitor
+from agentic_pipeline.nodes.ir_nodes import IRNode
+from agentic_pipeline.nodes.ir_serializer import get_serializer
+from agentic_pipeline.state_models import ActionPlan, AnalysisResult, StageContext, StageOutput
 
 logger = logging.getLogger(__name__)
 

@@ -64,13 +64,13 @@ class ToolRegistry:
 
         Equivalente a _build_default_tool_registry() en agent_loop.py.
         """
-        from .tools.read_file import ReadFileTool
-        from .tools.write_file import WriteFileTool
-        from .tools.run_command import RunCommandTool
-        from .tools.search_code import SearchCodeTool
-        from .tools.generate_code import GenerateCodeTool
-        from .tools.ask_user import AskUserTool
-        from .tools.explain import ExplainTool
+        from agentic_pipeline.tools.ask_user import AskUserTool
+        from agentic_pipeline.tools.explain import ExplainTool
+        from agentic_pipeline.tools.generate_code import GenerateCodeTool
+        from agentic_pipeline.tools.read_file import ReadFileTool
+        from agentic_pipeline.tools.run_command import RunCommandTool
+        from agentic_pipeline.tools.search_code import SearchCodeTool
+        from agentic_pipeline.tools.write_file import WriteFileTool
 
         registry = cls()
         registry.register(ReadFileTool())

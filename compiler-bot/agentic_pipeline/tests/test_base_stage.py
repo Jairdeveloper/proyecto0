@@ -2,10 +2,10 @@ import pytest
 
 from agentic_pipeline.base_stage import PipelineStage
 from agentic_pipeline.state_models import (
-    StageContext,
-    Stage,
-    AnalysisResult,
     ActionPlan,
+    AnalysisResult,
+    Stage,
+    StageContext,
     StageOutput,
 )
 

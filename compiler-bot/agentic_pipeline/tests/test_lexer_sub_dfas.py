@@ -9,15 +9,14 @@ from agentic_pipeline.nodes.lexer import (
     TokenFlyweightRegistry,
 )
 from agentic_pipeline.nodes.sub_dfa import (
+    UIDFA,
     ActionDFA,
     DomainDFA,
     QualityDFA,
     TechDFA,
-    UIDFA,
     build_dfa_from_words,
 )
 from agentic_pipeline.state_models import Stage, StageContext
-
 
 # ============================================================================
 # build_dfa_from_words

@@ -10,7 +10,7 @@ if _src_root not in sys.path:
 
 import pytest
 
-from agentic_pipeline.state_models import StageContext, Stage
+from agentic_pipeline.state_models import Stage, StageContext
 
 
 @pytest.fixture

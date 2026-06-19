@@ -1,5 +1,6 @@
 from typing import Literal
-from .state_models import StageContext
+
+from agentic_pipeline.state_models import StageContext
 
 
 class ErrorGuard:

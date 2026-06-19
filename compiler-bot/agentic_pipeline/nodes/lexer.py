@@ -5,9 +5,23 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from ..base_stage import PipelineStage
-from ..state_models import ActionPlan, AnalysisResult, StageContext, StageOutput, Token
-from .sub_dfa import ActionDFA, BaseDFA, DomainDFA, QualityDFA, TechDFA, UIDFA
+from agentic_pipeline.base_stage import PipelineStage
+from agentic_pipeline.nodes.sub_dfa import (
+    UIDFA,
+    ActionDFA,
+    BaseDFA,
+    DomainDFA,
+    EntityDFA,
+    QualityDFA,
+    TechDFA,
+)
+from agentic_pipeline.state_models import (
+    ActionPlan,
+    AnalysisResult,
+    StageContext,
+    StageOutput,
+    Token,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -116,6 +130,7 @@ class Lexer(PipelineStage):
             "tech": TechDFA(),
             "ui": UIDFA(),
             "quality": QualityDFA(),
+            "entity": EntityDFA(),
         }
         self.trie = DEFAULT_TRIE
         self._text = ""

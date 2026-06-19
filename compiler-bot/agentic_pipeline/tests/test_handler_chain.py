@@ -149,15 +149,13 @@ class TestHandlerChainBuild:
 
     @pytest.mark.asyncio
     async def test_handler_llm_failure_fallback(self):
-        from agentic_pipeline.prompt_chain.prompts.preprocess import (
-            PreprocessHandler,
-        )
-
+        import agentic_pipeline.prompt_chain.prompts as _pkg
         from agentic_pipeline.prompt_chain.prompt_template import (
             PromptRegistry,
         )
-
-        import agentic_pipeline.prompt_chain.prompts as _pkg
+        from agentic_pipeline.prompt_chain.prompts.preprocess import (
+            PreprocessHandler,
+        )
 
         _ = _pkg
         PromptRegistry.clear()

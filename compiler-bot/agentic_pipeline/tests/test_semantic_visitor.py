@@ -10,7 +10,6 @@ from agentic_pipeline.nodes.symbol_table import SymbolTable
 from agentic_pipeline.nodes.type_systems import TypeRegistry
 from agentic_pipeline.state_models import Stage, StageContext
 
-
 # ============================================================================
 # SemanticVisitor tests
 # ============================================================================

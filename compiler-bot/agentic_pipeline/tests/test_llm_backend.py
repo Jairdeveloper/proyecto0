@@ -18,7 +18,11 @@ class _MockLLMBase:
         raise NotImplementedError
 
     async def generate_structured(
-        self, prompt, system="", output_schema=None, temperature=0.3,
+        self,
+        prompt,
+        system="",
+        output_schema=None,
+        temperature=0.3,
     ):
         raise NotImplementedError
 
@@ -34,7 +38,10 @@ class TestFailoverLLMBackend:
         class AlwaysFail(_MockLLMBase):
             async def generate(self, prompt="", system="", temperature=0.3, max_tokens=4096):
                 return LLMResult(success=False, error="fail")
-            async def generate_structured(self, prompt="", system="", output_schema=None, temperature=0.3):
+
+            async def generate_structured(
+                self, prompt="", system="", output_schema=None, temperature=0.3
+            ):
                 return LLMResult(success=False, error="fail")
 
         fb = FailoverLLMBackend([AlwaysFail(), AlwaysFail()])
@@ -52,13 +59,19 @@ class TestFailoverLLMBackend:
         class FirstOK(_MockLLMBase):
             async def generate(self, prompt="", system="", temperature=0.3, max_tokens=4096):
                 return LLMResult(content="ok", provider="first", model="m", success=True)
-            async def generate_structured(self, prompt="", system="", output_schema=None, temperature=0.3):
+
+            async def generate_structured(
+                self, prompt="", system="", output_schema=None, temperature=0.3
+            ):
                 return LLMResult(content="ok", provider="first", model="m", success=True)
 
         class NeverReached(_MockLLMBase):
             async def generate(self, prompt="", system="", temperature=0.3, max_tokens=4096):
                 raise RuntimeError("should not be called")
-            async def generate_structured(self, prompt="", system="", output_schema=None, temperature=0.3):
+
+            async def generate_structured(
+                self, prompt="", system="", output_schema=None, temperature=0.3
+            ):
                 raise RuntimeError("should not be called")
 
         fb = FailoverLLMBackend([FirstOK(), NeverReached()])
@@ -76,12 +89,16 @@ class TestFailoverLLMBackend:
         class AlwaysFail(_MockLLMBase):
             async def generate(self, prompt="", system="", temperature=0.3, max_tokens=4096):
                 return LLMResult(success=False, error="fail")
-            async def generate_structured(self, prompt="", system="", output_schema=None, temperature=0.3):
+
+            async def generate_structured(
+                self, prompt="", system="", output_schema=None, temperature=0.3
+            ):
                 return LLMResult(success=False, error="fail")
 
         fb = FailoverLLMBackend([AlwaysFail()])
         result = await fb.generate_structured(
-            prompt="test", output_schema=_TestSchema,
+            prompt="test",
+            output_schema=_TestSchema,
         )
         assert not result.success
 
@@ -107,18 +124,26 @@ class TestFailoverLLMBackend:
                 return LLMResult(
                     content='{"message": "hi", "count": 3}',
                     structured={"message": "hi", "count": 3},
-                    provider="stub", model="s", success=True,
+                    provider="stub",
+                    model="s",
+                    success=True,
                 )
-            async def generate_structured(self, prompt="", system="", output_schema=None, temperature=0.3):
+
+            async def generate_structured(
+                self, prompt="", system="", output_schema=None, temperature=0.3
+            ):
                 return LLMResult(
                     content='{"message": "hi", "count": 3}',
                     structured={"message": "hi", "count": 3},
-                    provider="stub", model="s", success=True,
+                    provider="stub",
+                    model="s",
+                    success=True,
                 )
 
         fb = FailoverLLMBackend([StubLLM()])
         result = await fb.generate_structured(
-            prompt="test", output_schema=_TestSchema,
+            prompt="test",
+            output_schema=_TestSchema,
         )
         assert result.success
         assert result.structured["message"] == "hi"
@@ -141,7 +166,8 @@ class TestOpenAIBackend:
 
         backend = OpenAIBackend(api_key="invalid-key")
         result = await backend.generate_structured(
-            prompt="test", output_schema=_TestSchema,
+            prompt="test",
+            output_schema=_TestSchema,
         )
         assert not result.success
 

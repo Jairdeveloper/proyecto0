@@ -46,9 +46,7 @@ class TestTypeRegistry:
 
 class TestUIComponentValidator:
     def test_valid_component(self):
-        errors = ui_component_validator(
-            {"name": "form", "component_type": "formulario"}
-        )
+        errors = ui_component_validator({"name": "form", "component_type": "formulario"})
         assert errors == []
 
     def test_missing_name(self):

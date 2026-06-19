@@ -32,14 +32,21 @@ class TestAcceptDispatch:
         class SpyVisitor(IASTVisitor):
             def visit_project(self, n):
                 visited.append("project")
+
             def visit_page(self, n):
                 visited.append("page")
+
             def visit_component(self, n):
                 visited.append("component")
+
             def visit_entity(self, n):
                 visited.append("entity")
+
             def visit_infra(self, n):
                 visited.append("infra")
+
+            def visit_action(self, n):
+                visited.append("action")
 
         node.accept(SpyVisitor())
         assert visited == ["project"]
@@ -51,14 +58,21 @@ class TestAcceptDispatch:
         class SpyVisitor(IASTVisitor):
             def visit_project(self, n):
                 visited.append("project")
+
             def visit_page(self, n):
                 visited.append("page")
+
             def visit_component(self, n):
                 visited.append("component")
+
             def visit_entity(self, n):
                 visited.append("entity")
+
             def visit_infra(self, n):
                 visited.append("infra")
+
+            def visit_action(self, n):
+                visited.append("action")
 
         node.accept(SpyVisitor())
         assert visited == ["page"]
@@ -70,14 +84,21 @@ class TestAcceptDispatch:
         class SpyVisitor(IASTVisitor):
             def visit_project(self, n):
                 visited.append("project")
+
             def visit_page(self, n):
                 visited.append("page")
+
             def visit_component(self, n):
                 visited.append("component")
+
             def visit_entity(self, n):
                 visited.append("entity")
+
             def visit_infra(self, n):
                 visited.append("infra")
+
+            def visit_action(self, n):
+                visited.append("action")
 
         node.accept(SpyVisitor())
         assert visited == ["component"]
@@ -89,14 +110,21 @@ class TestAcceptDispatch:
         class SpyVisitor(IASTVisitor):
             def visit_project(self, n):
                 visited.append("project")
+
             def visit_page(self, n):
                 visited.append("page")
+
             def visit_component(self, n):
                 visited.append("component")
+
             def visit_entity(self, n):
                 visited.append("entity")
+
             def visit_infra(self, n):
                 visited.append("infra")
+
+            def visit_action(self, n):
+                visited.append("action")
 
         node.accept(SpyVisitor())
         assert visited == ["entity"]
@@ -108,14 +136,21 @@ class TestAcceptDispatch:
         class SpyVisitor(IASTVisitor):
             def visit_project(self, n):
                 visited.append("project")
+
             def visit_page(self, n):
                 visited.append("page")
+
             def visit_component(self, n):
                 visited.append("component")
+
             def visit_entity(self, n):
                 visited.append("entity")
+
             def visit_infra(self, n):
                 visited.append("infra")
+
+            def visit_action(self, n):
+                visited.append("action")
 
         node.accept(SpyVisitor())
         assert visited == ["infra"]
@@ -150,6 +185,7 @@ class TestTreeWalkingVisitor:
             def visit_page(self, node):
                 visited.append(f"page:{node.name}")
                 super().visit_page(node)
+
             def visit_component(self, node):
                 visited.append(f"comp:{node.name}")
                 super().visit_component(node)

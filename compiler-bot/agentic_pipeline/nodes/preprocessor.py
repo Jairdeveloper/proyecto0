@@ -7,8 +7,8 @@ import re
 from abc import ABC, abstractmethod
 from typing import Any
 
-from ..base_stage import PipelineStage
-from ..state_models import ActionPlan, AnalysisResult, StageContext, StageOutput
+from agentic_pipeline.base_stage import PipelineStage
+from agentic_pipeline.state_models import ActionPlan, AnalysisResult, StageContext, StageOutput
 
 logger = logging.getLogger(__name__)
 
@@ -135,6 +135,7 @@ class SpacyProcessor:
     def get_nlp(cls):
         if cls._nlp is None:
             import spacy
+
             cls._nlp = spacy.load("es_core_news_sm")
         return cls._nlp
 

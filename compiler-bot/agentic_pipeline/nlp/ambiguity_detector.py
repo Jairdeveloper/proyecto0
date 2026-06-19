@@ -1,5 +1,6 @@
 import re
-from .enriched_input import IntentResult, Entities, Slots, AmbiguityResult
+
+from agentic_pipeline.nlp.enriched_input import AmbiguityResult, Entities, IntentResult, Slots
 
 
 class AmbiguityDetector:

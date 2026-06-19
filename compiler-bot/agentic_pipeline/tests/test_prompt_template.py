@@ -61,6 +61,7 @@ class TestPromptTemplate:
 class TestPromptRegistry:
     def setup_method(self):
         from agentic_pipeline.prompt_chain.prompt_template import PromptRegistry
+
         PromptRegistry.clear()
 
     def test_register_and_get(self):
@@ -117,12 +118,18 @@ class TestPromptRegistry:
         )
 
         t1 = PromptTemplate(
-            name="a", system_prompt="", template="",
-            input_schema=_InputSchema, output_schema=_OutputSchema,
+            name="a",
+            system_prompt="",
+            template="",
+            input_schema=_InputSchema,
+            output_schema=_OutputSchema,
         )
         t2 = PromptTemplate(
-            name="b", system_prompt="", template="",
-            input_schema=_InputSchema, output_schema=_OutputSchema,
+            name="b",
+            system_prompt="",
+            template="",
+            input_schema=_InputSchema,
+            output_schema=_OutputSchema,
         )
         PromptRegistry.register(t1)
         PromptRegistry.register(t2)
@@ -138,8 +145,11 @@ class TestPromptRegistry:
         )
 
         t = PromptTemplate(
-            name="val", system_prompt="", template="",
-            input_schema=_InputSchema, output_schema=_OutputSchema,
+            name="val",
+            system_prompt="",
+            template="",
+            input_schema=_InputSchema,
+            output_schema=_OutputSchema,
         )
         PromptRegistry.register(t)
         result = PromptRegistry.validate_output("val", {"result": "ok"})
@@ -153,8 +163,11 @@ class TestPromptRegistry:
         )
 
         t = PromptTemplate(
-            name="val2", system_prompt="", template="",
-            input_schema=_InputSchema, output_schema=_OutputSchema,
+            name="val2",
+            system_prompt="",
+            template="",
+            input_schema=_InputSchema,
+            output_schema=_OutputSchema,
         )
         PromptRegistry.register(t)
         try:
@@ -171,8 +184,11 @@ class TestPromptRegistry:
         )
 
         t = PromptTemplate(
-            name="helper", system_prompt="", template="",
-            input_schema=_InputSchema, output_schema=_OutputSchema,
+            name="helper",
+            system_prompt="",
+            template="",
+            input_schema=_InputSchema,
+            output_schema=_OutputSchema,
         )
         result = register_prompt(t)
         assert result is t

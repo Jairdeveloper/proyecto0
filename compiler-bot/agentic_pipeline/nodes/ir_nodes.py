@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Any, List
+from typing import Any
 
 
 class IRNode(ABC):
@@ -11,7 +11,7 @@ class IRNode(ABC):
 
     def __init__(self, name: str) -> None:
         self.name = name
-        self.children: List[IRNode] = []
+        self.children: list[IRNode] = []
 
     def add(self, child: IRNode) -> None:
         self.children.append(child)
@@ -20,10 +20,10 @@ class IRNode(ABC):
     def to_code(self, target: str) -> str: ...
 
     @abstractmethod
-    def validate(self) -> List[str]: ...
+    def validate(self) -> list[str]: ...
 
     @abstractmethod
-    def dependencies(self) -> List[str]: ...
+    def dependencies(self) -> list[str]: ...
 
 
 # ============================================================================
@@ -52,10 +52,10 @@ class IRConfig(IRNode):
             lines.append(f"{k}={v}")
         return "\n".join(lines)
 
-    def validate(self) -> List[str]:
+    def validate(self) -> list[str]:
         return []
 
-    def dependencies(self) -> List[str]:
+    def dependencies(self) -> list[str]:
         return []
 
 
@@ -70,14 +70,14 @@ class IRProject(IRNode):
     def to_code(self, target: str) -> str:
         return "\n".join(c.to_code(target) for c in self.children)
 
-    def validate(self) -> List[str]:
-        errors: List[str] = []
+    def validate(self) -> list[str]:
+        errors: list[str] = []
         for c in self.children:
             errors.extend(c.validate())
         return [e for e in errors if e]
 
-    def dependencies(self) -> List[str]:
-        deps: List[str] = []
+    def dependencies(self) -> list[str]:
+        deps: list[str] = []
         for c in self.children:
             deps.extend(c.dependencies())
         return deps
@@ -105,15 +105,15 @@ class IRPage(IRNode):
             )
         return f"<!-- page: {self.name} -->"
 
-    def validate(self) -> List[str]:
+    def validate(self) -> list[str]:
         if not self.children:
             return [f"Page '{self.name}' has no components"]
-        errors: List[str] = []
+        errors: list[str] = []
         for c in self.children:
             errors.extend(c.validate())
         return [e for e in errors if e]
 
-    def dependencies(self) -> List[str]:
+    def dependencies(self) -> list[str]:
         return [c.name for c in self.children if isinstance(c, IRComponent)]
 
 
@@ -133,12 +133,12 @@ class IRComponent(IRNode):
             return f"<{self.name} />"
         return f"<!-- component: {self.name} ({self.component_type}) -->"
 
-    def validate(self) -> List[str]:
+    def validate(self) -> list[str]:
         if not self.name:
             return ["Component name cannot be empty"]
         return []
 
-    def dependencies(self) -> List[str]:
+    def dependencies(self) -> list[str]:
         return []
 
 
@@ -171,14 +171,14 @@ class IREntity(IRNode):
             return "\n".join(lines)
         return f"// entity {self.name}"
 
-    def validate(self) -> List[str]:
+    def validate(self) -> list[str]:
         if not self.name:
             return ["Entity name cannot be empty"]
         if not self.attributes:
             return [f"Entity '{self.name}' has no attributes"]
         return []
 
-    def dependencies(self) -> List[str]:
+    def dependencies(self) -> list[str]:
         return []
 
 
@@ -204,12 +204,12 @@ class IRAPI(IRNode):
             )
         return f"// api: {self.name} [{', '.join(self.methods)}]"
 
-    def validate(self) -> List[str]:
+    def validate(self) -> list[str]:
         if not self.name:
             return ["API name cannot be empty"]
         return []
 
-    def dependencies(self) -> List[str]:
+    def dependencies(self) -> list[str]:
         return []
 
 
@@ -251,13 +251,13 @@ class IRInfra(IRNode):
             )
         return f"# infra: {self.name} ({self.infra_type})"
 
-    def validate(self) -> List[str]:
-        errors: List[str] = []
+    def validate(self) -> list[str]:
+        errors: list[str] = []
         if not self.name:
             errors.append("Infra resource name cannot be empty")
         if not self.infra_type:
             errors.append("Infra resource type cannot be empty")
         return errors
 
-    def dependencies(self) -> List[str]:
+    def dependencies(self) -> list[str]:
         return []

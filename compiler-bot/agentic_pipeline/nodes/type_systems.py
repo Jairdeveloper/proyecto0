@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 Validator = Callable[[dict[str, Any]], list[str]]
 
@@ -59,8 +60,7 @@ def data_entity_validator(value: dict[str, Any]) -> list[str]:
             attr_type = attr.get("type", "").lower()
             if attr_type not in valid_types:
                 errors.append(
-                    f"Invalid attribute type '{attr.get('type')}' "
-                    f"in '{attr.get('name')}'"
+                    f"Invalid attribute type '{attr.get('type')}' in '{attr.get('name')}'"
                 )
     return errors
 

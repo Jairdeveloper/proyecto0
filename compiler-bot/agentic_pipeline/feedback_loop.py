@@ -8,9 +8,9 @@ import os
 from collections.abc import Callable
 from typing import Any
 
-from .config import config
-from .metrics_store import MetricsStore
-from .prompt_chain.observer_base import StageEvent
+from agentic_pipeline.config import config
+from agentic_pipeline.metrics_store import MetricsStore
+from agentic_pipeline.prompt_chain.observer_base import StageEvent
 
 logger = logging.getLogger(__name__)
 
@@ -194,16 +194,24 @@ class PromptOptimizerObserver:
 
     def on_event(self, event: StageEvent) -> None:
         prompt_stages = {
-            "preprocess", "intent", "plan", "generate", "verify", "format",
+            "preprocess",
+            "intent",
+            "plan",
+            "generate",
+            "verify",
+            "format",
         }
         if event.stage not in prompt_stages:
             return
-        self._store.record_prompt(event.stage, {
-            "success": event.success,
-            "duration": event.duration,
-            "error": event.error,
-            "fallback_used": event.metadata.get("fallback_used", False),
-        })
+        self._store.record_prompt(
+            event.stage,
+            {
+                "success": event.success,
+                "duration": event.duration,
+                "error": event.error,
+                "fallback_used": event.metadata.get("fallback_used", False),
+            },
+        )
 
 
 class DashboardObserver:
@@ -227,12 +235,14 @@ class DashboardObserver:
     def _broadcast(self, event: StageEvent) -> None:
         for ws in self._ws_clients:
             try:
-                ws.send_json({
-                    "stage": event.stage,
-                    "duration": event.duration,
-                    "success": event.success,
-                    "timestamp": event.timestamp,
-                })
+                ws.send_json(
+                    {
+                        "stage": event.stage,
+                        "duration": event.duration,
+                        "success": event.success,
+                        "timestamp": event.timestamp,
+                    }
+                )
             except Exception:
                 self._ws_clients.remove(ws)
 

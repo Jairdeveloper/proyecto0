@@ -8,6 +8,7 @@ import pytest
 class TestSentenceTransformerClassifier:
     def test_classify_create_intent(self):
         from agentic_pipeline.nodes.perception_unit import SentenceTransformerClassifier
+
         try:
             clf = SentenceTransformerClassifier()
         except Exception:
@@ -18,6 +19,7 @@ class TestSentenceTransformerClassifier:
 
     def test_classify_read_intent(self):
         from agentic_pipeline.nodes.perception_unit import SentenceTransformerClassifier
+
         try:
             clf = SentenceTransformerClassifier()
         except Exception:
@@ -28,6 +30,7 @@ class TestSentenceTransformerClassifier:
 
     def test_classify_delete_intent(self):
         from agentic_pipeline.nodes.perception_unit import SentenceTransformerClassifier
+
         try:
             clf = SentenceTransformerClassifier()
         except Exception:
@@ -38,6 +41,7 @@ class TestSentenceTransformerClassifier:
 
     def test_classify_explain_intent(self):
         from agentic_pipeline.nodes.perception_unit import SentenceTransformerClassifier
+
         try:
             clf = SentenceTransformerClassifier()
         except Exception:
@@ -48,6 +52,7 @@ class TestSentenceTransformerClassifier:
 
     def test_paraphrase_detection(self):
         from agentic_pipeline.nodes.perception_unit import SentenceTransformerClassifier
+
         try:
             clf = SentenceTransformerClassifier()
         except Exception:
@@ -64,6 +69,7 @@ class TestSentenceTransformerClassifier:
 
     def test_ambiguous_prompt_low_score(self):
         from agentic_pipeline.nodes.perception_unit import SentenceTransformerClassifier
+
         try:
             clf = SentenceTransformerClassifier()
         except Exception:
@@ -73,6 +79,7 @@ class TestSentenceTransformerClassifier:
 
     def test_high_confidence_threshold(self):
         from agentic_pipeline.nodes.perception_unit import SentenceTransformerClassifier
+
         try:
             clf = SentenceTransformerClassifier()
         except Exception:
@@ -82,6 +89,7 @@ class TestSentenceTransformerClassifier:
 
     def test_classify_update_intent(self):
         from agentic_pipeline.nodes.perception_unit import SentenceTransformerClassifier
+
         try:
             clf = SentenceTransformerClassifier()
         except Exception:

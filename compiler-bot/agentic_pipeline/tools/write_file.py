@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from ..tool_registry import Tool, ToolResult, Parameter
+from agentic_pipeline.tool_registry import Parameter, Tool, ToolResult
 
 
 class WriteFileTool(Tool):

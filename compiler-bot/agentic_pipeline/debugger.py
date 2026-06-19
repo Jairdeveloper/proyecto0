@@ -11,8 +11,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from .orchestrator import NODE_MAP, PipelineOrchestrator
-from .state_models import StageOutput
+from agentic_pipeline.orchestrator import NODE_MAP, PipelineOrchestrator
+from agentic_pipeline.state_models import Stage, StageOutput
 
 logger = logging.getLogger(__name__)
 
@@ -65,6 +65,34 @@ class PipelineDebugger:
         self._orchestrator: PipelineOrchestrator | None = None
         self._locations = _resolve_stage_locations()
 
+    _CHAIN_STAGE_MAP: dict[str, Stage] = {
+        "preprocess": Stage.PREPROCESSOR,
+        "intent": Stage.INTENT,
+        "plan": Stage.PLANNER,
+        "generate": Stage.SYNTHESIS,
+        "verify": Stage.VALIDATOR,
+    }
+
+    @staticmethod
+    def _to_stage(stage_name: str) -> Stage:
+        try:
+            return Stage(stage_name)
+        except ValueError:
+            return PipelineDebugger._CHAIN_STAGE_MAP.get(stage_name, Stage.VALIDATOR)
+
+    @staticmethod
+    def _normalize(stage_name: str, output: StageOutput | dict) -> StageOutput:
+        """Convert dict to StageOutput when callback receives raw dict (chain path)."""
+        if isinstance(output, dict):
+            return StageOutput(
+                stage=PipelineDebugger._to_stage(stage_name),
+                output_data=output,
+                success=bool(output),
+                error=None,
+                metrics={},
+            )
+        return output
+
     async def run(self, prompt: str) -> dict[str, Any]:
         session_id = datetime.now().strftime("%Y%m%d_%H%M%S")
         if self.mode == "inspect":
@@ -110,6 +138,7 @@ class PipelineDebugger:
             return f"    ── output: {data!r}"
 
     def _trace_stage(self, stage: str, output: StageOutput) -> None:
+        output = self._normalize(stage, output)
         status = "OK" if output.success else "FAIL"
         data_size = self._estimate_size(output.output_data)
         print(
@@ -130,6 +159,7 @@ class PipelineDebugger:
         print(self._output_preview(output.output_data), file=sys.stderr)
 
     def _step_stage(self, stage: str, output: StageOutput) -> None:
+        output = self._normalize(stage, output)
         status = "OK" if output.success else "FAIL"
         data_size = self._estimate_size(output.output_data)
         print(
@@ -157,6 +187,7 @@ class PipelineDebugger:
             print("  (non-interactive, continuing)", file=sys.stderr)
 
     def _timing_stage(self, stage: str, output: StageOutput) -> None:
+        output = self._normalize(stage, output)
         elapsed = output.metrics.get("duration_seconds", 0)
         self._stage_times[stage] = elapsed
         status = "OK" if output.success else "FAIL"
@@ -173,11 +204,10 @@ class PipelineDebugger:
         print(self._output_preview(output.output_data), file=sys.stderr)
 
     def _inspect_stage(self, stage: str, output: StageOutput) -> None:
+        output = self._normalize(stage, output)
         loc = self._loc(stage)
         snap_output = (
-            output.output_data
-            if self.show_output
-            else self._summarize(output.output_data)
+            output.output_data if self.show_output else self._summarize(output.output_data)
         )
         snap = {
             "stage": stage,

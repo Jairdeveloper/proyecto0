@@ -5,18 +5,19 @@ from __future__ import annotations
 import logging
 import re
 from pathlib import Path
+
 from lark import Lark, Token, Tree
 
-from ..base_stage import PipelineStage
-from ..state_models import ActionPlan, AnalysisResult, StageContext, StageOutput
-from .ast_nodes import (
+from agentic_pipeline.base_stage import PipelineStage
+from agentic_pipeline.nodes.ast_nodes import (
     ComponentNode,
     EntityNode,
     InfraNode,
     PageNode,
     ProjectNode,
 )
-from .ir_export_visitor import IRExportVisitor
+from agentic_pipeline.nodes.ir_export_visitor import IRExportVisitor
+from agentic_pipeline.state_models import ActionPlan, AnalysisResult, StageContext, StageOutput
 
 logger = logging.getLogger(__name__)
 
@@ -25,9 +26,7 @@ logger = logging.getLogger(__name__)
 # CONSTANTS
 # ============================================================================
 
-STOP_WORDS_RE = re.compile(
-    r"\b(de|en|para|del|un|una|por|el|la|los|las|al)\b", re.IGNORECASE
-)
+STOP_WORDS_RE = re.compile(r"\b(de|en|para|del|un|una|por|el|la|los|las|al)\b", re.IGNORECASE)
 
 GRAMMAR_DIR = Path(__file__).parent.parent / "grammars"
 
@@ -37,9 +36,9 @@ GRAMMAR_DIR = Path(__file__).parent.parent / "grammars"
 
 DOMAIN_MAP: dict[str, dict[str, str]] = {
     "software": {"grammar": "project", "description": "modulo de software"},
-    "entity":   {"grammar": "data",    "description": "entidad de datos"},
-    "ui":       {"grammar": "ui",      "description": "interfaz de usuario"},
-    "infra":    {"grammar": "infra",   "description": "infraestructura"},
+    "entity": {"grammar": "data", "description": "entidad de datos"},
+    "ui": {"grammar": "ui", "description": "interfaz de usuario"},
+    "infra": {"grammar": "infra", "description": "infraestructura"},
 }
 
 
@@ -47,9 +46,11 @@ def ensure_nltk_data() -> None:
     """Descarga wordnet si no esta instalado."""
     try:
         from nltk.data import find as nltk_find
+
         nltk_find("wordnet")
     except LookupError:
         import nltk
+
         nltk.download("wordnet", quiet=True)
         nltk.download("omw-1.4", quiet=True)
 
@@ -71,6 +72,7 @@ def disambiguate_term(term: str, context: list[str]) -> dict:
     """Algoritmo de Lesk: synset mas probable segun contexto."""
     ensure_nltk_data()
     from nltk.wsd import lesk
+
     sentence = " ".join(context[-5:])
     synset = lesk(sentence, term, lang="spa")
     if synset:
@@ -165,9 +167,7 @@ def _build_module_def(tree: Tree) -> PageNode | None:
 
 def _build_component_from_tree(tree: Tree) -> ComponentNode | None:
     if tree.data == "CNAME":
-        return ComponentNode(
-            str(tree.children[0]) if tree.children else "", "component"
-        )
+        return ComponentNode(str(tree.children[0]) if tree.children else "", "component")
     return None
 
 
@@ -304,8 +304,9 @@ def _resolve_ambiguous_grammar(tokens: list[dict], context: list[str] | None = N
     return None
 
 
-def _select_grammar(text: str, tokens: list[dict] | None = None,
-                    context: list[str] | None = None) -> str:
+def _select_grammar(
+    text: str, tokens: list[dict] | None = None, context: list[str] | None = None
+) -> str:
     # Intentar desambiguacion por WordNet primero (N2.1c)
     if tokens and context:
         resolved = _resolve_ambiguous_grammar(tokens, context)
@@ -330,8 +331,7 @@ def _select_grammar(text: str, tokens: list[dict] | None = None,
     ):
         return "infra"
     if any(
-        kw in text_lower
-        for kw in ("navbar", "sidebar", "footer", "header", "layout", "seccion")
+        kw in text_lower for kw in ("navbar", "sidebar", "footer", "header", "layout", "seccion")
     ):
         return "ui"
     return "project"
@@ -438,19 +438,24 @@ class ParserGLR(PipelineStage):
             return None
 
     def _build_ast_from_tokens(self, tokens: list[dict]) -> dict:
+        from agentic_pipeline.nodes.ast_nodes import ActionNode, ProjectNode
+        from agentic_pipeline.nodes.ir_export_visitor import IRExportVisitor
         actions = []
         entities = []
         for t in tokens:
             cat = t.get("category", "")
             if cat == "action":
-                actions.append(t.get("value", ""))
+                target = entities[0] if entities else ""
+                actions.append(ActionNode(
+                    action_type=t.get("type", "").lower(),
+                    target=target,
+                ))
             elif cat in ("entity", "domain"):
                 entities.append(t.get("value", ""))
-        return {
-            "node_type": "project",
-            "children": [{"node_type": "action", "value": a} for a in actions]
-            + [{"node_type": "entity", "value": e} for e in entities],
-        }
+        project = ProjectNode("project")
+        for a in actions:
+            project.add(a)
+        return project.accept(IRExportVisitor())
 
     def learn_and_improve(self, feedback: object) -> None:
         pass

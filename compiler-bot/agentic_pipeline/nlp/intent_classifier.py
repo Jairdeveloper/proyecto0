@@ -1,5 +1,6 @@
 import re
-from .enriched_input import IntentResult
+
+from agentic_pipeline.nlp.enriched_input import IntentResult
 
 
 class IntentClassifier:

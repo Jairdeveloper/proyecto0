@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from agentic_pipeline.base_stage import PipelineStage
 from agentic_pipeline.feedback_loop import (
     DashboardObserver,
     DebugObserver,
@@ -16,8 +17,7 @@ from agentic_pipeline.prompt_chain.observer_base import (
     StageObserver,
     StageSubject,
 )
-from agentic_pipeline.base_stage import PipelineStage
-from agentic_pipeline.state_models import StageContext, Stage
+from agentic_pipeline.state_models import Stage, StageContext
 
 
 class TestStageSubject:
@@ -202,7 +202,8 @@ class TestPipelineStageSubject:
                 from agentic_pipeline.state_models import StageOutput
 
                 return StageOutput(
-                    stage=Stage.PREPROCESSOR, output_data={"done": True},
+                    stage=Stage.PREPROCESSOR,
+                    output_data={"done": True},
                 )
 
         subject = StageSubject()
@@ -212,7 +213,8 @@ class TestPipelineStageSubject:
         PipelineStage.subject = subject
         try:
             ctx = StageContext(
-                stage=Stage.PREPROCESSOR, input_data="test",
+                stage=Stage.PREPROCESSOR,
+                input_data="test",
             )
             stage = _MockStage(ctx)
             stage.execute("hello")
@@ -239,7 +241,8 @@ class TestPipelineStageSubject:
                     raise RuntimeError(msg)
 
             ctx = StageContext(
-                stage=Stage.PREPROCESSOR, input_data="test",
+                stage=Stage.PREPROCESSOR,
+                input_data="test",
             )
             stage = _FailingStage(ctx)
             with pytest.raises(RuntimeError):

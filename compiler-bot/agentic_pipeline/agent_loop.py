@@ -6,23 +6,26 @@ import json
 from dataclasses import dataclass, field
 from typing import Literal
 
-from .orchestrator import AgentOrchestrator
-from .tool_registry import ToolRegistry
-from .memory import ConversationalMemory
-from .tools.read_file import ReadFileTool
-from .tools.write_file import WriteFileTool
-from .tools.run_command import RunCommandTool
-from .tools.search_code import SearchCodeTool
-from .tools.generate_code import GenerateCodeTool
-from .tools.ask_user import AskUserTool
-from .tools.explain import ExplainTool
+from agentic_pipeline.memory import ConversationalMemory
+from agentic_pipeline.orchestrator import AgentOrchestrator
+from agentic_pipeline.tool_registry import ToolRegistry
+from agentic_pipeline.tools.ask_user import AskUserTool
+from agentic_pipeline.tools.explain import ExplainTool
+from agentic_pipeline.tools.generate_code import GenerateCodeTool
+from agentic_pipeline.tools.read_file import ReadFileTool
+from agentic_pipeline.tools.run_command import RunCommandTool
+from agentic_pipeline.tools.search_code import SearchCodeTool
+from agentic_pipeline.tools.write_file import WriteFileTool
 
 
 @dataclass
 class AgentOutput:
     status: Literal[
-        "completed", "needs_clarification", "action_executed",
-        "max_iterations_reached", "error",
+        "completed",
+        "needs_clarification",
+        "action_executed",
+        "max_iterations_reached",
+        "error",
     ]
     data: dict = field(default_factory=dict)
     message: str = ""
@@ -44,7 +47,7 @@ def _build_default_tool_registry() -> ToolRegistry:
 
 class AgentLoop:
     """Bucle principal del agente: percibe → razona → ejecuta → observa.
-    
+
     Port del patron utilizado en:
     - compiler-bot/recpl.sh (interactive_mode, command_mode, batch_mode)
     - compiler-bot/agent-robot/agent.sh (classify → execute → respond)

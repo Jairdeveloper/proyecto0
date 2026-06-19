@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
-from .command_base import Command, CommandResult
+from agentic_pipeline.prompt_chain.command_base import Command, CommandResult
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +19,7 @@ class CommandEntry:
     command_name: str
     result: CommandResult
     timestamp: str = field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat(),
+        default_factory=lambda: datetime.now(UTC).isoformat(),
     )
     params: dict[str, Any] = field(default_factory=dict)
 

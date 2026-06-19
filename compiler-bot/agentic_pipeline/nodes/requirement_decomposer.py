@@ -1,20 +1,27 @@
-"""RequirementDecomposer pipeline stage."""
+"""
+RequirementDecomposer pipeline stage.
+
+LEGACY — Este archivo está marcado como código legacy. No se utiliza en el
+pipeline activo (RECPL v2.0+). Pendiente de estudio para determinar si se
+elimina o se refactoriza. Ver docs/130_PLAN_DEV_MIGRATION_EXECUTION_1_0_DRAFT.md
+(M0.9) para contexto.
+"""
 
 from __future__ import annotations
 
 import logging
 
-from .ast_cache import ASTCache
-from ..base_stage import PipelineStage
-from ..feedback_loop import get_global_feedback
-from ..state_models import (
+from agentic_pipeline.base_stage import PipelineStage
+from agentic_pipeline.feedback_loop import get_global_feedback
+from agentic_pipeline.nodes.ast_cache import ASTCache
+from agentic_pipeline.state_models import (
     ActionPlan,
     AnalysisResult,
     RequirementGraph,
     StageContext,
     StageOutput,
 )
-from ..tools.llm_tools import (
+from agentic_pipeline.tools.llm_tools import (
     ConstraintDetector,
     DomainClassifier,
     EntityExtractor,

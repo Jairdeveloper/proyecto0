@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from pydantic import BaseModel
 
-from .prompt_template import ChainStep
+from agentic_pipeline.prompt_chain.prompt_template import ChainStep
 
 
 class ChainContext:
@@ -43,7 +43,7 @@ class ChainContext:
             ChainStep(
                 stage=stage,
                 output=data,
-                timestamp=datetime.now(timezone.utc).isoformat(),
+                timestamp=datetime.now(UTC).isoformat(),
                 success=True,
             )
         )

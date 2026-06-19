@@ -14,7 +14,6 @@ from agentic_pipeline.feedback_loop import (
 from agentic_pipeline.metrics_store import MetricsStore
 from agentic_pipeline.nodes.ast_cache import ASTCache
 
-
 # ---------------------------------------------------------------------------
 # FeedbackLoop (legacy file-based)
 # ---------------------------------------------------------------------------
@@ -118,36 +117,28 @@ def test_metrics_store_record_token():
 
 def test_global_feedback_record_stage():
     fb = GlobalFeedbackLoop()
-    fb.record_stage(
-        "parser", {"tokens": 50, "errors": 0, "task_count": 10, "node_count": 20}
-    )
+    fb.record_stage("parser", {"tokens": 50, "errors": 0, "task_count": 10, "node_count": 20})
     summary = fb.summary()
     assert summary["total_records"] >= 1
 
 
 def test_global_feedback_lexer_adjustment_high_errors():
     fb = GlobalFeedbackLoop()
-    fb.record_stage(
-        "lexer", {"tokens": 50, "errors": 7, "task_count": 10, "node_count": 5}
-    )
+    fb.record_stage("lexer", {"tokens": 50, "errors": 7, "task_count": 10, "node_count": 5})
     adj = fb.get_lexer_adjustments()
     assert adj["action"] == "reduce_complexity"
 
 
 def test_global_feedback_lexer_adjustment_high_nodes():
     fb = GlobalFeedbackLoop()
-    fb.record_stage(
-        "lexer", {"tokens": 50, "errors": 0, "task_count": 10, "node_count": 100}
-    )
+    fb.record_stage("lexer", {"tokens": 50, "errors": 0, "task_count": 10, "node_count": 100})
     adj = fb.get_lexer_adjustments()
     assert adj["action"] == "increase_threshold"
 
 
 def test_global_feedback_no_adjustment():
     fb = GlobalFeedbackLoop()
-    fb.record_stage(
-        "lexer", {"tokens": 50, "errors": 0, "task_count": 10, "node_count": 5}
-    )
+    fb.record_stage("lexer", {"tokens": 50, "errors": 0, "task_count": 10, "node_count": 5})
     adj = fb.get_lexer_adjustments()
     assert adj == {}
 

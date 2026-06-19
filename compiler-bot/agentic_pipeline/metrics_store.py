@@ -116,10 +116,7 @@ class MetricsStore:
                     "WHERE stage = ? ORDER BY id DESC LIMIT ?",
                     (stage, limit),
                 ).fetchall()
-            return [
-                {"timestamp": row[0], "metrics": json.loads(row[1])}
-                for row in reversed(rows)
-            ]
+            return [{"timestamp": row[0], "metrics": json.loads(row[1])} for row in reversed(rows)]
         entries = self._json_read(stage)
         return [
             {"timestamp": e.get("timestamp", ""), "metrics": e.get("metrics", {})}
@@ -135,8 +132,7 @@ class MetricsStore:
                     "GROUP BY stage ORDER BY cnt DESC"
                 ).fetchall()
                 errors = conn.execute(
-                    "SELECT COUNT(*) FROM stage_metrics "
-                    "WHERE json_extract(metrics, '$.errors') > 0"
+                    "SELECT COUNT(*) FROM stage_metrics WHERE json_extract(metrics, '$.errors') > 0"
                 ).fetchone()[0]
             return {
                 "total_records": total,
@@ -237,9 +233,7 @@ class MetricsStore:
         entries = self._get_prompt_entries(prompt_name, n)
         if not entries:
             return 1.0
-        successes = sum(
-            1 for e in entries if e.get("metrics", {}).get("success", False)
-        )
+        successes = sum(1 for e in entries if e.get("metrics", {}).get("success", False))
         return successes / len(entries)
 
     def get_prompt_avg_duration(
@@ -269,9 +263,7 @@ class MetricsStore:
         entries = self._get_prompt_entries(prompt_name, n)
         if not entries:
             return 0.0
-        fallbacks = sum(
-            1 for e in entries if e.get("metrics", {}).get("fallback_used", False)
-        )
+        fallbacks = sum(1 for e in entries if e.get("metrics", {}).get("fallback_used", False))
         return fallbacks / len(entries)
 
     def get_prompt_chain_summary(self) -> dict[str, Any]:
@@ -301,12 +293,8 @@ class MetricsStore:
                 continue
             count = len(entries)
             total_records += count
-            errors = sum(
-                1 for e in entries if not e.get("metrics", {}).get("success", True)
-            )
-            fallbacks = sum(
-                1 for e in entries if e.get("metrics", {}).get("fallback_used", False)
-            )
+            errors = sum(1 for e in entries if not e.get("metrics", {}).get("success", True))
+            fallbacks = sum(1 for e in entries if e.get("metrics", {}).get("fallback_used", False))
             total_errors += errors
             total_fallbacks += fallbacks
 

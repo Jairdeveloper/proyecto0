@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
+from agentic_pipeline.agents.agent_mediator import AgentMessage, PerceptionResult
+from agentic_pipeline.agents.base_agent import Agent, SharedContext, Task, TaskResult
 from agentic_pipeline.prompt_chain.llm_backend import LLMBackend
-
-from ..world_model import WorldModel
-from .agent_mediator import AgentMessage, PerceptionResult
-from .base_agent import Agent, SharedContext, Task, TaskResult
+from agentic_pipeline.world_model import WorldModel
 
 
 class PerceptionAgent(Agent):
@@ -96,13 +95,9 @@ class PerceptionAgent(Agent):
             intent, score = clf.classify(text)
             analysis["intent"] = {"intent": intent, "score": score}
         terms = [
-            t.get("text", "")
-            for t in (analysis.get("tokens") or [])
-            if not t.get("is_stop", False)
+            t.get("text", "") for t in (analysis.get("tokens") or []) if not t.get("is_stop", False)
         ]
-        ambiguous = [
-            t for t in terms if t in ("modulo", "entidad", "servicio", "pagina")
-        ]
+        ambiguous = [t for t in terms if t in ("modulo", "entidad", "servicio", "pagina")]
         for term in ambiguous:
             result = self._disambiguate(term, [text])
             if result:

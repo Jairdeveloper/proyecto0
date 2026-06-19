@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
+from agentic_pipeline.agents.agent_mediator import AgentMessage, ValidationResult
+from agentic_pipeline.agents.base_agent import Agent, SharedContext, Task, TaskResult
 from agentic_pipeline.prompt_chain.llm_backend import LLMBackend
-
-from .agent_mediator import AgentMessage, ValidationResult
-from .base_agent import Agent, SharedContext, Task, TaskResult
 
 
 class SupervisorAgent(Agent):
@@ -87,9 +86,7 @@ class SupervisorAgent(Agent):
                     continue
                 agent = self.agents.get(sub.agent)
                 if not agent:
-                    return TaskResult(
-                        task.id, False, error=f"Agent not found: {sub.agent}"
-                    )
+                    return TaskResult(task.id, False, error=f"Agent not found: {sub.agent}")
                 result = await agent.process(sub)
                 results[sub.id] = result
 

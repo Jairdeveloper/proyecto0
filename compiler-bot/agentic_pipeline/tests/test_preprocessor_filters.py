@@ -10,7 +10,6 @@ from agentic_pipeline.nodes.preprocessor import (
 )
 from agentic_pipeline.state_models import Stage, StageContext
 
-
 # ============================================================================
 # NormalizationFilter
 # ============================================================================

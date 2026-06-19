@@ -6,7 +6,7 @@ import logging
 from graphlib import TopologicalSorter
 from typing import Any
 
-from .ir_nodes import (
+from agentic_pipeline.nodes.ir_nodes import (
     IRAPI,
     IRComponent,
     IRConfig,
@@ -131,6 +131,11 @@ class IRBuilder:
             settings = data.get("settings", {})
             self._config = IRConfig(name, settings)
             return self._config
+        if node_type == "action":
+            return IRComponent(
+                name=data.get("name", data.get("value", "unnamed")),
+                component_type="action",
+            )
 
         logger.warning("Unknown IR node type: %s", node_type)
         return None

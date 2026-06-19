@@ -6,17 +6,17 @@ import logging
 import re
 import subprocess
 from abc import ABC, abstractmethod
-from enum import Enum
+from enum import StrEnum
 from pathlib import Path
 from typing import Any
 
-from ..base_stage import PipelineStage
-from ..state_models import ActionPlan, AnalysisResult, StageContext, StageOutput
+from agentic_pipeline.base_stage import PipelineStage
+from agentic_pipeline.state_models import ActionPlan, AnalysisResult, StageContext, StageOutput
 
 logger = logging.getLogger(__name__)
 
 
-class ValidationLevel(str, Enum):
+class ValidationLevel(StrEnum):
     PASS = "pass"
     WARNING = "warning"
     ERROR = "error"
@@ -259,9 +259,7 @@ class ValidatorPipeline(PipelineStage):
             result = self._chain.check(output_dir)
             self._all_results.append(result)
         errors = sum(1 for r in self._all_results if r.level == ValidationLevel.ERROR)
-        warnings = sum(
-            1 for r in self._all_results if r.level == ValidationLevel.WARNING
-        )
+        warnings = sum(1 for r in self._all_results if r.level == ValidationLevel.WARNING)
         should_retry = errors > 0
         return StageOutput(
             stage=self.context.stage,

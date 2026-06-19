@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from .base_generator import BaseGenerator
+from agentic_pipeline.generators.base_generator import BaseGenerator
 
 
 class DockerGenerator(BaseGenerator):

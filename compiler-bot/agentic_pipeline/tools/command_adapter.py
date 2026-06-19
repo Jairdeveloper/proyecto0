@@ -43,9 +43,7 @@ class ToolCommand(Command):
             if result.success:
                 return CommandResult(
                     success=True,
-                    data=result.data
-                    if isinstance(result.data, dict)
-                    else {"value": result.data},
+                    data=result.data if isinstance(result.data, dict) else {"value": result.data},
                     duration=duration,
                     command_name=self.name,
                 )

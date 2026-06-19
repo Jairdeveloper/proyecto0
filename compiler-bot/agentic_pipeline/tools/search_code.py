@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import subprocess
 
-from ..tool_registry import Tool, ToolResult, Parameter
+from agentic_pipeline.tool_registry import Parameter, Tool, ToolResult
 
 
 class SearchCodeTool(Tool):
@@ -21,13 +21,17 @@ class SearchCodeTool(Tool):
         try:
             result = subprocess.run(
                 ["rg", "-n", pattern, search_path],
-                capture_output=True, text=True, timeout=30,
+                capture_output=True,
+                text=True,
+                timeout=30,
             )
         except FileNotFoundError:
             try:
                 result = subprocess.run(
                     ["grep", "-rn", pattern, search_path],
-                    capture_output=True, text=True, timeout=30,
+                    capture_output=True,
+                    text=True,
+                    timeout=30,
                 )
             except FileNotFoundError:
                 return ToolResult(success=False, error="ni rg ni grep estan instalados")

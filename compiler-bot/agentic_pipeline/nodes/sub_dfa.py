@@ -4,8 +4,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 
-from ..state_models import Token
-
+from agentic_pipeline.state_models import Token
 
 # ============================================================================
 # DFA BUILDER UTILITY
@@ -281,5 +280,34 @@ class QualityDFA(BaseDFA):
             ("observable", "OBSERVABLE"),
             ("trazable", "TRACEABLE"),
             ("auditable", "AUDITABLE"),
+        ]
+        self.transitions, self.accepting_states = build_dfa_from_words(words)
+
+
+# ============================================================================
+# ENTITY DFA (~15 tokens)
+# ============================================================================
+
+
+class EntityDFA(BaseDFA):
+    category = "entity"
+
+    def _build(self):
+        words = [
+            ("modulo", "MODULE"),
+            ("module", "MODULE"),
+            ("entidad", "ENTITY"),
+            ("entity", "ENTITY"),
+            ("modelo", "MODEL"),
+            ("model", "MODEL"),
+            ("pagos", "PAYMENT"),
+            ("auth", "AUTH"),
+            ("autenticacion", "AUTH"),
+            ("usuario", "USER"),
+            ("user", "USER"),
+            ("producto", "PRODUCT"),
+            ("orden", "ORDER"),
+            ("factura", "INVOICE"),
+            ("catalogo", "CATALOG"),
         ]
         self.transitions, self.accepting_states = build_dfa_from_words(words)

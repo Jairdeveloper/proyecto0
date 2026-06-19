@@ -160,9 +160,7 @@ class OpenAIBackend(LLMBackend):
                 f"Responde SOLO con JSON valido que cumpla este schema:\n"
                 f"{output_schema.model_json_schema()}"
             )
-            full_system = (
-                f"{system}\n\n{schema_instructions}" if system else schema_instructions
-            )
+            full_system = f"{system}\n\n{schema_instructions}" if system else schema_instructions
             messages = [
                 SystemMessage(content=full_system),
                 HumanMessage(content=prompt),
@@ -270,9 +268,7 @@ class OllamaBackend(LLMBackend):
             f"Responde SOLO con JSON valido que cumpla este schema:\n"
             f"{output_schema.model_json_schema()}"
         )
-        full_system = (
-            f"{system}\n\n{schema_instructions}" if system else schema_instructions
-        )
+        full_system = f"{system}\n\n{schema_instructions}" if system else schema_instructions
 
         result = await self.generate(prompt, full_system, temperature)
         if not result.success:
@@ -329,9 +325,7 @@ class VLLMBackend(LLMBackend):
             payload["messages"].append({"role": "user", "content": prompt})
 
             async with httpx.AsyncClient(timeout=60.0) as client:
-                resp = await client.post(
-                    f"{self._base_url}/v1/chat/completions", json=payload
-                )
+                resp = await client.post(f"{self._base_url}/v1/chat/completions", json=payload)
                 resp.raise_for_status()
                 data = resp.json()
 
@@ -369,9 +363,7 @@ class VLLMBackend(LLMBackend):
             f"Responde SOLO con JSON valido que cumpla este schema:\n"
             f"{output_schema.model_json_schema()}"
         )
-        full_system = (
-            f"{system}\n\n{schema_instructions}" if system else schema_instructions
-        )
+        full_system = f"{system}\n\n{schema_instructions}" if system else schema_instructions
 
         result = await self.generate(prompt, full_system, temperature)
         if not result.success:

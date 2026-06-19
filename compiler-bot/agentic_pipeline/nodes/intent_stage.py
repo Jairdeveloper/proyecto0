@@ -1,2 +1,3 @@
 """Backward compat: re-export PerceptionUnit as IntentStage."""
-from .perception_unit import PerceptionUnit as IntentStage  # noqa: F401
+
+from agentic_pipeline.nodes.perception_unit import PerceptionUnit as IntentStage  # noqa: F401

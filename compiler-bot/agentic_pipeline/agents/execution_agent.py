@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
+from agentic_pipeline.agents.agent_mediator import AgentMessage, ExecutionResult
+from agentic_pipeline.agents.base_agent import Agent, SharedContext, Task, TaskResult
 from agentic_pipeline.prompt_chain.llm_backend import LLMBackend
-
-from ..tool_registry import ToolRegistry
-from ..world_model import WorldModel
-from .agent_mediator import AgentMessage, ExecutionResult
-from .base_agent import Agent, SharedContext, Task, TaskResult
+from agentic_pipeline.tool_registry import ToolRegistry
+from agentic_pipeline.world_model import WorldModel
 
 
 class ExecutionAgent(Agent):

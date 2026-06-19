@@ -4,8 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from .design_tokens import DesignTokens
-
+from agentic_pipeline.generators.design_tokens import DesignTokens
 
 # ============================================================================
 # ResponsiveEngine

@@ -33,9 +33,7 @@ register_prompt(
             "- Relaciones Prisma correctas\n"
             "- Decoradores NestJS correctos"
         ),
-        template=(
-            "Requisitos: {requirements}\n\nArchivos: {files}\n\nCriterios: {criteria}"
-        ),
+        template=("Requisitos: {requirements}\n\nArchivos: {files}\n\nCriterios: {criteria}"),
         input_schema=ValidatorInput,
         output_schema=ValidatorContract,
         fallback_name="validator_pipeline",

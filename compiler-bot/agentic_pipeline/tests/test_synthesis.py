@@ -47,9 +47,7 @@ class TestSynthesisOrchestrator:
         data = {
             "ir_tree": proj,
             "tasks": [{"id": "Home", "target": "react"}],
-            "commands": [
-                {"task_id": "Home", "path": str(Path.cwd() / "tmp_modules" / "home")}
-            ],
+            "commands": [{"task_id": "Home", "path": str(Path.cwd() / "tmp_modules" / "home")}],
         }
         orchestrator.receive_mission(data)
         plan = orchestrator.reflect_and_plan(orchestrator.analyze())

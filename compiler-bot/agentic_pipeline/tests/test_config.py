@@ -1,4 +1,4 @@
-from agentic_pipeline.config import config, PipelineConfig
+from agentic_pipeline.config import PipelineConfig, config
 
 
 def test_config_defaults():

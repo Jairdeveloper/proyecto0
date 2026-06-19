@@ -1,5 +1,6 @@
 import re
-from .enriched_input import Entities, Entity
+
+from agentic_pipeline.nlp.enriched_input import Entities, Entity
 
 
 class NERExtractor:

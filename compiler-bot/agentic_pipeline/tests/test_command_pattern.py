@@ -99,9 +99,8 @@ class TestCommandExecute:
     @pytest.mark.asyncio
     async def test_preprocess_command_execute(self):
         """PreprocessCommand ejecuta handler via Command pattern."""
-        from agentic_pipeline.prompt_chain.commands import PreprocessCommand
-
         import agentic_pipeline.prompt_chain.prompts as _pkg
+        from agentic_pipeline.prompt_chain.commands import PreprocessCommand
 
         _ = _pkg
         PromptRegistry.clear()

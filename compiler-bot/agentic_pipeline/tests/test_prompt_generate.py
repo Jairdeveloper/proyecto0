@@ -175,9 +175,7 @@ class TestGeneratePrompt:
             GenerateHandler,
         )
 
-        tasks = [
-            {"id": "t1", "type": "scaffold_module", "target": "exists", "params": {}}
-        ]
+        tasks = [{"id": "t1", "type": "scaffold_module", "target": "exists", "params": {}}]
         mock_llm = AsyncMock()
         mock_llm.generate_structured.return_value = LLMResult(
             content='{"files": [{"path": "modules/exists/exists.module.ts",'

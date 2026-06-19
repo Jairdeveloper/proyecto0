@@ -1,10 +1,9 @@
 from pydantic import BaseModel, Field
-from typing import Optional
 
 
 class IntentResult(BaseModel):
     primary: str
-    secondary: Optional[str] = None
+    secondary: str | None = None
     confidence: float
     scores: dict[str, float] = {}
     domain: str = "backend"
@@ -24,11 +23,11 @@ class Entities(BaseModel):
 
 
 class Slots(BaseModel):
-    accion: Optional[str] = None
-    tipo: Optional[str] = None
-    nombre: Optional[str] = None
-    tech: Optional[str] = None
-    dominio: Optional[str] = None
+    accion: str | None = None
+    tipo: str | None = None
+    nombre: str | None = None
+    tech: str | None = None
+    dominio: str | None = None
     completado: bool = False
     faltantes: list[str] = []
 

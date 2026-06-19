@@ -10,7 +10,7 @@ from typing import Any
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
 
-from ..config import config
+from agentic_pipeline.config import config
 
 logger = logging.getLogger(__name__)
 
@@ -115,9 +115,7 @@ class EntityExtractor:
                 name = name.capitalize()
                 if name not in seen:
                     seen.add(name)
-                    entities.append(
-                        {"name": name, "type": entity_type, "attributes": []}
-                    )
+                    entities.append({"name": name, "type": entity_type, "attributes": []})
         if not entities and self._llm:
             entities = self._llm.extract_entities(text)
         return entities

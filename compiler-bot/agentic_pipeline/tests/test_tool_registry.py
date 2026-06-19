@@ -8,11 +8,11 @@ import tempfile
 import pytest
 
 from agentic_pipeline.tool_registry import ToolRegistry
+from agentic_pipeline.tools.explain import ExplainTool
 from agentic_pipeline.tools.read_file import ReadFileTool
-from agentic_pipeline.tools.write_file import WriteFileTool
 from agentic_pipeline.tools.run_command import RunCommandTool
 from agentic_pipeline.tools.search_code import SearchCodeTool
-from agentic_pipeline.tools.explain import ExplainTool
+from agentic_pipeline.tools.write_file import WriteFileTool
 
 
 @pytest.fixture
@@ -48,6 +48,7 @@ class TestToolRegistry:
 
     def test_execute_unknown(self, registry: ToolRegistry):
         import asyncio
+
         result = asyncio.run(registry.execute("nope", {}))
         assert not result.success
         assert "not found" in result.error

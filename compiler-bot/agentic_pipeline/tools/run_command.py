@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 
-from ..tool_registry import Tool, ToolResult, Parameter
+from agentic_pipeline.tool_registry import Parameter, Tool, ToolResult
 
 
 class RunCommandTool(Tool):
@@ -23,7 +23,8 @@ class RunCommandTool(Tool):
                 stderr=asyncio.subprocess.PIPE,
             )
             stdout, stderr = await asyncio.wait_for(
-                proc.communicate(), timeout=30,
+                proc.communicate(),
+                timeout=30,
             )
             return ToolResult(
                 success=proc.returncode == 0,
@@ -33,7 +34,7 @@ class RunCommandTool(Tool):
                     "returncode": proc.returncode,
                 },
             )
-        except asyncio.TimeoutError:
+        except TimeoutError:
             return ToolResult(success=False, error="Comando excedio el timeout de 30s")
         except FileNotFoundError:
             return ToolResult(success=False, error=f"Comando no encontrado: {command}")

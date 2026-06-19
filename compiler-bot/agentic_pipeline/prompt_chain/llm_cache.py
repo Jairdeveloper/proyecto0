@@ -99,8 +99,7 @@ class LLMCache:
     def _set_sqlite(self, key: str, entry: dict[str, Any]) -> None:
         try:
             self._sqlite_conn.execute(
-                "INSERT OR REPLACE INTO llm_cache (key, response, created_at) "
-                "VALUES (?, ?, ?)",
+                "INSERT OR REPLACE INTO llm_cache (key, response, created_at) VALUES (?, ?, ?)",
                 (key, json.dumps(entry["response"]), entry["created_at"]),
             )
             self._sqlite_conn.commit()

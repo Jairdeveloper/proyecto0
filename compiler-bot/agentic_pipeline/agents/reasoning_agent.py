@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
+from agentic_pipeline.agents.agent_mediator import AgentMessage, PerceptionResult, ReasoningResult
+from agentic_pipeline.agents.base_agent import Agent, SharedContext, Task, TaskResult
+from agentic_pipeline.nodes.reasoning_engine import GoalTreePlanner
 from agentic_pipeline.prompt_chain.llm_backend import LLMBackend
-
-from ..nodes.reasoning_engine import GoalTreePlanner
-from ..world_model import WorldModel
-from .agent_mediator import AgentMessage, PerceptionResult, ReasoningResult
-from .base_agent import Agent, SharedContext, Task, TaskResult
+from agentic_pipeline.world_model import WorldModel
 
 
 class ReasoningAgent(Agent):
@@ -67,13 +66,9 @@ class ReasoningAgent(Agent):
                             topic="reasoning.completed",
                             payload=ReasoningResult(
                                 goal_id=result_data.get("goal_id", task.id),
-                                goal_description=result_data.get(
-                                    "goal_description", ""
-                                ),
+                                goal_description=result_data.get("goal_description", ""),
                                 subtasks=result_data.get("subtasks", []),
-                                verification_criteria=result_data.get(
-                                    "verification_criteria", []
-                                ),
+                                verification_criteria=result_data.get("verification_criteria", []),
                             ),
                             correlation_id=task.id,
                         )

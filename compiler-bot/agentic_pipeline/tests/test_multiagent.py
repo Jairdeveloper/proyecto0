@@ -8,6 +8,7 @@ import pytest
 class TestBaseAgent:
     def test_task_dataclass(self):
         from agentic_pipeline.agents.base_agent import Task
+
         t = Task(id="t1", description="test", agent="perception_agent")
         assert t.id == "t1"
         assert t.agent == "perception_agent"
@@ -17,6 +18,7 @@ class TestBaseAgent:
 
     def test_task_result_dataclass(self):
         from agentic_pipeline.agents.base_agent import TaskResult
+
         r = TaskResult(task_id="t1", success=True, data={"key": "val"})
         assert r.task_id == "t1"
         assert r.success is True
@@ -25,6 +27,7 @@ class TestBaseAgent:
 
     def test_shared_context_publish_subscribe(self):
         from agentic_pipeline.agents.base_agent import SharedContext
+
         ctx = SharedContext()
         ctx.publish("topic1", "data1")
         result = ctx.subscribe("topic1")
@@ -32,6 +35,7 @@ class TestBaseAgent:
 
     def test_shared_context_get_snapshot(self):
         from agentic_pipeline.agents.base_agent import SharedContext
+
         ctx = SharedContext()
         ctx.publish("a", 1)
         ctx.publish("b", 2)
@@ -40,11 +44,13 @@ class TestBaseAgent:
 
     def test_agent_abstract_cannot_instantiate(self):
         from agentic_pipeline.agents.base_agent import Agent, SharedContext
+
         with pytest.raises(TypeError):
             Agent(SharedContext())  # type: ignore
 
     def test_async_shared_context_inherits(self):
         from agentic_pipeline.agents.base_agent import AsyncSharedContext
+
         ctx = AsyncSharedContext()
         assert hasattr(ctx, "publish")
         assert hasattr(ctx, "subscribe")
@@ -56,10 +62,15 @@ class TestPerceptionAgent:
     async def test_process_returns_task_result(self):
         from agentic_pipeline.agents.base_agent import SharedContext, Task
         from agentic_pipeline.agents.perception_agent import PerceptionAgent
+
         ctx = SharedContext()
         agent = PerceptionAgent(ctx)
-        task = Task(id="p1", description="crea un modulo de pagos", agent="perception_agent",
-                    params={"text": "crea un modulo de pagos"})
+        task = Task(
+            id="p1",
+            description="crea un modulo de pagos",
+            agent="perception_agent",
+            params={"text": "crea un modulo de pagos"},
+        )
         result = await agent.process(task)
         assert result.success is True
         assert result.task_id == "p1"
@@ -68,10 +79,10 @@ class TestPerceptionAgent:
     async def test_publishes_perception_result(self):
         from agentic_pipeline.agents.base_agent import SharedContext, Task
         from agentic_pipeline.agents.perception_agent import PerceptionAgent
+
         ctx = SharedContext()
         agent = PerceptionAgent(ctx)
-        task = Task(id="p2", description="test", agent="perception_agent",
-                    params={"text": "test"})
+        task = Task(id="p2", description="test", agent="perception_agent", params={"text": "test"})
         await agent.process(task)
         result = ctx.subscribe("perception_result")
         assert result is not None
@@ -84,8 +95,11 @@ class TestReasoningAgent:
         from agentic_pipeline.agents.base_agent import SharedContext, Task
         from agentic_pipeline.agents.reasoning_agent import ReasoningAgent
         from agentic_pipeline.world_model import WorldModel
+
         ctx = SharedContext()
-        ctx.publish("perception_result", {"raw": "crea modulo pagos", "intent": {"intent": "CREATE"}})
+        ctx.publish(
+            "perception_result", {"raw": "crea modulo pagos", "intent": {"intent": "CREATE"}}
+        )
         agent = ReasoningAgent(ctx, WorldModel())
         task = Task(id="r1", description="crea modulo pagos", agent="reasoning_agent")
         result = await agent.process(task)
@@ -98,6 +112,7 @@ class TestReasoningAgent:
         from agentic_pipeline.agents.base_agent import SharedContext, Task
         from agentic_pipeline.agents.reasoning_agent import ReasoningAgent
         from agentic_pipeline.world_model import WorldModel
+
         ctx = SharedContext()
         ctx.publish("perception_result", {"raw": "crea modulo", "intent": {"intent": "CREATE"}})
         agent = ReasoningAgent(ctx, WorldModel())
@@ -114,10 +129,15 @@ class TestExecutionAgent:
         from agentic_pipeline.agents.base_agent import SharedContext, Task
         from agentic_pipeline.agents.execution_agent import ExecutionAgent
         from agentic_pipeline.world_model import WorldModel
+
         ctx = SharedContext()
         agent = ExecutionAgent(ctx, WorldModel())
-        task = Task(id="e1", description="explica algo", agent="execution_agent",
-                    params={"action": "explain"})
+        task = Task(
+            id="e1",
+            description="explica algo",
+            agent="execution_agent",
+            params={"action": "explain"},
+        )
         result = await agent.process(task)
         assert result.success is True
 
@@ -128,14 +148,22 @@ class TestValidatorAgent:
         from agentic_pipeline.agents.base_agent import SharedContext, Task
         from agentic_pipeline.agents.validator_agent import ValidatorAgent
         from agentic_pipeline.world_model import WorldModel
+
         ctx = SharedContext()
-        ctx.publish("reasoning_result", {
-            "verification_criteria": [],
-        })
+        ctx.publish(
+            "reasoning_result",
+            {
+                "verification_criteria": [],
+            },
+        )
         ctx.publish("execution_result", {})
         agent = ValidatorAgent(ctx, WorldModel())
-        task = Task(id="v1", description="validar", agent="validator_agent",
-                    params={"verification_criteria": []})
+        task = Task(
+            id="v1",
+            description="validar",
+            agent="validator_agent",
+            params={"verification_criteria": []},
+        )
         result = await agent.process(task)
         assert result.success is True
         assert "criteria_checks" in result.data
@@ -146,6 +174,7 @@ class TestSupervisorAgent:
     async def test_decomposes_into_subtasks(self):
         from agentic_pipeline.agents.base_agent import SharedContext, Task
         from agentic_pipeline.agents.supervisor_agent import SupervisorAgent
+
         ctx = SharedContext()
         agent = SupervisorAgent(ctx, {})
         subtasks = agent._decompose(Task("t", "test", "supervisor"))
@@ -159,7 +188,10 @@ class TestSupervisorAgent:
     @pytest.mark.asyncio
     async def test_full_flow_with_mock_agents(self):
         from agentic_pipeline.agents.base_agent import (
-            Agent, SharedContext, Task, TaskResult,
+            Agent,
+            SharedContext,
+            Task,
+            TaskResult,
         )
         from agentic_pipeline.agents.supervisor_agent import SupervisorAgent
 
@@ -188,7 +220,10 @@ class TestSupervisorAgent:
     @pytest.mark.asyncio
     async def test_replan_on_failure(self):
         from agentic_pipeline.agents.base_agent import (
-            Agent, SharedContext, Task, TaskResult,
+            Agent,
+            SharedContext,
+            Task,
+            TaskResult,
         )
         from agentic_pipeline.agents.supervisor_agent import SupervisorAgent
 

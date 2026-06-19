@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import hashlib
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Literal
 
@@ -25,7 +25,7 @@ class DecisionRecord:
     rationale: str
     params: dict = field(default_factory=dict)
     timestamp: str = field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat(),
+        default_factory=lambda: datetime.now(UTC).isoformat(),
     )
 
 
@@ -74,7 +74,7 @@ class WorldModel:
                 file_type="file",
                 hash=action.get("hash"),
                 created_by=action.get("goal_id"),
-                timestamp=datetime.now(timezone.utc).isoformat(),
+                timestamp=datetime.now(UTC).isoformat(),
             )
             self.files[path] = node
             delta.added.append(node)
@@ -89,12 +89,14 @@ class WorldModel:
             self.files[path] = node
             delta.added.append(node)
 
-        self.decisions.append(DecisionRecord(
-            goal_id=action.get("goal_id", "unknown"),
-            action=action_type,
-            rationale=action.get("rationale", ""),
-            params=action,
-        ))
+        self.decisions.append(
+            DecisionRecord(
+                goal_id=action.get("goal_id", "unknown"),
+                action=action_type,
+                rationale=action.get("rationale", ""),
+                params=action,
+            )
+        )
         return delta
 
     def query(self, question: str) -> str:

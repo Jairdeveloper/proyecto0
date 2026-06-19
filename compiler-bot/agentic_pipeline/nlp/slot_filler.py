@@ -1,4 +1,4 @@
-from .enriched_input import IntentResult, Entities, Slots
+from agentic_pipeline.nlp.enriched_input import Entities, IntentResult, Slots
 
 
 class SlotFiller:

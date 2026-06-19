@@ -15,7 +15,6 @@ from agentic_pipeline.nodes.parser import ParserGLR, _select_grammar
 from agentic_pipeline.nodes.validation_visitor import ValidationVisitor
 from agentic_pipeline.state_models import Stage, StageContext
 
-
 # ============================================================================
 # AST Node unit tests
 # ============================================================================

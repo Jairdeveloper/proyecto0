@@ -59,9 +59,7 @@ class TestAgentMediator:
             slots={},
             confidence=0.95,
         )
-        msg = AgentMessage(
-            sender="perception", topic="perception.completed", payload=payload
-        )
+        msg = AgentMessage(sender="perception", topic="perception.completed", payload=payload)
         assert isinstance(msg.payload, PerceptionResult)
         assert msg.payload.raw == "crea modulo"
         assert msg.payload.confidence == 0.95

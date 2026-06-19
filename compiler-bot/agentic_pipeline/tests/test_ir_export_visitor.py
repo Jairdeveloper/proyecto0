@@ -1,6 +1,5 @@
 """Tests for IRExportVisitor — AST to IR serialization."""
 
-
 from agentic_pipeline.nodes.ast_nodes import (
     ComponentNode,
     EntityNode,

@@ -3,7 +3,6 @@
 import tempfile
 from pathlib import Path
 
-
 from agentic_pipeline.nodes.task_command import (
     FileCreateCommand,
     ScaffoldCommand,

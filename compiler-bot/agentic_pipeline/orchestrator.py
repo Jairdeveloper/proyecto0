@@ -4,26 +4,27 @@ from __future__ import annotations
 
 import logging
 import time
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 from langgraph.graph import END, StateGraph
 
-from .agents.agent_stage_adapter import AgentStageAdapter
-from .agents.base_agent import Agent
-from .base_stage import PipelineStage
-from .prompt_chain.command_base import Command, CommandResult
-from .error_guard import ErrorGuard
-from .nodes.perception_unit import PerceptionUnit
-from .nodes.ir_generator import IRGenerator
-from .nodes.lexer import Lexer
-from .nodes.parser import ParserGLR
-from .nodes.reasoning_engine import ReasoningEngine
-from .nodes.preprocessor import Preprocessor
-from .nodes.action_executor import ActionExecutor
-from .nodes.semantic_analyzer import SemanticAnalyzer
-from .nodes.ui_generator import UIGenerator
-from .nodes.validator import ValidatorPipeline
-from .state_models import Stage, StageContext, StageOutput, ContextWindow
+from agentic_pipeline.agents.agent_stage_adapter import AgentStageAdapter
+from agentic_pipeline.agents.base_agent import Agent
+from agentic_pipeline.base_stage import PipelineStage
+from agentic_pipeline.error_guard import ErrorGuard
+from agentic_pipeline.nodes.action_executor import ActionExecutor
+from agentic_pipeline.nodes.ir_generator import IRGenerator
+from agentic_pipeline.nodes.lexer import Lexer
+from agentic_pipeline.nodes.parser import ParserGLR
+from agentic_pipeline.nodes.perception_unit import PerceptionUnit
+from agentic_pipeline.nodes.preprocessor import Preprocessor
+from agentic_pipeline.nodes.reasoning_engine import ReasoningEngine
+from agentic_pipeline.nodes.semantic_analyzer import SemanticAnalyzer
+from agentic_pipeline.nodes.ui_generator import UIGenerator
+from agentic_pipeline.nodes.validator import ValidatorPipeline
+from agentic_pipeline.prompt_chain.command_base import Command, CommandResult
+from agentic_pipeline.state_models import ContextWindow, Stage, StageContext, StageOutput
 
 logger = logging.getLogger(__name__)
 
@@ -33,9 +34,7 @@ logger = logging.getLogger(__name__)
 # ============================================================================
 
 
-def build_context(
-    stage: Stage, full_context: dict, world: object = None
-) -> ContextWindow:
+def build_context(stage: Stage, full_context: dict, world: object = None) -> ContextWindow:
     """Construye el contexto optimo para cada stage."""
     history = full_context.get("history", [])
     world_snapshot = world.snapshot() if world and hasattr(world, "snapshot") else {}
@@ -53,9 +52,7 @@ def build_context(
             task_focus="decompose goal with current world state",
         )
     if stage in (Stage.SYNTHESIS, Stage.EXECUTION):
-        files_list = (
-            world_snapshot.get("files", []) if isinstance(world_snapshot, dict) else []
-        )
+        files_list = world_snapshot.get("files", []) if isinstance(world_snapshot, dict) else []
         return ContextWindow(
             relevant_history=[],
             world_snapshot={"files": files_list},
@@ -246,7 +243,7 @@ class PipelineMacroCommand(Command):
 
     async def execute(self) -> CommandResult:
         """Ejecuta todos los stages secuencialmente."""
-        from .command_base import CommandResult
+        from agentic_pipeline.command_base import CommandResult
 
         t0 = time.time()
         input_data: object = ""
@@ -294,17 +291,17 @@ class PipelineMacroCommand(Command):
     @staticmethod
     def _stage_to_enum(stage_cls: type[PipelineStage]) -> Stage:
         """Mapea clase PipelineStage a su enum Stage."""
-        from .nodes.preprocessor import Preprocessor
-        from .nodes.lexer import Lexer
-        from .nodes.parser import ParserGLR
-        from .nodes.semantic_analyzer import SemanticAnalyzer
-        from .nodes.ir_generator import IRGenerator
-        from .nodes.reasoning_engine import ReasoningEngine
-        from .nodes.action_executor import ActionExecutor
-        from .nodes.ui_generator import UIGenerator
-        from .nodes.validator import ValidatorPipeline
-        from .nodes.intent_stage import IntentStage
-        from .state_models import Stage
+        from agentic_pipeline.nodes.action_executor import ActionExecutor
+        from agentic_pipeline.nodes.intent_stage import IntentStage
+        from agentic_pipeline.nodes.ir_generator import IRGenerator
+        from agentic_pipeline.nodes.lexer import Lexer
+        from agentic_pipeline.nodes.parser import ParserGLR
+        from agentic_pipeline.nodes.preprocessor import Preprocessor
+        from agentic_pipeline.nodes.reasoning_engine import ReasoningEngine
+        from agentic_pipeline.nodes.semantic_analyzer import SemanticAnalyzer
+        from agentic_pipeline.nodes.ui_generator import UIGenerator
+        from agentic_pipeline.nodes.validator import ValidatorPipeline
+        from agentic_pipeline.state_models import Stage
 
         mapping: dict[type[PipelineStage], Stage] = {
             IntentStage: Stage.INTENT,

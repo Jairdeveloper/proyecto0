@@ -18,9 +18,7 @@ class _MockAgent(Agent):
         self.processed_tasks.append(task)
         if self.should_fail:
             return TaskResult(task.id, False, error="mock failure")
-        return TaskResult(
-            task.id, True, data={"handled": True, "input": task.description}
-        )
+        return TaskResult(task.id, True, data={"handled": True, "input": task.description})
 
 
 class TestAgentStageAdapter:

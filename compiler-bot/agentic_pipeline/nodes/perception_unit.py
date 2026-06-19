@@ -1,13 +1,14 @@
 """PerceptionUnit — clasificador de intencion con SentenceTransformers (N2.1b)."""
 
-from ..base_stage import PipelineStage
-from ..nlp.intent_classifier import IntentClassifier
-from ..nlp.ner_extractor import NERExtractor
-from ..nlp.slot_filler import SlotFiller
-from ..nlp.ambiguity_detector import AmbiguityDetector
-from ..nlp.enriched_input import EnrichedInput, ContextState
-from ..state_models import StageContext, StageOutput, AnalysisResult, ActionPlan
 from datetime import datetime
+
+from agentic_pipeline.base_stage import PipelineStage
+from agentic_pipeline.nlp.ambiguity_detector import AmbiguityDetector
+from agentic_pipeline.nlp.enriched_input import ContextState, EnrichedInput
+from agentic_pipeline.nlp.intent_classifier import IntentClassifier
+from agentic_pipeline.nlp.ner_extractor import NERExtractor
+from agentic_pipeline.nlp.slot_filler import SlotFiller
+from agentic_pipeline.state_models import ActionPlan, AnalysisResult, StageContext, StageOutput
 
 
 class SentenceTransformerClassifier:
@@ -20,6 +21,7 @@ class SentenceTransformerClassifier:
     def get_model(cls):
         if cls._model is None:
             from sentence_transformers import SentenceTransformer
+
             cls._model = SentenceTransformer(cls.MODEL_NAME)
         return cls._model
 
@@ -29,6 +31,7 @@ class SentenceTransformerClassifier:
 
     def _build_references(self):
         from sentence_transformers import util as st_util
+
         self._util = st_util
         refs = {
             "CREATE": [

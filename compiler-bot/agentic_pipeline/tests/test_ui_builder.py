@@ -22,19 +22,13 @@ class TestUIComponentBuilder:
 
     def test_add_behavior(self):
         builder = UIComponentBuilder("form")
-        comp = (
-            builder.build_structure("Login")
-            .add_behavior({"onSubmit": "handleLogin"})
-            .build()
-        )
+        comp = builder.build_structure("Login").add_behavior({"onSubmit": "handleLogin"}).build()
         assert comp["events"]["onSubmit"] == "handleLogin"
 
     def test_add_accessibility(self):
         builder = UIComponentBuilder("input")
         comp = (
-            builder.build_structure("email")
-            .add_accessibility({"label": "Email address"})
-            .build()
+            builder.build_structure("email").add_accessibility({"label": "Email address"}).build()
         )
         assert comp["aria"]["label"] == "Email address"
 

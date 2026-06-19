@@ -1,6 +1,16 @@
 # serializer version: 1
 # name: test_ast_entity_snapshot
   dict({
+    'children': list([
+      dict({
+        'attributes': list([
+        ]),
+        'name': 'usuario',
+        'node_type': 'entity',
+      }),
+    ]),
+    'name': 'data_model',
+    'node_type': 'project',
   })
 # ---
 # name: test_ast_page_snapshot
@@ -18,6 +28,7 @@
         'node_type': 'page',
       }),
     ]),
+    'name': 'project',
     'node_type': 'project',
   })
 # ---
@@ -25,10 +36,12 @@
   dict({
     'children': list([
       dict({
+        'name': 'create',
         'node_type': 'action',
-        'value': 'crea',
+        'target': '',
       }),
     ]),
+    'name': 'project',
     'node_type': 'project',
   })
 # ---

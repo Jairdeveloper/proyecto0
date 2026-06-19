@@ -3,6 +3,7 @@
 from typing import Any
 
 from agentic_pipeline.nodes.ast_nodes import (
+    ActionNode,
     ComponentNode,
     EntityNode,
     InfraNode,
@@ -48,6 +49,13 @@ class EvaluationVisitor(TreeWalkingVisitor):
             "type": "entity",
             "name": node.name,
             "attributes": node.attributes,
+        }
+
+    def visit_action(self, node: ActionNode) -> Any:
+        return {
+            "type": "action",
+            "action": node.action_type,
+            "target": node.target,
         }
 
     def visit_infra(self, node: InfraNode) -> Any:

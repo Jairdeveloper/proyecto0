@@ -2,10 +2,10 @@ import logging
 import time
 from abc import ABC, abstractmethod
 
-from .contracts import STAGE_CONTRACTS
-from .feedback_loop import MetricsObserver as _MetricsObserver
-from .prompt_chain.observer_base import StageEvent, StageSubject
-from .state_models import StageContext, AnalysisResult, ActionPlan, StageOutput
+from agentic_pipeline.contracts import STAGE_CONTRACTS
+from agentic_pipeline.feedback_loop import MetricsObserver as _MetricsObserver
+from agentic_pipeline.prompt_chain.observer_base import StageEvent, StageSubject
+from agentic_pipeline.state_models import ActionPlan, AnalysisResult, StageContext, StageOutput
 
 logger = logging.getLogger(__name__)
 
@@ -57,11 +57,7 @@ class PipelineStage(ABC):
                 stage=self.name,
                 duration=round(duration, 4),
                 success=output.success,
-                output=(
-                    output.output_data
-                    if isinstance(output.output_data, dict)
-                    else {}
-                ),
+                output=(output.output_data if isinstance(output.output_data, dict) else {}),
                 error=output.error,
                 metadata=output.metrics,
             )

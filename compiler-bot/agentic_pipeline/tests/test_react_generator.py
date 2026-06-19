@@ -2,8 +2,8 @@
 
 from pathlib import Path
 
-from agentic_pipeline.generators.react_generator import ReactGenerator
 from agentic_pipeline.generators.base_generator import GeneratorFactory
+from agentic_pipeline.generators.react_generator import ReactGenerator
 from agentic_pipeline.nodes.ir_nodes import IRComponent, IRPage, IRProject
 
 

@@ -3,7 +3,7 @@
 import pytest
 
 from agentic_pipeline.nodes.requirement_decomposer import RequirementDecomposer
-from agentic_pipeline.state_models import Stage, StageContext, RequirementGraph
+from agentic_pipeline.state_models import RequirementGraph, Stage, StageContext
 
 
 @pytest.fixture

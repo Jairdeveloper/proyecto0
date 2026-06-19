@@ -1,2 +1,5 @@
 """Backward compat: re-export ActionExecutor as SynthesisOrchestrator."""
-from .action_executor import ActionExecutor as SynthesisOrchestrator  # noqa: F401
+
+from agentic_pipeline.nodes.action_executor import (
+    ActionExecutor as SynthesisOrchestrator,  # noqa: F401
+)

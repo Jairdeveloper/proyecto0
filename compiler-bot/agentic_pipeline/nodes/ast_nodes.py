@@ -77,3 +77,15 @@ class InfraNode(ASTNode):
 
     def accept(self, visitor: IASTVisitor) -> Any:
         return visitor.visit_infra(self)
+
+
+class ActionNode(ASTNode):
+    """Represents an action command (create, read, update, delete) with its target."""
+
+    def __init__(self, action_type: str, target: str = ""):
+        super().__init__(name=action_type)
+        self.action_type: str = action_type
+        self.target: str = target
+
+    def accept(self, visitor: IASTVisitor) -> Any:
+        return visitor.visit_action(self)

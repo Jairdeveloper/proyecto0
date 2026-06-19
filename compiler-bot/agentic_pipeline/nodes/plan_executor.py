@@ -4,12 +4,12 @@ from __future__ import annotations
 
 import logging
 from abc import ABC
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from .planner import Task, TaskState
-from .task_command import TaskCommand
+from agentic_pipeline.nodes.planner import Task, TaskState
+from agentic_pipeline.nodes.task_command import TaskCommand
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +32,7 @@ class PlanObserver:
         new_state: TaskState,
     ) -> None:
         entry = {
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "task_id": task.id,
             "old_state": old_state.value,
             "new_state": new_state.value,
@@ -42,7 +42,7 @@ class PlanObserver:
 
     def on_error(self, task: Task, error: str) -> None:
         entry = {
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "task_id": task.id,
             "error": error,
         }

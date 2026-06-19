@@ -3,6 +3,7 @@
 from typing import Any
 
 from agentic_pipeline.nodes.ast_nodes import (
+    ActionNode,
     ComponentNode,
     EntityNode,
     InfraNode,
@@ -39,6 +40,13 @@ class IRExportVisitor(IASTVisitor):
             "node_type": "entity",
             "name": node.name,
             "attributes": node.attributes,
+        }
+
+    def visit_action(self, node: ActionNode) -> Any:
+        return {
+            "node_type": "action",
+            "name": node.name,
+            "target": node.target,
         }
 
     def visit_infra(self, node: InfraNode) -> Any:

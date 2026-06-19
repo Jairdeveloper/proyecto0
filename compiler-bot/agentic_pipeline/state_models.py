@@ -1,11 +1,13 @@
-from pydantic import BaseModel, Field
-from enum import Enum
-from typing import Any, Optional
 from datetime import datetime
+from enum import Enum
+from typing import Any
+
+from pydantic import BaseModel, Field
 
 
 class ContextWindow(BaseModel):
     """Contexto optimizado para un stage especifico (N2.2c)."""
+
     relevant_history: list[dict] = []
     world_snapshot: dict = {}
     task_focus: str = ""
@@ -32,9 +34,9 @@ class StageContext(BaseModel):
     mission_id: str = Field(default_factory=lambda: datetime.now().isoformat())
     stage: Stage
     input_data: Any
-    previous_output: Optional[Any] = None
+    previous_output: Any | None = None
     config_overrides: dict = {}
-    last_error: Optional[str] = None
+    last_error: str | None = None
 
 
 class AnalysisResult(BaseModel):
@@ -57,7 +59,7 @@ class StageOutput(BaseModel):
     metrics: dict = {}
     feedback: dict = {}
     success: bool = True
-    error: Optional[str] = None
+    error: str | None = None
 
 
 class Token(BaseModel):

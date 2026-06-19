@@ -3,14 +3,14 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
 
 class ConversationalMemory:
     """Memoria persistente del agente.
-    
+
     Almacena historial de conversaciones, contexto y sesiones en archivos JSON.
     Port del patron utilizado en agent-robot/memory.sh.
     """
@@ -43,11 +43,13 @@ class ConversationalMemory:
 
     def add_history(self, instruction: str, response: str) -> None:
         """Agrega una entrada al historial."""
-        self.current_session["historial"].append({
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "instruction": instruction,
-            "response": response,
-        })
+        self.current_session["historial"].append(
+            {
+                "timestamp": datetime.now(UTC).isoformat(),
+                "instruction": instruction,
+                "response": response,
+            }
+        )
         self._save()
 
     def get_recent(self, limit: int = 5) -> list[dict]:

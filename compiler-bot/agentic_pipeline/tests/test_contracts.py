@@ -1,19 +1,19 @@
 """Tests for stage output contracts (Pydantic validation)."""
 
+import pytest
+
 from agentic_pipeline.contracts import (
-    NLPContract,
-    PreprocessorContract,
-    LexerContract,
-    ParserContract,
-    SemanticContract,
     IRContract,
+    LexerContract,
+    NLPContract,
+    ParserContract,
     PlannerContract,
+    PreprocessorContract,
+    SemanticContract,
     SynthesisContract,
     UIContract,
     ValidatorContract,
 )
-
-import pytest
 
 
 class TestNLPContract:
@@ -34,9 +34,7 @@ class TestNLPContract:
 
 class TestPreprocessorContract:
     def test_valid(self):
-        PreprocessorContract.model_validate(
-            {"normalized_text": "crea modulo", "domain": "web"}
-        )
+        PreprocessorContract.model_validate({"normalized_text": "crea modulo", "domain": "web"})
 
 
 class TestLexerContract:
@@ -63,9 +61,7 @@ class TestParserContract:
 
 class TestSemanticContract:
     def test_valid(self):
-        SemanticContract.model_validate(
-            {"ast": {}, "semantic_errors": [], "warnings": []}
-        )
+        SemanticContract.model_validate({"ast": {}, "semantic_errors": [], "warnings": []})
 
 
 class TestIRContract:
@@ -75,9 +71,7 @@ class TestIRContract:
 
 class TestPlannerContract:
     def test_valid(self):
-        PlannerContract.model_validate(
-            {"tasks": [], "commands": [], "complexity": "low"}
-        )
+        PlannerContract.model_validate({"tasks": [], "commands": [], "complexity": "low"})
 
 
 class TestSynthesisContract:

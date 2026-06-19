@@ -53,6 +53,7 @@ def test_pipeline_short(benchmark):
 
     def run():
         import asyncio
+
         return asyncio.run(orch.run(SHORT_PROMPT))
 
     result = benchmark(run)
@@ -70,6 +71,7 @@ def test_pipeline_long(benchmark):
 
     def run():
         import asyncio
+
         return asyncio.run(orch.run(LONG_PROMPT))
 
     result = benchmark(run)

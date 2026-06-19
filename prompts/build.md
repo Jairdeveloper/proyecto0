@@ -626,3 +626,259 @@ easier to make reusable Observers and Subjects than to make reusable
 Mediators. 
 On the other hand, Mediator can leverage Observer for dynamically 
 registering colleagues and communicating with them.
+
+
+
+
+
+Discoveries
+1. Root .gitignore tiene prompts/ (sin leading slash) â esto ignora el directorio compiler-bot/agentic_pipeline/prompt_chain/prompts/ tambiÃ©n. Para stagear esos archivos hay que usar git add -f.
+2. Los handlers refactorizados a clases (Fase 1) requieren actualizar tests: cada test individual ahora crea una instancia del handler, construye PromptRequest + ChainContext (con datos precargados vÃ­a set_output()), llama a handler.handle(request, ctx) y accede a response.output en vez de llamar a funciones sueltas.
+3. Los patch paths para execute_fallback en tests cambiÃ³ de agentic_pipeline.prompt_chain.prompts.<name>.execute_fallback a agentic_pipeline.prompt_chain.handler_base.execute_fallback porque el cÃ³digo se moviÃ³ a handler_base.py.
+4. ChainContext.get_all_outputs() es Ãºtil para la lÃ³gica de reintentos en el orchestrator â evita KeyError de get_fields().
+5. MacroCommand debe hacer break cuando result.success es False â el plan no lo menciona pero es necesario para stop-on-failure.
+6. ToolCommand necesita ToolResult importado en command_adapter.py y el name del mock debe setearse antes de registrar en ToolRegistry.
+Accomplished
+Fase 1 â Chain of Responsibility (completada, commit 10c288d)
+- Creado prompt_chain/handler_base.py con PromptHandler(ABC), PromptRequest, PromptResponse. Implementa set_next() para encadenamiento y handle() con ciclo LLMâfallbackâctxâdelegaciÃ³n.
+- Refactorizados 6 handlers de funciones a clases que heredan de PromptHandler: PreprocessHandler, IntentHandler, PlanHandler, GenerateHandler, VerifyHandler, FormatHandler. Template registration preservado como side-effect module-level en cada archivo.
+- PipelineStage simplificado: analyze(), reflect_and_plan(), learn_and_improve() ahora tienen defaults no-abstract (Template Method). Subclases solo necesitan receive_mission() + act().
+- ChainOrchestrator simplificado de 321â95 lÃ­neas: reemplazado LangGraph StateGraph por cadena CoR directa con retry loop. Retry corrigiÃ³ bug de attempt_count: la main chain cuenta como attempt=1, el loop corre mientras attempt < max_retries.
+- 10 tests nuevos CoR + 44 tests adaptados.
+- Reporte: docs/117_REP_DEV_FASE1_COR_REFACTOR_1_0_DRAFT.md
+Fase 2 â Command Pattern (completada, commit a2c181b)
+- Creado prompt_chain/command_base.py con Command(ABC), CommandResult (dataclass con success/data/error/fallback_used/duration/command_name), MacroCommand con ejecuciÃ³n secuencial y stop-on-failure.
+- Creado prompt_chain/command_history.py con CommandHistory: registro, filtro por Ã©xito/fallo/nombre, replay de fallos vÃ­a factory de clases, tasa de Ã©xito, fallback_count.
+- Creado prompt_chain/commands.py con 6 Prompt*Command wrappers: PreprocessCommand, IntentCommand, PlanCommand, GenerateCommand, VerifyCommand, FormatCommand. Cada uno construye handler+request+ctx, ejecuta handle(), retorna CommandResult con duraciÃ³n.
+- Creado tools/command_adapter.py con ToolCommand(Command) que envuelve cualquier tool registrada en ToolRegistry.
+- AÃ±adido PipelineMacroCommand a orchestrator.py: encapsula todos los PipelineStage del AgentOrchestrator en un solo Command.
+- Actualizados exports en prompt_chain/__init__.py y tools/__init__.py.
+- 20 tests nuevos (execute, history, macro, failure logging, ToolCommand adapter).
+- Reporte: docs/118_REP_DEV_FASE2_COMMAND_REFACTOR_1_0_DRAFT.md
+Lo que queda (Fase 3 â Observer)
+La Fase 3 del plan (docs/116_PLAN_DEV_BEHAVIORAL_PATTERNS_REFACTOR_1_0_DRAFT.md secciÃ³n ## Fase 3 â Observer Pattern) tiene 3 sub-tareas:
+1. 3.1 Sistema de metricas como Observer (~0.5 sesiÃ³n): Crear prompt_chain/observer_base.py con StageSubject, StageObserver, StageEvent. Refactorizar base_stage.py para usar subject.notify() en vez de get_global_feedback().record_stage(). Refactorizar orchestrator.py para reemplazar debug_callback directo por observer. Mover MetricsObserver a feedback_loop.py. +4 tests nuevos.
+2. 3.2 CoordinaciÃ³n entre agentes via Observer (~0.5 sesiÃ³n): Formalizar SharedContext como EventBus (Observer con tÃ³picos). Integrar en agents/base_agent.py. Crear agents/event_bus.py. +3 tests.
+3. 3.3 Dashboard como Observer (~1 sesiÃ³n): DashboardObserver que recibe eventos en tiempo real, mantiene deque de Ãºltimos 1000 eventos, broadcast a WebSocket clients. +1 test (o integrado con los anteriores).
+Relevant files / directories
+Documentos de planificaciÃ³n
+- docs/116_PLAN_DEV_BEHAVIORAL_PATTERNS_REFACTOR_1_0_DRAFT.md â Plan detallado Fase 1-3 (leer la secciÃ³n ## Fase 3 â Observer Pattern para la siguiente tarea)
+- docs/117_REP_DEV_FASE1_COR_REFACTOR_1_0_DRAFT.md â Reporte Fase 1 (completada)
+- docs/118_REP_DEV_FASE2_COMMAND_REFACTOR_1_0_DRAFT.md â Reporte Fase 2 (completada)
+Archivos creados (Fase 1 + 2)
+- compiler-bot/agentic_pipeline/prompt_chain/handler_base.py â PromptHandler base CoR
+- compiler-bot/agentic_pipeline/prompt_chain/command_base.py â Command, CommandResult, MacroCommand
+- compiler-bot/agentic_pipeline/prompt_chain/command_history.py â CommandHistory
+- compiler-bot/agentic_pipeline/prompt_chain/commands.py â 6 Prompt*Command wrappers
+- compiler-bot/agentic_pipeline/tools/command_adapter.py â ToolCommand adapter
+- compiler-bot/agentic_pipeline/tests/test_handler_chain.py â 10 tests CoR
+- compiler-bot/agentic_pipeline/tests/test_command_pattern.py â 20 tests Command
+Archivos modificados (Fase 1 + 2)
+- compiler-bot/agentic_pipeline/base_stage.py â PipelineStage con defaults
+- compiler-bot/agentic_pipeline/prompt_chain/__init__.py â Exporta PromptHandler, Command, etc.
+- compiler-bot/agentic_pipeline/prompt_chain/orchestrator.py â ChainOrchestrator simplificado
+- compiler-bot/agentic_pipeline/prompt_chain/prompts/*.py (6 archivos) â Handlers como clases
+- compiler-bot/agentic_pipeline/prompt_chain/prompts/__init__.py â Exporta clases handler
+- compiler-bot/agentic_pipeline/orchestrator.py â PipelineMacroCommand aÃ±adido
+- compiler-bot/agentic_pipeline/tools/__init__.py â Exporta ToolCommand
+Archivos a modificar para Fase 3
+- NUEVO: prompt_chain/observer_base.py â StageSubject, StageObserver, StageEvent (~50 lines)
+- base_stage.py â reemplazar get_global_feedback().record_stage() por subject.notify()
+- orchestrator.py (prompt chain) â reemplazar debug_callback directo por observer
+- feedback_loop.py â MetricsObserver
+- agents/base_agent.py â integrar EventBus
+- agents/supervisor_agent.py â coordinar via eventos
+- NUEVO: agents/event_bus.py â EventBus (~40 lines)
+- Tests: +7 nuevos (4 observer + 3 event bus)
+Tests existentes (Fase 1 + 2, 74 tests total)
+- tests/test_handler_chain.py â 10 tests CoR
+- tests/test_command_pattern.py â 20 tests Command
+- tests/test_prompt_preprocess.py â 5 tests
+- tests/test_prompt_intent.py â 7 tests
+- tests/test_prompt_plan.py â 6 tests
+- tests/test_prompt_generate.py â 6 tests
+- tests/test_prompt_verify.py â 5 tests
+- tests/test_prompt_format.py â 4 tests
+- tests/test_chain_orchestrator.py â 8 tests
+- tests/test_base_stage.py â 3 tests
+
+Tu tarea es analizar el sistema Proyecto0 y generar un reporte técnico completo.
+
+El reporte debe incluir:
+1. Resumen del sistema
+2. Requisitos funcionales y no funcionales
+3. Arquitectura propuesta (explicada claramente)
+4. Diagramas descritos en texto (componentes y flujo)
+5. Tecnologías recomendadas y justificación
+6. Modelo de datos (si aplica)
+7. Riesgos y posibles cuellos de botella
+8. Escalabilidad y rendimiento
+9. Seguridad
+10. Conclusión
+
+Escribe de forma profesional, clara y estructurada como un documento de arquitectura real.
+📊 2. Prompt para análisis de sistema existente
+Actúa como arquitecto de software senior.
+
+Voy a darte un sistema existente. Analízalo en profundidad y genera un reporte de arquitectura.
+
+Incluye:
+- Arquitectura actual (AS-IS)
+- Problemas detectados
+- Deuda técnica
+- Riesgos
+- Mejores prácticas incumplidas
+- Propuesta de mejora (TO-BE)
+- Arquitectura optimizada
+- Recomendaciones priorizadas (alto, medio, bajo impacto)
+
+Sé crítico, técnico y preciso.
+🧱 3. Prompt para diseñar desde cero
+Actúa como arquitecto de software senior.
+
+Te daré una idea de producto. Tu tarea es diseñar la arquitectura completa desde cero.
+
+El resultado debe incluir:
+- Arquitectura del sistema
+- Diseño de componentes
+- Backend y frontend sugerido
+- Base de datos recomendada
+- API design (REST o GraphQL)
+- Escalabilidad
+- Infraestructura cloud (AWS, Azure o GCP)
+- Estrategia de despliegue (CI/CD)
+- Consideraciones de seguridad
+
+Hazlo como si fueras a entregarlo a un equipo de ingeniería real.
+🧪 4. Prompt para reporte tipo “documento profesional”
+Actúa como arquitecto de software senior.
+
+Genera un documento técnico formal estilo “Software Architecture Document (SAD)”.
+
+Debe incluir secciones bien estructuradas, lenguaje profesional y explicaciones claras.
+
+Formato obligatorio:
+- Títulos numerados
+- Explicaciones detalladas
+- Tablas cuando sea útil
+- Decisiones de diseño justificadas
+
+El objetivo es que pueda ser entregado a stakeholders técnicos y no técnicos.
+⚙️ 5. Prompt para revisión de arquitectura (code + system)
+Actúa como arquitecto de software senior.
+
+Voy a proporcionarte código o una arquitectura parcial.
+
+Debes:
+- Revisar calidad del diseño
+- Detectar anti-patrones
+- Evaluar escalabilidad
+- Analizar separación de responsabilidades
+- Revisar modularidad
+- Sugerir mejoras concretas
+
+Responde como auditor técnico experto.
+🚀 Bonus: Prompt combinado (muy potente)
+Actúa como arquitecto de software principal (Principal Software Architect).
+
+Analiza el sistema que te voy a dar y produce un informe completo tipo consultoría.
+
+Incluye análisis, diseño, mejoras, riesgos, escalabilidad, seguridad y una arquitectura final optimizada.
+
+Piensa como si estuvieras diseñando un sistema para una empresa tipo Google 
+
+
+
+â£  Build Â· DeepSeek V4 Flash Free Â· 10.2s
+/agents      
+Switch agent
+/compact     
+Compact session
+/connect     
+Connect provider
+/copy        
+Copy session transcript
+/editor      
+Open editor
+/exit        
+Exit the app
+/export      
+Export session transcript
+/fork        
+Fork from message
+/help        
+Help
+/init        
+guided AGENTS.md setup
+/mcps        
+Toggle MCPs
+/models      
+Switch model
+/new         
+New session
+/rename      
+Rename session
+/review      
+review changes [commit|branch|pr], defaults to uncommitted
+/sessions    
+Switch session
+/share       
+Share session
+/skills      
+Skills
+/status      
+View status
+/themes      
+Switch theme
+/thinking    
+Hide thinking
+/timeline    
+Jump to message
+/timestamps  
+Show timestamps
+/undo        
+Undo previous message
+
+
+ActÃºa como un arquitecto de software senior con experiencia en sistemas escalables, diseÃ±o de microservicios, cloud y buenas prÃ¡cticas de ingenierÃ­a y Analiza los siguientes archivos:'/home/john/proyects/proyect0/docs/diagrams/001_CLASS_DIAGRAM_RECPL_1_0_DRAFT.md','/home/john/proyects/proyect0/docs/diagrams/002_USECASE_DIAGRAM_RECPL_1_0_DRAFT.md','/home/john/proyects/proyect0/docs/diagrams/003_SEQUENCE_DIAGRAM_RECPL_1_0_DRAFT.md','/home/john/proyects/proyect0/docs/diagrams/004_ACTIVITY_DIAGRAM_RECPL_1_0_DRAFT.md','/home/john/proyects/proyect0/docs/diagrams/005_STATEMACHINE_DIAGRAM_RECPL_1_0_DRAFT.md','/home/john/proyects/proyect0/docs/diagrams/006_COMPONENT_DIAGRAM_RECPL_1_0_DRAFT.md','/home/john/proyects/proyect0/docs/diagrams/007_DEPLOYMENT_DIAGRAM_RECPL_1_0_DRAFT.md'.
+Tu tarea es Escribir archivo .md reporte.:
+El reporte debe incluir:
+1. Resumen del sistema
+2. Requisitos funcionales y no funcionales
+3. Arquitectura propuesta (explicada claramente)
+4. Diagramas descritos en texto (componentes y flujo)
+5. TecnologÃ­as recomendadas y justificaciÃ³n
+6. Modelo de datos (si aplica)
+7. Riesgos y posibles cuellos de botella
+8. Escalabilidad y rendimiento
+9. Seguridad
+10. ConclusiÃ³n
+Escribe de forma profesional, clara y estructurada como un documento de arquitectura real. 
+Incluye:
+- Arquitectura actual (AS-IS)
+- Problemas detectados
+- Deuda tÃ©cnica
+- Riesgos
+- Mejores prÃ¡cticas incumplidas
+- Propuesta de mejora (TO-BE)
+- Arquitectura optimizada
+- Recomendaciones priorizadas (alto, medio, bajo impacto)
+SÃ© crÃ­tico, tÃ©cnico y preciso. 
+Formato obligatorio:
+- TÃ­tulos numerados
+- Explicaciones detalladas
+- Tablas cuando sea Ãºtil
+- Decisiones de diseÃ±o justificadas
+El objetivo es que pueda ser entregado a stakeholders tÃ©cnicos y no tÃ©cnicos. 
+
+Analiza el siguiente archivos: '/home/john/proyects/proyect0/docs/122_PLAN_DEV_PATTERNS_REFACTOR_1_0_DRAFT.md'. Escribe un archivo .md que describa un plan de accion para la propuesta de implementaciÃ³n del archivo: /home/john/proyects/proyect0/docs/122_PLAN_DEV_PATTERNS_REFACTOR_1_0_DRAFT.md
+
+Analiza el archivo: '/home/john/proyects/proyect0/docs/123_PLAN_DEV_PATTERNS_ACTION_1_0_DRAFT.md'. Ejecuta la seccion ## 4. Track B — Mediator + Adapter:
+### B1 — Crear `IAgentMediator`, mensajes tipados y mediator concreto
+### B2 — Modificar `Agent` base para recibir `mediator`
+### B3-B6 — Modificar agentes individuales
+### B7 — Refactorizar `SupervisorAgent` para usar mediator
+### B8 — Tests de Mediator
+### B9 — Crear `AgentStageAdapter`
+### B10 — Agregar `build_from_agents()` en Orchestrator
+Escribe reporte en : /home/john/proyects/proyect0/docs/124_REP_DEV_PATTERNS_ACTION_TRACK-A_1_0_DRAFT.md. de las acciones realizadas.

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from .base_generator import BaseGenerator
+from agentic_pipeline.generators.base_generator import BaseGenerator
 
 
 class NestJSGenerator(BaseGenerator):
@@ -105,7 +105,5 @@ class NestJSGenerator(BaseGenerator):
         name = getattr(entity, "name", "Entity")
         attrs = getattr(entity, "attributes", [])
 
-        fields = "\n".join(
-            f"  {a.get('name', 'field')}: {a.get('type', 'string')};" for a in attrs
-        )
+        fields = "\n".join(f"  {a.get('name', 'field')}: {a.get('type', 'string')};" for a in attrs)
         return f"export class {name} {{\n{fields}\n}}\n"

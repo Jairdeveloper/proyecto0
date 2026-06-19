@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from ..tool_registry import Tool, ToolResult, Parameter
-from ..generators.base_generator import GeneratorFactory
-from ..nodes.ir_nodes import IRProject, IRPage, IREntity, IRAPI, IRInfra, IRConfig
+from agentic_pipeline.generators.base_generator import GeneratorFactory
+from agentic_pipeline.nodes.ir_nodes import IRAPI, IRConfig, IREntity, IRInfra, IRPage, IRProject
+from agentic_pipeline.tool_registry import Parameter, Tool, ToolResult
 
 
 class GenerateCodeTool(Tool):
@@ -16,7 +16,9 @@ class GenerateCodeTool(Tool):
         "(nestjs, prisma, react, nextjs, tailwind, docker)"
     )
     parameters = [
-        Parameter("target", "string", "Target de generacion (nestjs|prisma|react|nextjs|tailwind|docker)"),
+        Parameter(
+            "target", "string", "Target de generacion (nestjs|prisma|react|nextjs|tailwind|docker)"
+        ),
         Parameter("name", "string", "Nombre del modulo/entidad/componente"),
         Parameter("output_dir", "string", "Directorio de salida", required=False),
     ]
@@ -31,7 +33,7 @@ class GenerateCodeTool(Tool):
             return ToolResult(
                 success=False,
                 error=f"Generador no encontrado: {target}. "
-                      f"Disponibles: nestjs, prisma, react, nextjs, tailwind, docker",
+                f"Disponibles: nestjs, prisma, react, nextjs, tailwind, docker",
             )
         target_dir = output_dir / name.lower()
         target_dir.mkdir(parents=True, exist_ok=True)

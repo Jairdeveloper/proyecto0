@@ -5,18 +5,19 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from ..base_stage import PipelineStage
-from ..state_models import ActionPlan, AnalysisResult, StageContext, StageOutput
-from .ast_nodes import (
+from agentic_pipeline.base_stage import PipelineStage
+from agentic_pipeline.nodes.ast_nodes import (
+    ActionNode,
     ComponentNode,
     EntityNode,
     InfraNode,
     PageNode,
     ProjectNode,
 )
-from .ast_visitor import IASTVisitor
-from .symbol_table import SymbolTable
-from .type_systems import TypeRegistry, get_default_registry
+from agentic_pipeline.nodes.ast_visitor import IASTVisitor
+from agentic_pipeline.nodes.symbol_table import SymbolTable
+from agentic_pipeline.nodes.type_systems import TypeRegistry, get_default_registry
+from agentic_pipeline.state_models import ActionPlan, AnalysisResult, StageContext, StageOutput
 
 logger = logging.getLogger(__name__)
 
@@ -63,9 +64,19 @@ class SemanticAnalysisVisitor(IASTVisitor):
             {"type": "component", "component_type": node.component_type},
         )
         errs = self.registry.validate(
-            "ui", "component", {"name": node.name, "component_type": node.component_type},
+            "ui",
+            "component",
+            {"name": node.name, "component_type": node.component_type},
         )
         self.errors.extend(errs)
+
+    def visit_action(self, node: ActionNode) -> Any:
+        if not node.target:
+            self.errors.append(f"Action '{node.name}' missing target")
+        self.symbols.define(
+            f"action:{node.name}",
+            {"type": "action", "action_type": node.action_type, "target": node.target},
+        )
 
     def visit_entity(self, node: EntityNode) -> Any:
         self.symbols.define(node.name, {"type": "entity", "attributes": node.attributes})
@@ -78,7 +89,9 @@ class SemanticAnalysisVisitor(IASTVisitor):
             {"type": "infra", "infra_type": node.infra_type},
         )
         errs = self.registry.validate(
-            "infra", "resource", {"name": node.name, "infra_type": node.infra_type},
+            "infra",
+            "resource",
+            {"name": node.name, "infra_type": node.infra_type},
         )
         self.errors.extend(errs)
 
@@ -152,6 +165,20 @@ class SemanticVisitor:
         self.symbols.define(name, {"type": "entity", "node": node})
         errs = self.registry.validate("data", "entity", node)
         self.errors.extend(errs)
+
+    def visit_action(self, node: dict[str, Any]) -> None:
+        target = node.get("target", "")
+        value = node.get("name", node.get("value", ""))
+        if not target:
+            self.warnings.append(f"Action '{value}' has no target")
+        self.symbols.define(f"$action_{value}", {
+            "type": "action",
+            "target": target,
+            "node": node,
+        })
+
+    def exit_action(self, node: dict[str, Any]) -> None:
+        pass
 
     def visit_infra(self, node: dict[str, Any]) -> None:
         name = node.get("name", "")

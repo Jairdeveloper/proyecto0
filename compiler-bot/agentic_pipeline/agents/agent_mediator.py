@@ -11,7 +11,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from .base_agent import Agent
+    from agentic_pipeline.agents.base_agent import Agent
 
 
 @dataclass
@@ -68,7 +68,7 @@ class IAgentMediator(ABC):
     """Interface for the Mediator — agents only know this interface."""
 
     @abstractmethod
-    def register(self, agent: "Agent") -> None: ...
+    def register(self, agent: Agent) -> None: ...
 
     @abstractmethod
     def send(self, message: AgentMessage) -> None: ...
@@ -82,10 +82,10 @@ class AgentMediator(IAgentMediator):
 
     def __init__(self, event_bus=None):
         self._event_bus = event_bus
-        self._agents: dict[str, "Agent"] = {}
+        self._agents: dict[str, Agent] = {}
         self._subscriptions: dict[str, list[str]] = {}
 
-    def register(self, agent: "Agent") -> None:
+    def register(self, agent: Agent) -> None:
         self._agents[agent.name] = agent
         if hasattr(agent, "subscriptions"):
             for topic in agent.subscriptions:

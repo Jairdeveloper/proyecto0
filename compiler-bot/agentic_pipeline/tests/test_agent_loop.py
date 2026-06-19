@@ -7,8 +7,8 @@ import tempfile
 import pytest
 
 from agentic_pipeline.agent_loop import AgentLoop, AgentOutput
-from agentic_pipeline.orchestrator import AgentOrchestrator
 from agentic_pipeline.memory import ConversationalMemory
+from agentic_pipeline.orchestrator import AgentOrchestrator
 
 
 class TestAgentOutput:

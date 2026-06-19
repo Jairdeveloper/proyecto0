@@ -3,6 +3,7 @@
 from typing import Any
 
 from agentic_pipeline.nodes.ast_nodes import (
+    ActionNode,
     ComponentNode,
     EntityNode,
     PageNode,
@@ -27,6 +28,12 @@ class ValidationVisitor(TreeWalkingVisitor):
         if not node.attributes:
             self.errors.append(f"Entity '{node.name}' has no attributes")
         super().visit_entity(node)
+        return self
+
+    def visit_action(self, node: ActionNode) -> Any:
+        if not node.target:
+            self.errors.append(f"Action '{node.name}' has no target")
+        super().visit_action(node)
         return self
 
     def visit_component(self, node: ComponentNode) -> Any:

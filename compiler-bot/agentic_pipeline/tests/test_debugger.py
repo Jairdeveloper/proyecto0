@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-
 import pytest
 
 from agentic_pipeline.debugger import PipelineDebugger

@@ -2,16 +2,15 @@
 
 from __future__ import annotations
 
-from agentic_pipeline.prompt_chain.llm_backend import LLMBackend
-
-from ..world_model import WorldModel
-from .agent_mediator import (
+from agentic_pipeline.agents.agent_mediator import (
     AgentMessage,
     ExecutionResult,
     ReasoningResult,
     ValidationResult,
 )
-from .base_agent import Agent, SharedContext, Task, TaskResult
+from agentic_pipeline.agents.base_agent import Agent, SharedContext, Task, TaskResult
+from agentic_pipeline.prompt_chain.llm_backend import LLMBackend
+from agentic_pipeline.world_model import WorldModel
 
 
 class ValidatorAgent(Agent):
@@ -168,9 +167,7 @@ class ValidatorAgent(Agent):
                         all_passed=all_passed,
                         criteria_checks=validation_results,
                         total_criteria=len(criteria),
-                        passed_criteria=sum(
-                            1 for v in validation_results if v["passed"]
-                        ),
+                        passed_criteria=sum(1 for v in validation_results if v["passed"]),
                     ),
                     correlation_id=task.id,
                 )

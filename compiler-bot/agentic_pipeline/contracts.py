@@ -1,5 +1,4 @@
 from pydantic import BaseModel
-from typing import Optional
 
 
 class NLPContract(BaseModel):
@@ -13,12 +12,12 @@ class NLPContract(BaseModel):
 class PreprocessorContract(BaseModel):
     normalized_text: str
     domain: str
-    enriched: Optional[dict] = None
+    enriched: dict | None = None
 
 
 class LexerContract(BaseModel):
     tokens: list[dict]
-    enriched: Optional[dict] = None
+    enriched: dict | None = None
 
 
 class ParserContract(BaseModel):

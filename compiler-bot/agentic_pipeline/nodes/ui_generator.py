@@ -7,14 +7,14 @@ import logging
 from pathlib import Path
 from typing import Any
 
-from ..base_stage import PipelineStage
-from ..generators.design_tokens import DesignTokens
-from ..generators.responsive_engine import (
+from agentic_pipeline.base_stage import PipelineStage
+from agentic_pipeline.generators.design_tokens import DesignTokens
+from agentic_pipeline.generators.responsive_engine import (
     AccessibilityInjector,
     AnimationInjector,
 )
-from ..generators.ui_component_builder import ComponentFactory
-from ..state_models import ActionPlan, AnalysisResult, StageContext, StageOutput
+from agentic_pipeline.generators.ui_component_builder import ComponentFactory
+from agentic_pipeline.state_models import ActionPlan, AnalysisResult, StageContext, StageOutput
 
 logger = logging.getLogger(__name__)
 
@@ -64,8 +64,35 @@ class UIGenerator(PipelineStage):
     def act(self, plan: ActionPlan) -> StageOutput:
         ir_tree = self._input_data.get("ir_tree") if self._input_data else None
         tasks = self._input_data.get("tasks", []) if self._input_data else []
+        enriched = (self._input_data.get("enriched", {}) or {}) if self._input_data else {}
         generated_files: list[str] = []
         errors: list[str] = []
+
+        previous_files = self._input_data.get("generated_files", []) if self._input_data else []
+
+        # --- Domain gate ---
+        domain = enriched.get("intent", {}).get("domain", "backend")
+        if domain != "ui":
+            ui_components = self._detect_ui_components(ir_tree, tasks)
+            if not ui_components:
+                return StageOutput(
+                    stage=self.context.stage,
+                    output_data={
+                        "generated_files": previous_files,
+                        "errors": [],
+                        "task_count": len(tasks),
+                        "enriched": enriched or None,
+                    },
+                    metrics={
+                        "files_generated": len(previous_files),
+                        "errors": 0,
+                        "components": 0,
+                        "domain": domain,
+                        "ui_components_detected": 0,
+                        "domain_gate_triggered": True,
+                    },
+                    success=True,
+                )
 
         output_dir = self._output_dir / "ui"
         output_dir.mkdir(parents=True, exist_ok=True)
@@ -94,18 +121,31 @@ class UIGenerator(PipelineStage):
         tokens_json.write_text(json.dumps(DesignTokens.tailwind_config(), indent=2))
         generated_files.append(str(tokens_json))
 
+        all_files = list(previous_files) + generated_files
+        seen = set()
+        deduped = []
+        for f in all_files:
+            if f not in seen:
+                seen.add(f)
+                deduped.append(f)
+
         return StageOutput(
             stage=self.context.stage,
             output_data={
-                "generated_files": generated_files,
+                "generated_files": deduped,
                 "errors": errors,
                 "task_count": len(tasks),
-                "enriched": self._enriched or None,
+                "ir_tree": ir_tree,
+                "tasks": tasks,
+                "enriched": enriched or None,
             },
             metrics={
                 "files_generated": len(generated_files),
                 "errors": len(errors),
                 "components": len(ui_components),
+                "domain": domain,
+                "ui_components_detected": len(ui_components),
+                "domain_gate_triggered": domain != "ui",
             },
             success=len(errors) == 0,
         )
@@ -139,14 +179,10 @@ class UIGenerator(PipelineStage):
         for task in tasks:
             task_name = task.get("id", "").lower()
             if "form" in task_name and task_name not in seen:
-                components.append(
-                    ComponentFactory.form(task.get("id", "Form").capitalize())
-                )
+                components.append(ComponentFactory.form(task.get("id", "Form").capitalize()))
                 seen.add(task_name)
             if ("table" in task_name or "list" in task_name) and task_name not in seen:
-                components.append(
-                    ComponentFactory.table(task.get("id", "Table").capitalize())
-                )
+                components.append(ComponentFactory.table(task.get("id", "Table").capitalize()))
                 seen.add(task_name)
 
         return components
@@ -200,9 +236,7 @@ class UIGenerator(PipelineStage):
 
         style_str = json.dumps(styles, indent=4) if styles else "{}"
         event_attrs = " ".join(f"{k}={{{v}}}" for k, v in events.items())
-        aria_attrs = " ".join(
-            f'aria-{k.replace("_", "-")}="{v}"' for k, v in aria.items()
-        )
+        aria_attrs = " ".join(f'aria-{k.replace("_", "-")}="{v}"' for k, v in aria.items())
         anim_class = AnimationInjector.to_tailwind(animations)
 
         if children:
@@ -256,9 +290,7 @@ class UIGenerator(PipelineStage):
 
         style_str = json.dumps(styles, indent=4) if styles else "{}"
         event_attrs = " ".join(f"{k}={{{v}}}" for k, v in events.items())
-        aria_attrs = " ".join(
-            f'aria-{k.replace("_", "-")}="{v}"' for k, v in aria.items()
-        )
+        aria_attrs = " ".join(f'aria-{k.replace("_", "-")}="{v}"' for k, v in aria.items())
         anim_class = AnimationInjector.to_tailwind(animations)
         return (
             f"      <{ctype}\n"
