@@ -12,10 +12,12 @@ y este proyecto se adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.
 - `docs/139_REP_DEV_FASE1_VERSION_ALIGNMENT_1_0_DRAFT.md`: reporte de ejecucion de la Fase 1 del plan 138, alineacion de versionado a 2.8.4.
 - `docs/140_REP_DEV_FASE2_VERSION_CHECK_SCRIPT_1_0_DRAFT.md`: reporte de ejecucion de la Fase 2 del plan 138, script de verificacion de versionado.
 - `scripts/check_version_alignment.sh`: script ejecutable para verificar que VERSION, pyproject.toml y CHANGELOG.md coinciden.
+- `docs/141_REP_DEV_FASE3_CI_INTEGRATION_1_0_DRAFT.md`: reporte de ejecucion de la Fase 3 del plan 138, integracion CI del version check.
 
 ### Changed
 - `VERSION`: actualizado de `2.0.0` a `2.8.4` para alinear con CHANGELOG.
 - `compiler-bot/agentic_pipeline/pyproject.toml`: version del paquete actualizada de `0.1.0` a `2.8.4`.
+- `.github/workflows/ci.yml`: agregado paso `bash scripts/check_version_alignment.sh` en job lint, antes de setup-python.
 
 ## [2.8.3] — 2026-06-19
 
