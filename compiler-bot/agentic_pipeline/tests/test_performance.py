@@ -10,7 +10,7 @@ import pytest
 
 from agentic_pipeline.nodes.intent_stage import IntentStage
 from agentic_pipeline.nodes.lexer import Lexer
-from agentic_pipeline.nodes.parser import ParserGLR
+from agentic_pipeline.nodes.parser import LarkParser
 from agentic_pipeline.nodes.planner import HybridPlanner
 from agentic_pipeline.nodes.preprocessor import Preprocessor
 from agentic_pipeline.nodes.synthesis import SynthesisOrchestrator
@@ -114,7 +114,7 @@ def test_parser_throughput(benchmark):
     lex = Lexer(lex_ctx)
 
     par_ctx = _make_ctx(Stage.PARSER)
-    par = ParserGLR(par_ctx)
+    par = LarkParser(par_ctx)
 
     def run():
         lex.receive_mission(pre_output.output_data)

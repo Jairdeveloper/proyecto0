@@ -1,4 +1,4 @@
-"""Tests for ParserGLR stage and AST nodes."""
+"""Tests for LarkParser stage and AST nodes (formerly LarkParser)."""
 
 import pytest
 
@@ -11,7 +11,7 @@ from agentic_pipeline.nodes.ast_nodes import (
 )
 from agentic_pipeline.nodes.evaluation_visitor import EvaluationVisitor
 from agentic_pipeline.nodes.ir_export_visitor import IRExportVisitor
-from agentic_pipeline.nodes.parser import ParserGLR, _select_grammar
+from agentic_pipeline.nodes.parser import LarkParser, _select_grammar
 from agentic_pipeline.nodes.validation_visitor import ValidationVisitor
 from agentic_pipeline.state_models import Stage, StageContext
 
@@ -126,7 +126,7 @@ class TestGrammarSelection:
 
 
 # ============================================================================
-# ParserGLR Stage
+# LarkParser Stage
 # ============================================================================
 
 
@@ -150,11 +150,11 @@ INFRA_TOKENS = [
 ]
 
 
-class TestParserGLR:
+class TestLarkParser:
     @pytest.fixture
     def parser(self):
         ctx = StageContext(stage=Stage.PARSER, input_data="")
-        return ParserGLR(ctx)
+        return LarkParser(ctx)
 
     def test_receive_mission_from_dict(self, parser):
         parser.receive_mission({"tokens": [{"value": "pagina"}, {"value": "login"}]})
@@ -196,7 +196,7 @@ class TestParserGLR:
 
     def test_unknown_grammar(self):
         ctx = StageContext(stage=Stage.PARSER, input_data="")
-        p = ParserGLR(ctx, grammar="unknown")
+        p = LarkParser(ctx, grammar="unknown")
         p.receive_mission({"tokens": PAGE_TOKENS})
         output = p.act(p.reflect_and_plan(p.analyze()))
         assert output.success is True
@@ -209,22 +209,22 @@ class TestParserGLR:
         assert True
 
 
-class TestParserGLREdgeCases:
+class TestLarkParserEdgeCases:
     def test_empty_input(self):
         ctx = StageContext(stage=Stage.PARSER, input_data="")
-        p = ParserGLR(ctx)
+        p = LarkParser(ctx)
         result = p.execute({"tokens": []})
         assert result.success is False
 
     def test_single_page(self):
         ctx = StageContext(stage=Stage.PARSER, input_data="")
-        p = ParserGLR(ctx)
+        p = LarkParser(ctx)
         result = p.execute({"tokens": PAGE_TOKENS})
         assert result.success is True
 
     def test_tokens_with_stop_words(self):
         ctx = StageContext(stage=Stage.PARSER, input_data="")
-        p = ParserGLR(ctx)
+        p = LarkParser(ctx)
         p.receive_mission(
             {
                 "tokens": [
@@ -239,16 +239,16 @@ class TestParserGLREdgeCases:
         assert len(p._tokens) == 5
 
 
-class TestParserGLRMultiGrammar:
+class TestLarkParserMultiGrammar:
     def test_project_grammar(self):
         ctx = StageContext(stage=Stage.PARSER, input_data="")
-        p = ParserGLR(ctx, grammar="project")
+        p = LarkParser(ctx, grammar="project")
         result = p.execute({"tokens": PAGE_TOKENS})
         assert result.success is True
         assert len(result.output_data["ast"].get("children", [])) >= 1
 
     def test_data_grammar(self):
         ctx = StageContext(stage=Stage.PARSER, input_data="")
-        p = ParserGLR(ctx, grammar="data")
+        p = LarkParser(ctx, grammar="data")
         result = p.execute({"tokens": DATA_TOKENS})
         assert result.success is True

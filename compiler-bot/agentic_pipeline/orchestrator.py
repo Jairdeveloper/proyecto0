@@ -16,7 +16,7 @@ from agentic_pipeline.error_guard import ErrorGuard
 from agentic_pipeline.nodes.action_executor import ActionExecutor
 from agentic_pipeline.nodes.ir_generator import IRGenerator
 from agentic_pipeline.nodes.lexer import Lexer
-from agentic_pipeline.nodes.parser import ParserGLR
+from agentic_pipeline.nodes.parser import LarkParser
 from agentic_pipeline.nodes.perception_unit import PerceptionUnit
 from agentic_pipeline.nodes.preprocessor import Preprocessor
 from agentic_pipeline.nodes.reasoning_engine import ReasoningEngine
@@ -75,7 +75,7 @@ NODE_MAP: dict[Stage, type[PipelineStage]] = {
     Stage.INTENT: PerceptionUnit,
     Stage.PREPROCESSOR: Preprocessor,
     Stage.LEXER: Lexer,
-    Stage.PARSER: ParserGLR,
+    Stage.PARSER: LarkParser,
     Stage.SEMANTIC_ANALYZER: SemanticAnalyzer,
     Stage.IR_GENERATOR: IRGenerator,
     Stage.PLANNER: ReasoningEngine,
@@ -295,7 +295,7 @@ class PipelineMacroCommand(Command):
         from agentic_pipeline.nodes.intent_stage import IntentStage
         from agentic_pipeline.nodes.ir_generator import IRGenerator
         from agentic_pipeline.nodes.lexer import Lexer
-        from agentic_pipeline.nodes.parser import ParserGLR
+        from agentic_pipeline.nodes.parser import LarkParser
         from agentic_pipeline.nodes.preprocessor import Preprocessor
         from agentic_pipeline.nodes.reasoning_engine import ReasoningEngine
         from agentic_pipeline.nodes.semantic_analyzer import SemanticAnalyzer
@@ -307,7 +307,7 @@ class PipelineMacroCommand(Command):
             IntentStage: Stage.INTENT,
             Preprocessor: Stage.PREPROCESSOR,
             Lexer: Stage.LEXER,
-            ParserGLR: Stage.PARSER,
+            LarkParser: Stage.PARSER,
             SemanticAnalyzer: Stage.SEMANTIC_ANALYZER,
             IRGenerator: Stage.IR_GENERATOR,
             ReasoningEngine: Stage.PLANNER,

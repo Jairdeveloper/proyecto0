@@ -1,4 +1,4 @@
-"""Parser GLR stage — Lark-based parsing with AST generation."""
+"""LarkParser stage — Lark-based parsing with AST generation (formerly ParserGLR)."""
 
 from __future__ import annotations
 
@@ -342,7 +342,7 @@ def _select_grammar(
 # ============================================================================
 
 
-class ParserGLR(PipelineStage):
+class LarkParser(PipelineStage):
     """Stage 4: parses token text into an AST using Lark GLR parser."""
 
     name = "parser"
@@ -440,16 +440,19 @@ class ParserGLR(PipelineStage):
     def _build_ast_from_tokens(self, tokens: list[dict]) -> dict:
         from agentic_pipeline.nodes.ast_nodes import ActionNode, ProjectNode
         from agentic_pipeline.nodes.ir_export_visitor import IRExportVisitor
+
         actions = []
         entities = []
         for t in tokens:
             cat = t.get("category", "")
             if cat == "action":
                 target = entities[0] if entities else ""
-                actions.append(ActionNode(
-                    action_type=t.get("type", "").lower(),
-                    target=target,
-                ))
+                actions.append(
+                    ActionNode(
+                        action_type=t.get("type", "").lower(),
+                        target=target,
+                    )
+                )
             elif cat in ("entity", "domain"):
                 entities.append(t.get("value", ""))
         project = ProjectNode("project")

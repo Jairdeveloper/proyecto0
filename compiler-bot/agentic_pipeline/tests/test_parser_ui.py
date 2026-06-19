@@ -2,7 +2,7 @@
 
 import pytest
 
-from agentic_pipeline.nodes.parser import ParserGLR
+from agentic_pipeline.nodes.parser import LarkParser
 from agentic_pipeline.state_models import Stage, StageContext
 
 UI_TOKENS = [
@@ -39,7 +39,7 @@ class TestUIGrammar:
     @pytest.fixture
     def parser(self):
         ctx = StageContext(stage=Stage.PARSER, input_data="")
-        return ParserGLR(ctx, grammar="ui")
+        return LarkParser(ctx, grammar="ui")
 
     def test_parse_page_with_components(self, parser):
         result = parser.execute({"tokens": UI_TOKENS})
@@ -59,7 +59,7 @@ class TestInfraGrammar:
     @pytest.fixture
     def parser(self):
         ctx = StageContext(stage=Stage.PARSER, input_data="")
-        return ParserGLR(ctx, grammar="infra")
+        return LarkParser(ctx, grammar="infra")
 
     def test_parse_database(self, parser):
         result = parser.execute({"tokens": DB_TOKENS})
@@ -77,7 +77,7 @@ class TestInfraGrammar:
 class TestParserIntegration:
     def test_from_lexer_output(self):
         ctx = StageContext(stage=Stage.PARSER, input_data="")
-        p = ParserGLR(ctx)
+        p = LarkParser(ctx)
         tokens = {"tokens": UI_TOKENS}
         result = p.execute(tokens)
         assert result.success is True
@@ -86,7 +86,7 @@ class TestParserIntegration:
 
     def test_realistic_scenario(self):
         ctx = StageContext(stage=Stage.PARSER, input_data="")
-        p = ParserGLR(ctx)
+        p = LarkParser(ctx)
         tokens = {
             "tokens": UI_TOKENS
             + [

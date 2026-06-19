@@ -9,7 +9,7 @@ from __future__ import annotations
 from typing import Any
 
 from agentic_pipeline.nodes.lexer import Lexer
-from agentic_pipeline.nodes.parser import ParserGLR
+from agentic_pipeline.nodes.parser import LarkParser
 from agentic_pipeline.nodes.preprocessor import Preprocessor
 from agentic_pipeline.state_models import Stage, StageContext
 
@@ -27,7 +27,7 @@ def _run_parser(text: str) -> dict[str, Any]:
     lex_output = lex.act(lex.reflect_and_plan(lex.analyze()))
 
     par_ctx = StageContext(stage=Stage.PARSER, input_data="")
-    par = ParserGLR(par_ctx)
+    par = LarkParser(par_ctx)
     par.receive_mission(lex_output.output_data)
     par_output = par.act(par.reflect_and_plan(par.analyze()))
 
