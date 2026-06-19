@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RECPL Dashboard</title>
+<link rel="stylesheet" href="/static/dashboard.css">
+</head>
+<body>
+<header>
+  <h1>RECPL Dashboard</h1>
+  <button id="refresh-btn" onclick="loadAll()">Refresh</button>
+</header>
+
+<section id="kpi-row" class="kpi-row">
+  <div class="kpi-card"><span class="kpi-label">Total Records</span><span id="kpi-records" class="kpi-value">—</span></div>
+  <div class="kpi-card"><span class="kpi-label">Total Errors</span><span id="kpi-errors" class="kpi-value">—</span></div>
+  <div class="kpi-card"><span class="kpi-label">Success Rate</span><span id="kpi-rate" class="kpi-value">—</span></div>
+  <div class="kpi-card"><span class="kpi-label">Prompt Chain</span><span id="kpi-pc-rate" class="kpi-value">—</span></div>
+</section>
+
+<section id="stages-section">
+  <h2>Stages</h2>
+  <div id="stages-loading" class="state-msg">Loading stages...</div>
+  <div id="stages-empty" class="state-msg hidden">No stage data available.</div>
+  <div id="stages-error" class="state-msg hidden">Error loading stages.</div>
+  <div id="stages-table-wrap" class="table-wrap hidden">
+    <table id="stages-table">
+      <thead>
+        <tr>
+          <th data-sort="name" class="sortable" onclick="sortStages('name')">Stage</th>
+          <th data-sort="runs" class="sortable" onclick="sortStages('runs')">Runs</th>
+          <th data-sort="errors" class="sortable" onclick="sortStages('errors')">Errors</th>
+          <th data-sort="success_rate" class="sortable" onclick="sortStages('success_rate')">Success %</th>
+        </tr>
+      </thead>
+      <tbody id="stages-body"></tbody>
+    </table>
+  </div>
+</section>
+
+<section id="detail-section" class="hidden">
+  <h2 id="detail-title">Stage Detail</h2>
+  <div id="detail-loading" class="state-msg hidden">Loading detail...</div>
+  <div id="detail-empty" class="state-msg hidden">No recent records for this stage.</div>
+  <div id="detail-error" class="state-msg hidden">Error loading detail.</div>
+  <div id="detail-content" class="detail-content hidden"></div>
+</section>
+
+<script src="/static/dashboard.js"></script>
+</body>
+</html>

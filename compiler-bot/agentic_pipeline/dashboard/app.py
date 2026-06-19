@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from http.server import BaseHTTPRequestHandler, HTTPServer
+from pathlib import Path
 from typing import Any
 from urllib.parse import parse_qs, urlparse
 
@@ -10,23 +11,13 @@ from agentic_pipeline.dashboard.service import DashboardService
 DEFAULT_HOST = "127.0.0.1"
 DEFAULT_PORT = 8765
 
-_HTML_INDEX = """\
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="utf-8">
-<title>RECPL Dashboard</title>
-</head>
-<body>
-<h1>RECPL Dashboard</h1>
-<ul>
-<li><a href="/api/health">/api/health</a></li>
-<li><a href="/api/summary">/api/summary</a></li>
-<li><a href="/api/stages">/api/stages</a></li>
-</ul>
-</body>
-</html>
-"""
+_STATIC_DIR = Path(__file__).resolve().parent / "static"
+
+_MIME_MAP: dict[str, str] = {
+    ".html": "text/html; charset=utf-8",
+    ".css": "text/css; charset=utf-8",
+    ".js": "application/javascript; charset=utf-8",
+}
 
 
 class DashboardHTTPHandler(BaseHTTPRequestHandler):
@@ -46,10 +37,16 @@ class DashboardHTTPHandler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
-    def _html_response(self, html: str, status: int = 200) -> None:
-        body = html.encode("utf-8")
-        self.send_response(status)
-        self.send_header("Content-Type", "text/html; charset=utf-8")
+    def _static_response(self, filename: str) -> None:
+        filepath = _STATIC_DIR / filename
+        if not filepath.exists() or not filepath.is_file():
+            self._json_response({"error": "Not found"}, 404)
+            return
+        ext = filepath.suffix
+        content_type = _MIME_MAP.get(ext, "application/octet-stream")
+        body = filepath.read_bytes()
+        self.send_response(200)
+        self.send_header("Content-Type", content_type)
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
         self.wfile.write(body)
@@ -59,7 +56,13 @@ class DashboardHTTPHandler(BaseHTTPRequestHandler):
         path = parsed.path.rstrip("/")
         try:
             if path == "" or path == "/":
-                self._html_response(_HTML_INDEX)
+                self._static_response("index.html")
+                return
+            if path == "/static/dashboard.css":
+                self._static_response("dashboard.css")
+                return
+            if path == "/static/dashboard.js":
+                self._static_response("dashboard.js")
                 return
             if path == "/api/health":
                 self._json_response(self.service.get_health())
@@ -69,6 +72,9 @@ class DashboardHTTPHandler(BaseHTTPRequestHandler):
                 return
             if path == "/api/stages":
                 self._json_response(self.service.get_stages())
+                return
+            if path == "/api/prompt-chain":
+                self._json_response(self.service.get_prompt_chain_summary())
                 return
             if path.startswith("/api/stages/") and path.endswith("/recent"):
                 stage = path.split("/")[3]

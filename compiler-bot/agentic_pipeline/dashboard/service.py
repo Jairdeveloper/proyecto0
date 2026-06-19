@@ -56,6 +56,9 @@ class DashboardService:
             )
         return result
 
+    def get_prompt_chain_summary(self) -> dict[str, Any]:
+        return self._store.get_prompt_chain_summary()
+
     def get_recent(self, stage: str, limit: int = 20) -> list[dict[str, Any]]:
         clamped = max(1, min(limit, 100))
         return self._store.get_recent(stage, clamped)
