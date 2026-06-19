@@ -6,9 +6,12 @@ import logging
 import os
 import time
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel
+
+if TYPE_CHECKING:
+    from agentic_pipeline.prompt_chain.llm_cache import LLMCache
 
 logger = logging.getLogger(__name__)
 
@@ -27,6 +30,13 @@ class LLMResult(BaseModel):
 
 class LLMBackend(ABC):
     """Abstraccion sobre proveedores de LLM."""
+
+    def __init__(self) -> None:
+        self._cache: LLMCache | None = None
+
+    def set_cache(self, cache: LLMCache | None) -> None:
+        """Inyecta cache de respuestas LLM."""
+        self._cache = cache
 
     @abstractmethod
     async def generate(
@@ -64,6 +74,7 @@ class OpenAIBackend(LLMBackend):
         model: str | None = None,
         base_url: str | None = None,
     ) -> None:
+        super().__init__()
         self._api_key = api_key or os.getenv("AGENTIC_OPENAI_API_KEY", "")
         self._model = model or os.getenv("AGENTIC_OPENAI_MODEL", "gpt-4o-mini")
         self._base_url = base_url or os.getenv("AGENTIC_OPENAI_BASE_URL")
@@ -97,6 +108,13 @@ class OpenAIBackend(LLMBackend):
         temperature: float = 0.3,
         max_tokens: int = 4096,
     ) -> LLMResult:
+        # Check cache first
+        if self._cache is not None:
+            cached = await self._cache.get(prompt, "")
+            if cached is not None:
+                logger.debug("LLM cache HIT for prompt: %.60s", prompt)
+                return LLMResult(**cached)
+
         self._ensure_llm()
         if not hasattr(self._llm, "ainvoke"):
             return LLMResult(
@@ -116,13 +134,17 @@ class OpenAIBackend(LLMBackend):
 
             response = await self._llm.ainvoke(messages)
             duration = time.time() - t0
-            return LLMResult(
+            result = LLMResult(
                 content=response.content,
                 provider="openai",
                 model=self._model,
                 duration=duration,
                 success=True,
             )
+            # Store in cache
+            if self._cache is not None:
+                await self._cache.set(prompt, "", result.model_dump())
+            return result
         except Exception as exc:
             duration = time.time() - t0
             logger.warning("OpenAI generate failed: %s", exc)
@@ -141,6 +163,14 @@ class OpenAIBackend(LLMBackend):
         output_schema: type[BaseModel] | None = None,
         temperature: float = 0.3,
     ) -> LLMResult:
+        # Check cache first (schema-aware)
+        schema_name = output_schema.__name__ if output_schema else ""
+        if self._cache is not None:
+            cached = await self._cache.get(prompt, schema_name)
+            if cached is not None:
+                logger.debug("LLM cache HIT for structured: %.60s", prompt)
+                return LLMResult(**cached)
+
         self._ensure_llm()
         if not hasattr(self._llm, "ainvoke"):
             return LLMResult(
@@ -169,7 +199,7 @@ class OpenAIBackend(LLMBackend):
             response = await self._llm.ainvoke(messages)
             parsed = output_schema.model_validate_json(response.content)
             duration = time.time() - t0
-            return LLMResult(
+            result = LLMResult(
                 content=response.content,
                 structured=parsed.model_dump(),
                 provider="openai",
@@ -177,6 +207,10 @@ class OpenAIBackend(LLMBackend):
                 duration=duration,
                 success=True,
             )
+            # Store in cache
+            if self._cache is not None:
+                await self._cache.set(prompt, schema_name, result.model_dump())
+            return result
         except Exception as exc:
             duration = time.time() - t0
             logger.warning("OpenAI generate_structured failed: %s", exc)
@@ -202,6 +236,7 @@ class OllamaBackend(LLMBackend):
         base_url: str | None = None,
         model: str | None = None,
     ) -> None:
+        super().__init__()
         self._base_url = (
             base_url or os.getenv("AGENTIC_OLLAMA_URL", "http://localhost:11434")
         ).rstrip("/")
@@ -298,6 +333,7 @@ class VLLMBackend(LLMBackend):
         base_url: str | None = None,
         model: str | None = None,
     ) -> None:
+        super().__init__()
         self._base_url = (
             base_url or os.getenv("AGENTIC_VLLM_URL", "http://localhost:8000")
         ).rstrip("/")
@@ -388,6 +424,7 @@ class FailoverLLMBackend(LLMBackend):
     """
 
     def __init__(self, backends: list[LLMBackend]) -> None:
+        super().__init__()
         if not backends:
             msg = "At least one backend required"
             raise ValueError(msg)

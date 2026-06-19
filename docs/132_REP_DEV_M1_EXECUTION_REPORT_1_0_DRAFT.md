@@ -4,11 +4,12 @@
 - **Tipo:** REP (Reporte)
 - **Área:** DEV
 - **Módulo:** agentic_pipeline
-- **Versión:** 1.4
+- **Versión:** 1.5
 - **Estado:** DRAFT
-- **Tags:** `execution-report`, `m1`, `rename`, `parser`, `larkparser`, `exports`, `init`, `srp`, `observers`, `optimizer`, `type-hints`, `audit-observer`
-- **Fuente:** `docs/130_PLAN_DEV_MIGRATION_EXECUTION_1_0_DRAFT.md` (M1.2–M1.6)
+- **Tags:** `execution-report`, `m1`, `rename`, `parser`, `larkparser`, `exports`, `init`, `srp`, `observers`, `optimizer`, `type-hints`, `audit-observer`, `llm-cache`
+- **Fuente:** `docs/130_PLAN_DEV_MIGRATION_EXECUTION_1_0_DRAFT.md` (M1.2–M1.7)
 - **Changelog:**
+  - 1.5 — 2026-06-19: Añadido M1.7 — LLMCache cableado en LLMBackend.generate()
   - 1.4 — 2026-06-19: Añadido M1.6 — AuditObserver para trazabilidad de compilaciones
   - 1.3 — 2026-06-19: Añadido M1.5 — Type hints concretos (StageMetrics TypedDict, SummaryResult, WebSocketClient stub)
   - 1.2 — 2026-06-19: Añadido M1.4 — SRP split feedback_loop → observers/ + optimizer.py
@@ -363,4 +364,48 @@ $ pytest tests/test_integration.py tests/test_orchestrator_empty.py -v
 | **M1.4 — SRP feedback_loop → observers/ + optimizer/ (Q4)** | **✅ COMPLETADO** |
 | **M1.5 — Type hints concretos (Q5)** | **✅ COMPLETADO** |
 | **M1.6 — AuditObserver (S3)** | **✅ COMPLETADO** |
-| M1.7 — Cablear LLMCache (DT3) | ⏳ Pendiente |
+| **M1.7 — Cablear LLMCache en LLMBackend.generate() (DT3)** | **✅ COMPLETADO** |
+
+---
+
+## 10. M1.7 — Cablear LLMCache en LLMBackend.generate() (DT3)
+
+### Motivo
+
+`OpenAIBackend.generate()` y `generate_structured()` llamaban a la API en cada invocación sin cachear. Para prompts repetitivos (comunes en pipelines de compilación multi-step), esto duplicaba llamadas, aumentaba latencia y costos. Se cableó `LLMCache` como capa opcional en `LLMBackend`.
+
+### Archivos modificados
+
+| Archivo | Cambio |
+|---------|--------|
+| `prompt_chain/llm_backend.py:35-40` | `__init__()` base: agrega `self._cache: LLMCache \| None`. `set_cache()` setter para inyectar cache |
+| `prompt_chain/llm_backend.py:78,240,337,428` | `super().__init__()` en `OpenAIBackend`, `OllamaBackend`, `VLLMBackend`, `FailoverLLMBackend` |
+| `prompt_chain/llm_backend.py:112-117` | `OpenAIBackend.generate()`: cache check antes de llamar API |
+| `prompt_chain/llm_backend.py:146-147` | `OpenAIBackend.generate()`: store en cache tras éxito |
+| `prompt_chain/llm_backend.py:169-173` | `OpenAIBackend.generate_structured()`: cache check (schema-aware) |
+| `prompt_chain/llm_backend.py:212-213` | `OpenAIBackend.generate_structured()`: store en cache tras éxito |
+
+### Diseño de cache
+
+- Cache key compuesta por `(prompt, schema)`. Para `generate()` se usa schema vacío `""`; para `generate_structured()` se usa `output_schema.__name__`.
+- Cache es opcional (nullable). Sin cache configurado, el comportamiento es idéntico al anterior.
+- Interfaz `LLMCache.get(prompt, schema)` y `LLMCache.set(prompt, schema, value)` como async.
+- Los otros backends (`OllamaBackend`, `VLLMBackend`, `FailoverLLMBackend`) quedan con cache pas-through: heredan `set_cache()` y `_cache`, pero aún no implementan check/store. Esto se hará en M2 si es necesario.
+
+### Verificación
+
+```bash
+$ ruff check compiler-bot/agentic_pipeline/prompt_chain/llm_backend.py
+# EXIT: 0 — all checks passed
+
+$ pytest compiler-bot/agentic_pipeline/tests/test_llm_backend.py -v --tb=short -o "addopts="
+# 8 passed in 4.11s
+```
+
+| Verificación | Resultado |
+|-------------|-----------|
+| `ruff check . --quiet` | ✅ PASS (0 errores) |
+| LLMBackend tests (8 tests) | ✅ PASS |
+| Cache sin efecto cuando `_cache = None` | ✅ (comportamiento idéntico al anterior) |
+| Cache consultado cuando `_cache` está configurado | ✅ |
+| `hashlib` import removido (unused) | ✅ |
