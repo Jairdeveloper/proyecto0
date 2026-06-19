@@ -46,9 +46,10 @@ Estado verificado localmente:
 
 | Area | Estado observado |
 |---|---|
-| Version raiz | `VERSION` contiene `2.0.0` |
-| Paquete Python | `agentic-pipeline` version `0.1.0` en `pyproject.toml` |
-| Changelog mas reciente | `2.8.1` del 2026-06-19 |
+| Version raiz | `VERSION` contiene `2.8.4` |
+| Paquete Python | `agentic-pipeline` version `2.8.4` en `pyproject.toml` |
+| Changelog mas reciente | `2.8.4` del 2026-06-19 |
+| Dashboard | Servidor HTTP local en `agentic --dashboard` con UI estatica |
 | Python | requiere `>=3.11` |
 | Archivos Python | 196 archivos `*.py` bajo `compiler-bot/agentic_pipeline` |
 | Tests Python | 77 archivos `test_*.py` |
@@ -222,7 +223,35 @@ Estado observado el 2026-06-19:
 La persistencia usa `MetricsStore`. Si `_sqlite3` no esta disponible, cae a
 archivos JSON en `/tmp/agentic_metrics_json_fallback`.
 
-### 6.2 Dashboard shell
+### 6.2 Dashboard local (HTTP + UI)
+
+```sh
+# Arrancar servidor (default http://127.0.0.1:8765)
+./compiler-bot/agentic --dashboard
+
+# Con flags explicitos
+./compiler-bot/agentic --dashboard --host 127.0.0.1 --port 8765
+```
+
+El servidor expone 5 endpoints:
+
+| Endpoint | Respuesta |
+|----------|-----------|
+| `GET /` | HTML del dashboard (UI estatica) |
+| `GET /api/health` | JSON: backend + timestamp |
+| `GET /api/summary` | JSON: total_records, total_errors, success_rate |
+| `GET /api/stages` | JSON: lista de stages con name, runs, errors, success_rate |
+| `GET /api/stages/<stage>/recent?limit=N` | JSON: registros recientes |
+| `GET /api/prompt-chain` | JSON: resumen del prompt chain |
+
+La UI muestra KPIs (total records, errors, success rate, prompt chain rate),
+tabla de stages ordenable por columna, y panel de detalle al hacer click en
+una fila. Incluye boton de refresh y estados loading/empty/error.
+
+El dashboard usa `DashboardService` sobre `MetricsStore`. Si `_sqlite3` no esta
+disponible, cae a archivos JSON.
+
+### 6.3 Dashboard shell
 
 ```sh
 ./scripts/pipeline_stats.sh
@@ -434,8 +463,8 @@ Validar frontmatter obligatorio en documentos nuevos:
 
 ## 12. Riesgos Actuales
 
-1. Hay inconsistencia de versiones: `VERSION=2.0.0`, `pyproject=0.1.0` y
-   `CHANGELOG` llega a `2.8.1`.
+1. ~~Hay inconsistencia de versiones~~ **RESUELTO**: `VERSION=2.8.4`,
+   `pyproject=2.8.4`, `CHANGELOG=2.8.4` alineados. Ver `scripts/check_version_alignment.sh`.
 2. La suite Python completa no es reproducible en el entorno actual por `_sqlite3`,
    `torch`/CUDA y referencias antiguas a `HybridPlanner`.
 3. El CLI Python con `--offline` no termino en 60 segundos durante la verificacion.
@@ -457,7 +486,7 @@ Para trabajo diario, tratar como estable:
 
 Para preparar release o CI confiable, priorizar:
 
-1. Alinear versionado (`VERSION`, `pyproject.toml`, `CHANGELOG.md`).
+1. ~~Alinear versionado~~ **COMPLETADO**: versiones en `2.8.4` y `scripts/check_version_alignment.sh` en CI.
 2. Reparar entorno Python con `_sqlite3` y dependencias CPU-only o sanas de
    `torch`.
 3. Actualizar tests que importan `HybridPlanner`.

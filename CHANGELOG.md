@@ -25,8 +25,12 @@ y este proyecto se adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.
 - `compiler-bot/agentic_pipeline/dashboard/static/dashboard.css`: estilos responsive, densos y operativos.
 - `compiler-bot/agentic_pipeline/dashboard/static/dashboard.js`: logica de fetch, sort, detalle y refresh.
 - `docs/145_REP_DEV_FASE7_STATIC_UI_1_0_DRAFT.md`: reporte de ejecucion de la Fase 7 del plan 138.
+- `compiler-bot/agentic_pipeline/dashboard/README.md`: documentacion operativa standalone del paquete dashboard.
+- `docs/146_REP_DEV_FASE8_OPERATIONAL_DOCS_1_0_DRAFT.md`: reporte de ejecucion de la Fase 8 del plan 138.
 
 ### Changed
+- `README.md`: agregada seccion "Dashboard Local" con comandos y notas operativas.
+- `docs/136_GUIDE_DEV_PROJECT0_RUNBOOK_1_0_ACTIVE.md`: version actualizada a 2.8.4, agregada seccion 6.2 Dashboard local, riesgo 1 marcado como resuelto.
 - `compiler-bot/agentic_pipeline/dashboard/service.py`: nuevo metodo get_prompt_chain_summary().
 - `compiler-bot/agentic_pipeline/dashboard/app.py`: `/` sirve static/index.html, nuevos endpoints `/static/*` y `/api/prompt-chain`.
 - `compiler-bot/agentic`: agregados flags `--dashboard`, `--host`, `--port` para arrancar servidor dashboard local.

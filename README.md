@@ -37,19 +37,39 @@ pip install -e compiler-bot/agentic_pipeline/
 ls modules/pagos/
 ```
 
+### Dashboard Local
+
+```bash
+# Arrancar servidor dashboard (http://127.0.0.1:8765)
+./compiler-bot/agentic --dashboard
+
+# Puerto y host personalizados
+./compiler-bot/agentic --dashboard --host 127.0.0.1 --port 8765
+```
+
+El dashboard muestra KPIs (total records, errors, success rate, prompt chain rate),
+tabla de stages ordenable y detalle de registros recientes por stage.
+
+**Notas:**
+- Las metricas son acumuladas (historico desde que se empezo a registrar).
+- El dashboard usa `MetricsStore` (SQLite si `_sqlite3` esta disponible,
+  JSON fallback en caso contrario).
+- La UI es HTML/CSS/JS local, sin CDN ni build step.
+
+### Metricas (CLI)
+
+```bash
+./compiler-bot/agentic --metrics json      # Resumen en JSON
+./compiler-bot/agentic --metrics table     # Resumen en tabla
+./scripts/pipeline_stats.sh                # Dashboard shell legado
+```
+
 ### Docker
 
 ```bash
 docker build -t recpl .
 docker run recpl "crea un modulo de pagos con NestJS"     # prompt directo
 docker run recpl --prompt "crea un modulo" --output /app/modules  # flags explicitos
-```
-
-### Metricas
-
-```bash
-./compiler-bot/agentic --metrics table     # Dashboard de metricas del pipeline
-./scripts/pipeline_stats.sh                # Dashboard desde archivos JSON
 ```
 
 ## Arquitectura (Python v2.0)
