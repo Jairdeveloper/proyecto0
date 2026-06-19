@@ -5,13 +5,13 @@ from unittest.mock import MagicMock
 import pytest
 
 from agentic_pipeline.base_stage import PipelineStage
-from agentic_pipeline.feedback_loop import (
+from agentic_pipeline.metrics_store import MetricsStore
+from agentic_pipeline.observers import (
     DashboardObserver,
     DebugObserver,
     MetricsObserver,
     PromptOptimizerObserver,
 )
-from agentic_pipeline.metrics_store import MetricsStore
 from agentic_pipeline.prompt_chain.observer_base import (
     StageEvent,
     StageObserver,

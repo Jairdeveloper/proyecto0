@@ -11,7 +11,7 @@ from __future__ import annotations
 import logging
 from collections.abc import Callable
 
-from agentic_pipeline.feedback_loop import DebugObserver
+from agentic_pipeline.observers.debug_observer import DebugObserver
 from agentic_pipeline.prompt_chain.chain_context import ChainContext
 from agentic_pipeline.prompt_chain.handler_base import (
     PromptHandler,

@@ -1,16 +1,19 @@
-"""GlobalFeedbackLoop — weight adjustment and metric aggregation across stages."""
+"""GlobalFeedbackLoop — weight adjustment and metric aggregation across stages.
+
+Note: Observers and PromptOptimizer were extracted to agentic_pipeline.observers
+and agentic_pipeline.optimizer respectively (SRP refactor). Backward-compatible
+re-exports are maintained below.
+"""
 
 from __future__ import annotations
 
 import json
 import logging
 import os
-from collections.abc import Callable
 from typing import Any
 
 from agentic_pipeline.config import config
 from agentic_pipeline.metrics_store import MetricsStore
-from agentic_pipeline.prompt_chain.observer_base import StageEvent
 
 logger = logging.getLogger(__name__)
 
@@ -144,169 +147,9 @@ def get_global_feedback() -> GlobalFeedbackLoop:
     return _global_feedback
 
 
-# ============================================================================
-# Observer Pattern — Observers for StageSubject
-# ============================================================================
-
-
-class MetricsObserver:
-    """StageObserver que registra metricas en GlobalFeedbackLoop.
-
-    Conecta el StageSubject del pipeline con el sistema de metricas
-    existente, preservando la funcionalidad de record_stage().
-    """
-
-    def __init__(
-        self,
-        feedback: GlobalFeedbackLoop | None = None,
-    ) -> None:
-        self._feedback = feedback or get_global_feedback()
-
-    def on_event(self, event: StageEvent) -> None:
-        metrics: dict[str, Any] = {
-            "duration_seconds": event.duration,
-            "success": event.success,
-            "error": event.error,
-            **event.metadata,
-        }
-        self._feedback.record_stage(event.stage, metrics)
-
-
-class DebugObserver:
-    """StageObserver que invoca un callback de debug por evento."""
-
-    def __init__(
-        self,
-        callback: Callable[[str, dict], None] | None = None,
-    ) -> None:
-        self._callback = callback
-
-    def on_event(self, event: StageEvent) -> None:
-        if self._callback:
-            self._callback(event.stage, event.output)
-
-
-class PromptOptimizerObserver:
-    """StageObserver que registra metricas de prompts en MetricsStore."""
-
-    def __init__(self, store: MetricsStore | None = None) -> None:
-        self._store = store or MetricsStore()
-
-    def on_event(self, event: StageEvent) -> None:
-        prompt_stages = {
-            "preprocess",
-            "intent",
-            "plan",
-            "generate",
-            "verify",
-            "format",
-        }
-        if event.stage not in prompt_stages:
-            return
-        self._store.record_prompt(
-            event.stage,
-            {
-                "success": event.success,
-                "duration": event.duration,
-                "error": event.error,
-                "fallback_used": event.metadata.get("fallback_used", False),
-            },
-        )
-
-
-class DashboardObserver:
-    """StageObserver que mantiene un buffer de eventos recientes.
-
-    Almacena los ultimos 1000 eventos en un deque para consumo
-    del dashboard en tiempo real. El broadcast a WebSocket clients
-    es un stub preparado para integracion futura.
-    """
-
-    def __init__(self, max_events: int = 1000) -> None:
-        from collections import deque
-
-        self._recent_events: deque[StageEvent] = deque(maxlen=max_events)
-        self._ws_clients: list[Any] = []
-
-    def on_event(self, event: StageEvent) -> None:
-        self._recent_events.append(event)
-        self._broadcast(event)
-
-    def _broadcast(self, event: StageEvent) -> None:
-        for ws in self._ws_clients:
-            try:
-                ws.send_json(
-                    {
-                        "stage": event.stage,
-                        "duration": event.duration,
-                        "success": event.success,
-                        "timestamp": event.timestamp,
-                    }
-                )
-            except Exception:
-                self._ws_clients.remove(ws)
-
-    def get_recent(self, limit: int = 100) -> list[StageEvent]:
-        return list(self._recent_events)[-limit:]
-
-    @property
-    def event_count(self) -> int:
-        return len(self._recent_events)
-
-
-# ── T5.2: PromptOptimizer ──
-
-
-class PromptOptimizer:
-    """Ajusta temperatura/model segun metricas historicas (F5).
-
-    Reglas:
-        - Si success_rate < 0.8 en ultimas 20 ejecuciones:
-          → reducir temperatura en 0.1 (min 0.0)
-        - Si avg_duration > 5s:
-          → cambiar a modelo mas rapido
-        - Si fallback_used > 50%:
-          → reducir temperatura, simplificar prompt
-    """
-
-    def __init__(self, metrics_store: MetricsStore) -> None:
-        self._store = metrics_store
-
-    def optimize(self, prompt_name: str) -> dict[str, Any]:
-        """Retorna parametros optimizados para el prompt.
-
-        Args:
-            prompt_name: Nombre del prompt a optimizar.
-
-        Returns:
-            Dict con parametros ajustados (temperature, model, etc.).
-        """
-        rate = self._store.get_prompt_success_rate(prompt_name)
-        duration = self._store.get_prompt_avg_duration(prompt_name)
-        fallback_rate = self._store.get_prompt_fallback_rate(prompt_name)
-
-        params: dict[str, Any] = {}
-
-        if rate < 0.8:
-            params["temperature"] = max(0.0, 0.3 - 0.1)
-
-        if duration > 5.0:
-            params["model"] = "gpt-4o-mini"
-
-        if fallback_rate > 0.5:
-            params["temperature"] = min(
-                params.get("temperature", 0.3),
-                0.2,
-            )
-
-        if params:
-            logger.info(
-                "PromptOptimizer[%s]: rate=%.2f dur=%.2fs fallback=%.2f → %s",
-                prompt_name,
-                rate,
-                duration,
-                fallback_rate,
-                params,
-            )
-
-        return params
+# ── SRP refactor: Observers moved to agentic_pipeline.observers ────────────
+# ── SRP refactor: PromptOptimizer moved to agentic_pipeline.optimizer ──────
+# Backward-compat re-exports were removed to avoid circular imports.
+# Update imports to use the new locations:
+#   from agentic_pipeline.observers import MetricsObserver
+#   from agentic_pipeline.optimizer import PromptOptimizer

@@ -3,12 +3,14 @@
 - **ID:** 132_REP_DEV_M1_EXECUTION_REPORT_1_0_DRAFT
 - **Tipo:** REP (Reporte)
 - **Área:** DEV
-- **Módulo:** agentic_pipeline (parser)
-- **Versión:** 1.0
+- **Módulo:** agentic_pipeline
+- **Versión:** 1.2
 - **Estado:** DRAFT
-- **Tags:** `execution-report`, `m1`, `rename`, `parser`, `larkparser`
-- **Fuente:** `docs/130_PLAN_DEV_MIGRATION_EXECUTION_1_0_DRAFT.md` (M1.2)
+- **Tags:** `execution-report`, `m1`, `rename`, `parser`, `larkparser`, `exports`, `init`, `srp`, `observers`, `optimizer`
+- **Fuente:** `docs/130_PLAN_DEV_MIGRATION_EXECUTION_1_0_DRAFT.md` (M1.2, M1.3, M1.4)
 - **Changelog:**
+  - 1.2 — 2026-06-19: Añadido M1.4 — SRP split feedback_loop → observers/ + optimizer.py
+  - 1.1 — 2026-06-19: Añadido M1.3 — __init__.py exports for nodes, nlp, providers, grammars
   - 1.0 — 2026-06-19: Versión inicial — rename ParserGLR → LarkParser
 
 ---
@@ -77,14 +79,151 @@ No hay referencias activas a `ParserGLR` en el código. Todas las importaciones,
 
 ---
 
-## 5. Estado de M1
+## 5. M1.3 — __init__.py exports (Q3)
+
+**Archivos modificados:** 4 archivos (todos previamente vacíos).
+
+### nodes/__init__.py
+
+Exporta las 10 clases de stage del pipeline activo (`NODE_MAP` en `orchestrator.py`):
+
+```python
+from agentic_pipeline.nodes.action_executor import ActionExecutor
+from agentic_pipeline.nodes.ir_generator import IRGenerator
+from agentic_pipeline.nodes.lexer import Lexer
+from agentic_pipeline.nodes.parser import LarkParser
+from agentic_pipeline.nodes.perception_unit import PerceptionUnit
+from agentic_pipeline.nodes.preprocessor import Preprocessor
+from agentic_pipeline.nodes.reasoning_engine import ReasoningEngine
+from agentic_pipeline.nodes.semantic_analyzer import SemanticAnalyzer
+from agentic_pipeline.nodes.ui_generator import UIGenerator
+from agentic_pipeline.nodes.validator import ValidatorPipeline
+```
+
+### nlp/__init__.py
+
+Exporta los componentes del pipeline de NLP:
+
+| Clase | Archivo |
+|-------|---------|
+| `IntentClassifier` | `nlp/intent_classifier.py` |
+| `AmbiguityDetector` | `nlp/ambiguity_detector.py` |
+| `SlotFiller` | `nlp/slot_filler.py` |
+| `NERExtractor` | `nlp/ner_extractor.py` |
+| `EnrichedInput`, `IntentResult`, `Entities`, `Entity`, `Slots`, `AmbiguityResult`, `ContextState` | `nlp/enriched_input.py` |
+
+### providers/__init__.py
+
+```python
+"""LLM provider integrations (empty — providers are loaded dynamically)."""
+```
+
+Directorio sin módulos Python por ahora. Solo docstring descriptivo.
+
+### grammars/__init__.py
+
+```python
+"""Lark grammar files for RECPL parser (loaded by filename, not imported as Python)."""
+```
+
+Contiene solo archivos `.lark` (`project_grammar.lark`, `ui_grammar.lark`, `infra_grammar.lark`, `data_grammar.lark`). No hay módulos Python que exportar.
+
+### Verificación
+
+```bash
+$ python -c "from agentic_pipeline.nodes import LarkParser; print('nodes OK')"
+nodes OK
+
+$ python -c "from agentic_pipeline.nlp import IntentClassifier; print('nlp OK')"
+nlp OK
+
+$ ruff check . --quiet
+# EXIT: 0
+```
+
+| Verificación | Resultado |
+|-------------|-----------|
+| `from agentic_pipeline.nodes import LarkParser` | ✅ PASS |
+| `from agentic_pipeline.nlp import IntentClassifier` | ✅ PASS |
+| `ruff check . --quiet` | ✅ PASS |
+
+Todos los imports funcionan correctamente. No hay errores de lint.
+
+---
+
+## 6. M1.4 — SRP feedback_loop → observers/ + optimizer/ (Q4)
+
+### Motivo
+
+`feedback_loop.py` violaba el Principio de Responsabilidad Única (SRP) al contener 7 clases con responsabilidades distintas: métricas, debug, dashboard, optimización de prompts, etc. Se extrajeron a paquetes dedicados.
+
+### Cambios
+
+| Acción | Archivo nuevo |
+|--------|---------------|
+| 📄 Crear | `observers/__init__.py` — package init con exports |
+| 📄 Crear | `observers/metrics_observer.py` — `MetricsObserver` |
+| 📄 Crear | `observers/debug_observer.py` — `DebugObserver` |
+| 📄 Crear | `observers/prompt_optimizer_observer.py` — `PromptOptimizerObserver` |
+| 📄 Crear | `observers/dashboard_observer.py` — `DashboardObserver` |
+| 📄 Crear | `optimizer.py` — `PromptOptimizer` |
+
+| Acción | Archivo modificado | Cambio |
+|--------|--------------------|--------|
+| 🔧 Modificar | `feedback_loop.py` | Eliminadas 5 clases extraídas. Conserva solo `FeedbackLoop` + `GlobalFeedbackLoop` + `get_global_feedback()`. Re-exports eliminados por circular import. |
+| 🔧 Modificar | `base_stage.py:6` | `from agentic_pipeline.feedback_loop import MetricsObserver` → `from agentic_pipeline.observers.metrics_observer import MetricsObserver` |
+| 🔧 Modificar | `prompt_chain/orchestrator.py:14` | `from agentic_pipeline.feedback_loop import DebugObserver` → `from agentic_pipeline.observers.debug_observer import DebugObserver` |
+| 🔧 Modificar | `tests/test_observer_pattern.py:8-12` | Import desde `agentic_pipeline.observers` |
+| 🔧 Modificar | `tests/test_prompt_optimizer.py:7` | Import desde `agentic_pipeline.optimizer` |
+
+### Verificación
+
+```bash
+$ ruff check . --quiet
+# EXIT: 0
+
+$ pytest tests/test_observer_pattern.py tests/test_prompt_optimizer.py tests/test_feedback_loop.py -v --tb=short
+# 43 passed in 0.57s
+
+$ pytest tests/ --ignore=... 
+# 747 passed, 21 skipped
+```
+
+| Verificación | Resultado |
+|-------------|-----------|
+| `ruff check . --quiet` | ✅ PASS |
+| Observer tests (27 tests) | ✅ PASS |
+| PromptOptimizer tests (5 tests) | ✅ PASS |
+| FeedbackLoop tests (11 tests) | ✅ PASS |
+| Suite completa (747 tests) | ✅ PASS |
+| Sin circular imports | ✅ PASS |
+
+### Diagrama de dependencias
+
+```
+feedback_loop.py              observers/               optimizer.py
+┌─────────────────┐          ┌──────────────────┐     ┌────────────────┐
+│ FeedbackLoop     │          │ MetricsObserver   │     │ PromptOptimizer│
+│ GlobalFeedback   │          │ DebugObserver     │     └────────────────┘
+│ get_global_fbk() │          │ PromptOptObserver │
+└─────────────────┘          │ DashboardObserver │
+       ↑                     └──────────────────┘
+       │                              ↑
+       └── requirement_decomposer.py  └── base_stage.py
+                                       └── prompt_chain/orchestrator.py
+                                       └── tests/
+```
+
+---
+
+## 7. Estado de M1
 
 | Sub-tarea | Estado |
 |-----------|--------|
 | M1.1 — HTTP Wrapper | ⏳ **En evaluación** — no ejecutar hasta nuevo aviso |
 | **M1.2 — Renombrar ParserGLR a LarkParser** | **✅ COMPLETADO** |
-| M1.3 — __init__.py exports (Q3) | ⏳ Pendiente |
-| M1.4 — SRP feedback_loop → observers/ + optimizer/ (Q4) | ⏳ Pendiente |
+| **M1.3 — __init__.py exports (Q3)** | **✅ COMPLETADO** |
+| **M1.4 — SRP feedback_loop → observers/ + optimizer/ (Q4)** | **✅ COMPLETADO** |
 | M1.5 — Type hints concretos (Q5) | ⏳ Pendiente |
 | M1.6 — AuditObserver (S3) | ⏳ Pendiente |
 | M1.7 — Cablear LLMCache (DT3) | ⏳ Pendiente |

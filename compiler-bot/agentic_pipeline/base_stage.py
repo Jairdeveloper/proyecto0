@@ -3,7 +3,7 @@ import time
 from abc import ABC, abstractmethod
 
 from agentic_pipeline.contracts import STAGE_CONTRACTS
-from agentic_pipeline.feedback_loop import MetricsObserver as _MetricsObserver
+from agentic_pipeline.observers.metrics_observer import MetricsObserver as _MetricsObserver
 from agentic_pipeline.prompt_chain.observer_base import StageEvent, StageSubject
 from agentic_pipeline.state_models import ActionPlan, AnalysisResult, StageContext, StageOutput
 

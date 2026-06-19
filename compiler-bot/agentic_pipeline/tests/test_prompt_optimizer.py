@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock
 
-from agentic_pipeline.feedback_loop import PromptOptimizer
+from agentic_pipeline.optimizer import PromptOptimizer
 
 
 class TestPromptOptimizer:
