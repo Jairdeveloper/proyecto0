@@ -2,7 +2,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class ContextWindow(BaseModel):
@@ -31,12 +31,18 @@ class Stage(Enum):
 
 
 class StageContext(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
     mission_id: str = Field(default_factory=lambda: datetime.now().isoformat())
     stage: Stage
     input_data: Any
     previous_output: Any | None = None
     config_overrides: dict = {}
     last_error: str | None = None
+
+    def with_update(self, **kwargs: Any) -> "StageContext":
+        """Create a new instance with updated fields (frozen context)."""
+        return self.model_copy(update=kwargs)
 
 
 class AnalysisResult(BaseModel):

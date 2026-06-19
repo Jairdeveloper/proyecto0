@@ -106,23 +106,28 @@ class AgentOrchestrator:
         cls = NODE_MAP[stage]
 
         async def node_fn(ctx: StageContext) -> dict[str, Any]:
-            ctx.stage = stage
-            ctx.config_overrides["output_dir"] = self._output_dir
-            instance = cls(ctx)
+            instance_ctx = ctx.with_update(
+                stage=stage,
+                config_overrides={
+                    **ctx.config_overrides,
+                    "output_dir": self._output_dir,
+                },
+            )
+            instance = cls(instance_ctx)
             output = await executor.execute(instance, ctx.input_data)
             if self._stream_callback:
                 self._stream_callback(stage.value, output)
-            updated: dict[str, Any] = {"input_data": output.output_data}
+            updates: dict[str, Any] = {"input_data": output.output_data}
             if not output.success:
-                ctx.last_error = output.error
+                updates["last_error"] = output.error
                 logger.warning(
                     "Stage %s reported failure: %s",
                     stage.value,
                     output.error,
                 )
             else:
-                ctx.last_error = None
-            return updated
+                updates["last_error"] = None
+            return updates
 
         return node_fn
 
@@ -189,22 +194,27 @@ class AgentOrchestrator:
         adapter: AgentStageAdapter,
     ) -> Callable[[StageContext], dict[str, Any]]:
         def node_fn(ctx: StageContext) -> dict[str, Any]:
-            ctx.stage = Stage.INTENT
-            ctx.config_overrides["output_dir"] = self._output_dir
-            output = adapter.execute(ctx.input_data)
+            instance_ctx = ctx.with_update(
+                stage=Stage.INTENT,
+                config_overrides={
+                    **ctx.config_overrides,
+                    "output_dir": self._output_dir,
+                },
+            )
+            output = adapter.execute(instance_ctx.input_data)
             if self._stream_callback:
                 self._stream_callback(adapter.name, output)
-            updated: dict[str, Any] = {"input_data": output.output_data}
+            updates: dict[str, Any] = {"input_data": output.output_data}
             if not output.success:
-                ctx.last_error = output.error
+                updates["last_error"] = output.error
                 logger.warning(
                     "Agent adapter %s reported failure: %s",
                     adapter.name,
                     output.error,
                 )
             else:
-                ctx.last_error = None
-            return updated
+                updates["last_error"] = None
+            return updates
 
         return node_fn
 

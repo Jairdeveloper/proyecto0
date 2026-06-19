@@ -4,11 +4,12 @@
 - **Tipo:** REP (Reporte)
 - **Área:** DEV
 - **Módulo:** agentic_pipeline
-- **Versión:** 1.2
+- **Versión:** 1.3
 - **Estado:** DRAFT
-- **Tags:** `execution-report`, `m2`, `circuit-breaker`, `exponential-backoff`, `stage-executor`, `offline-mode`, `resilience`, `graceful-degradation`
-- **Fuente:** `docs/130_PLAN_DEV_MIGRATION_EXECUTION_1_0_DRAFT.md` (M2.1–M2.3)
+- **Tags:** `execution-report`, `m2`, `circuit-breaker`, `exponential-backoff`, `stage-executor`, `offline-mode`, `resilience`, `graceful-degradation`, `frozen-context`, `immutability`
+- **Fuente:** `docs/130_PLAN_DEV_MIGRATION_EXECUTION_1_0_DRAFT.md` (M2.1–M2.4)
 - **Changelog:**
+  - 1.3 — 2026-06-19: Añadido M2.4 — StageContext frozen con with_update()
   - 1.2 — 2026-06-19: Añadido M2.3 — Modo offline con graceful degradation
   - 1.1 — 2026-06-19: Añadido M2.2 — StageExecutor para aislamiento por stage
   - 1.0 — 2026-06-19: Versión inicial — M2.1 CircuitBreaker + ExponentialBackoff
@@ -251,11 +252,102 @@ $ pytest tests/test_integration.py tests/test_orchestrator_empty.py -v --tb=shor
 
 ---
 
-## 8. Estado de M2
+## 8. M2.4 — StageContext frozen (INM)
+
+### Motivo
+
+`StageContext` era un `BaseModel` mutable: cualquier node_fn en el StateGraph podía modificar `ctx.stage`, `ctx.input_data`, `ctx.config_overrides` o `ctx.last_error` por efecto secundario. Esto dificultaba el razonamiento sobre el flujo de datos (quién modifica qué y cuándo) y abría la puerta a bugs por mutación compartida entre stages. Se hizo frozen para garantizar inmutabilidad.
+
+### Archivos modificados
+
+| Acción | Archivo | Cambio |
+|--------|---------|--------|
+| 🔧 Modificar | `state_models.py` | `ConfigDict(frozen=True)` + `with_update()` |
+| 🔧 Modificar | `orchestrator.py` | Mutaciones reemplazadas por `with_update()` en `_make_node()` y `_make_adapter_node()` |
+
+### Cambios en state_models.py
+
+```python
+class StageContext(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
+    mission_id: str = Field(default_factory=lambda: datetime.now().isoformat())
+    stage: Stage
+    input_data: Any
+    previous_output: Any | None = None
+    config_overrides: dict = {}
+    last_error: str | None = None
+
+    def with_update(self, **kwargs: Any) -> "StageContext":
+        return self.model_copy(update=kwargs)
+```
+
+### Cambios en orchestrator.py
+
+**Antes** (mutación directa):
+```python
+ctx.stage = stage
+ctx.config_overrides["output_dir"] = self._output_dir
+instance = cls(ctx)
+# ...
+ctx.last_error = output.error
+```
+
+**Después** (inmutable):
+```python
+instance_ctx = ctx.with_update(
+    stage=stage,
+    config_overrides={**ctx.config_overrides, "output_dir": self._output_dir},
+)
+instance = cls(instance_ctx)
+# ...
+updates["last_error"] = output.error
+```
+
+El patrón clave es que las actualizaciones se devuelven en el dict de retorno del nodo, que StateGraph mergea automáticamente en una nueva copia frozen de StageContext. No se requiere `ctx = ctx.with_update(...)` dentro de node_fn.
+
+### Verificación
+
+```bash
+$ ruff check state_models.py orchestrator.py
+# EXIT: 0
+
+$ python -c "
+from agentic_pipeline.state_models import StageContext, Stage
+from pydantic import ValidationError
+ctx = StageContext(stage=Stage.INTENT, input_data='hola')
+try:
+    ctx.stage = Stage.PREPROCESSOR
+    assert False, 'should be frozen'
+except (TypeError, ValidationError):
+    print('frozen')
+new_ctx = ctx.with_update(input_data='mundo')
+assert new_ctx.input_data == 'mundo'
+assert ctx.input_data == 'hola'
+print('with_update works')
+"
+
+$ pytest tests/test_integration.py tests/test_orchestrator_empty.py tests/test_chain_orchestrator.py tests/test_state_models.py -v --tb=short -o "addopts="
+# 23 passed
+```
+
+| Verificación | Resultado |
+|-------------|-----------|
+| `ruff check` — 0 errores | ✅ PASS |
+| `StageContext` frozen (TypeError/ValidationError al mutar) | ✅ PASS |
+| `with_update()` crea nueva instancia sin mutar original | ✅ PASS |
+| Integration tests (6 tests) | ✅ PASS |
+| Orchestrator tests (2 tests) | ✅ PASS |
+| Chain orchestrator tests (8 tests) | ✅ PASS |
+| State model tests (7 tests) | ✅ PASS |
+
+---
+
+## 9. Estado de M2
 
 | Sub-tarea | Estado |
 |-----------|--------|
 | **M2.1 — CircuitBreaker + ExponentialBackoff (R1)** | **✅ COMPLETADO** |
 | **M2.2 — StageExecutor aislamiento (R3)** | **✅ COMPLETADO** |
 | **M2.3 — Modo offline / Graceful degradation (GD)** | **✅ COMPLETADO** |
-| M2.4 — StageContext frozen (INM) | ⏳ Pendiente |
+| **M2.4 — StageContext frozen (INM)** | **✅ COMPLETADO** |
