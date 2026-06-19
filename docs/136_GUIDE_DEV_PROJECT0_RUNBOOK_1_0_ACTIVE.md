@@ -419,7 +419,10 @@ Variables principales:
 ### 11.1 Smoke test recomendado antes de trabajar
 
 ```sh
-cd /home/john/proyects/proyect0
+# Gate diario automatizado (recomendado)
+./scripts/daily_check.sh
+
+# O manualmente:
 ruff check compiler-bot/agentic_pipeline
 bash compiler-bot/tests/run_tests.sh
 bash compiler-bot/tests/test_agent.sh

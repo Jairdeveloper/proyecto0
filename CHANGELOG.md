@@ -27,8 +27,11 @@ y este proyecto se adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.
 - `docs/145_REP_DEV_FASE7_STATIC_UI_1_0_DRAFT.md`: reporte de ejecucion de la Fase 7 del plan 138.
 - `compiler-bot/agentic_pipeline/dashboard/README.md`: documentacion operativa standalone del paquete dashboard.
 - `docs/146_REP_DEV_FASE8_OPERATIONAL_DOCS_1_0_DRAFT.md`: reporte de ejecucion de la Fase 8 del plan 138.
+- `scripts/daily_check.sh`: script ejecutable del gate diario con los 4 comandos de smoke test.
+- `docs/147_REP_DEV_FASE9_DAILY_GATE_1_0_DRAFT.md`: reporte de ejecucion de la Fase 9 del plan 138.
 
 ### Changed
+- `docs/136_GUIDE_DEV_PROJECT0_RUNBOOK_1_0_ACTIVE.md`: section 11.1 ahora recomienda `./scripts/daily_check.sh`.
 - `README.md`: agregada seccion "Dashboard Local" con comandos y notas operativas.
 - `docs/136_GUIDE_DEV_PROJECT0_RUNBOOK_1_0_ACTIVE.md`: version actualizada a 2.8.4, agregada seccion 6.2 Dashboard local, riesgo 1 marcado como resuelto.
 - `compiler-bot/agentic_pipeline/dashboard/service.py`: nuevo metodo get_prompt_chain_summary().
