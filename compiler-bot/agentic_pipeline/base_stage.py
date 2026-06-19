@@ -11,7 +11,28 @@ from agentic_pipeline.state_models import ActionPlan, AnalysisResult, StageConte
 logger = logging.getLogger(__name__)
 
 
-class PipelineStage(ABC):
+class Analyzable(ABC):
+    """Interface for stages that can analyze input data."""
+
+    @abstractmethod
+    def analyze(self) -> AnalysisResult: ...
+
+
+class Plannable(ABC):
+    """Interface for stages that can produce an execution plan."""
+
+    @abstractmethod
+    def reflect_and_plan(self, analysis: AnalysisResult) -> ActionPlan: ...
+
+
+class Executable(ABC):
+    """Interface for stages that can execute a plan and produce output."""
+
+    @abstractmethod
+    def act(self, plan: ActionPlan) -> StageOutput: ...
+
+
+class PipelineStage(Analyzable, Plannable, Executable, ABC):
     name: str
     subject: StageSubject = StageSubject()
     """StageSubject compartido por todas las subclases.
