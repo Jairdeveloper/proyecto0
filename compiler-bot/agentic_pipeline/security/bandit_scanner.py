@@ -1,15 +1,15 @@
-"""BanditScanner — StageObserver that scans generated files for blocked patterns."""
+"""BanditScanner — scans generated files for blocked patterns."""
 
 from __future__ import annotations
 
 from pathlib import Path
 
-from agentic_pipeline.prompt_chain.observer_base import StageEvent, StageObserver
+from agentic_pipeline.prompt_chain.observer_base import StageEvent
 from agentic_pipeline.security.policies import BLOCKED_PATTERNS
 
 
-class BanditScanner(StageObserver):
-    """StageObserver that inspects generated files for dangerous patterns.
+class BanditScanner:
+    """Inspects generated files for dangerous patterns.
 
     Attaches to StageSubject and scans every file emitted by the synthesis
     stage against BLOCKED_PATTERNS (eval, exec, os.system, etc.).

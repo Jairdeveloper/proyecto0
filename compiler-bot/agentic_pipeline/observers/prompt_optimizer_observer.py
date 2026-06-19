@@ -7,7 +7,7 @@ from agentic_pipeline.prompt_chain.observer_base import StageEvent
 
 
 class PromptOptimizerObserver:
-    """StageObserver que registra metricas de prompts en MetricsStore."""
+    """Registra metricas de prompts en MetricsStore."""
 
     def __init__(self, store: MetricsStore | None = None) -> None:
         self._store = store or MetricsStore()

@@ -1,4 +1,4 @@
-"""MetricsObserver — StageObserver que registra metricas en GlobalFeedbackLoop."""
+"""MetricsObserver — registra metricas en GlobalFeedbackLoop."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ from agentic_pipeline.prompt_chain.observer_base import StageEvent
 
 
 class MetricsObserver:
-    """StageObserver que registra metricas en GlobalFeedbackLoop.
+    """Registra metricas en GlobalFeedbackLoop.
 
     Conecta el StageSubject del pipeline con el sistema de metricas
     existente, preservando la funcionalidad de record_stage().

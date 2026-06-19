@@ -1,24 +1,22 @@
-"""Observer Pattern base — StageSubject, StageObserver, StageEvent.
+"""StageSubject — thin facade over EventBus, StageEvent payload.
 
-Implementa el bus de eventos para el pipeline RECPL. Los PipelineStage
-y PromptHandler publican StageEvent via StageSubject, y los observers
-concretos (MetricsObserver, DebugObserver, etc.) reaccionan sin
-acoplamiento directo.
-
-StageSubject integra EventBus como bus global de eventos para unificar
-el mecanismo pub/sub del pipeline (observer_base) con el sistema
-multi-agente (agents/event_bus.py).
+StageSubject mantiene la API attach/detach/notify por compatibilidad
+pero delega internamente en EventBus como unico mecanismo pub/sub.
+StageObserver se elimino como clase — los observers concretos
+implementan on_event(event) sin herencia.
 """
 
 from __future__ import annotations
 
-import threading
-from abc import ABC, abstractmethod
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import Any
 
 from agentic_pipeline.agents.event_bus import EventBus
+
+STAGE_EVENTS_TOPIC = "stage_event"
+"""Topic unico bajo el cual EventBus publica todos los StageEvent."""
 
 
 @dataclass
@@ -46,55 +44,42 @@ class StageEvent:
     )
 
 
-class StageObserver(ABC):
-    """Interface que deben implementar los observers del pipeline.
-
-    Cualquier clase que quiera recibir eventos de PipelineStage o
-    PromptHandler debe implementar on_event().
-    """
-
-    @abstractmethod
-    def on_event(self, event: StageEvent) -> None: ...
-
-
 class StageSubject:
-    """Sujeto del patron Observer — mantiene lista de observers y los notifica.
+    """Sujeto del patron Observer — fachada delgada sobre EventBus.
 
-    Los PipelineStage y PromptHandler usan una instancia compartida
-    de StageSubject para publicar eventos sin conocer a los observers.
+    Mantiene la API attach/detach/notify/observer_count por
+    compatibilidad con PipelineStage y PromptHandler. Internamente
+    todo el pub/sub se delega en EventBus.
 
-    Thread-safe: attach/detach usan un lock; notify itera sobre una
-    copia congelada para evitar RuntimeError por modificacion concurrente.
+    attach(observer) suscribe observer.on_event a EventBus.
+    detach(observer) cancela la suscripcion.
+    notify(event) publica en EventBus bajo STAGE_EVENTS_TOPIC.
     """
 
     def __init__(self) -> None:
-        self._lock = threading.Lock()
-        self._observers: list[StageObserver] = []
         self._bus = EventBus()
+        self._wrappers: dict[int, Callable[[str, Any], None]] = {}
 
-    def attach(self, observer: StageObserver) -> None:
-        """Registra un observer para recibir eventos futuros."""
-        with self._lock:
-            self._observers.append(observer)
+    def attach(self, observer: object) -> None:
+        """Suscribe observer.on_event a EventBus via wrapper."""
 
-    def detach(self, observer: StageObserver) -> None:
-        """Elimina un observer registrado previamente."""
-        with self._lock:
-            self._observers.remove(observer)
+        def _wrap(topic: str, data: object) -> None:
+            observer.on_event(data)  # type: ignore[union-attr]
+
+        self._wrappers[id(observer)] = _wrap
+        self._bus.subscribe(STAGE_EVENTS_TOPIC, _wrap)
+
+    def detach(self, observer: object) -> None:
+        """Cancela la suscripcion de un observer previamente registrado."""
+        wrapper = self._wrappers.pop(id(observer), None)
+        if wrapper is not None:
+            self._bus.unsubscribe(STAGE_EVENTS_TOPIC, wrapper)
 
     def notify(self, event: StageEvent) -> None:
-        """Notifica a observers locales y publica en el EventBus global.
-
-        Itera sobre copia congelada de _observers para seguridad
-        ante modificaciones concurrentes desde otros hilos.
-        """
-        with self._lock:
-            snapshot = list(self._observers)
-        for observer in snapshot:
-            observer.on_event(event)
-        self._bus.publish(event.stage, event)
+        """Publica un StageEvent en EventBus (unico mecanismo de difusion)."""
+        self._bus.publish(STAGE_EVENTS_TOPIC, event)
 
     @property
     def observer_count(self) -> int:
         """Cantidad de observers registrados actualmente."""
-        return len(self._observers)
+        return self._bus.subscriber_count(STAGE_EVENTS_TOPIC)

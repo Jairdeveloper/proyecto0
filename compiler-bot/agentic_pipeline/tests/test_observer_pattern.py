@@ -15,7 +15,6 @@ from agentic_pipeline.observers import (
 )
 from agentic_pipeline.prompt_chain.observer_base import (
     StageEvent,
-    StageObserver,
     StageSubject,
 )
 from agentic_pipeline.state_models import Stage, StageContext
@@ -26,7 +25,7 @@ class TestStageSubject:
 
     def test_attach_and_notify(self):
         subject = StageSubject()
-        observer = MagicMock(spec=StageObserver)
+        observer = MagicMock()
         subject.attach(observer)
         event = StageEvent(stage="test", duration=0.1, success=True)
         subject.notify(event)
@@ -34,7 +33,7 @@ class TestStageSubject:
 
     def test_detach_stops_notifications(self):
         subject = StageSubject()
-        observer = MagicMock(spec=StageObserver)
+        observer = MagicMock()
         subject.attach(observer)
         subject.detach(observer)
         event = StageEvent(stage="test", duration=0.1, success=True)
@@ -43,8 +42,8 @@ class TestStageSubject:
 
     def test_notifies_all_observers(self):
         subject = StageSubject()
-        obs1 = MagicMock(spec=StageObserver)
-        obs2 = MagicMock(spec=StageObserver)
+        obs1 = MagicMock()
+        obs2 = MagicMock()
         subject.attach(obs1)
         subject.attach(obs2)
         event = StageEvent(stage="test", duration=0.1, success=True)
@@ -55,7 +54,7 @@ class TestStageSubject:
     def test_observer_count(self):
         subject = StageSubject()
         assert subject.observer_count == 0
-        subject.attach(MagicMock(spec=StageObserver))
+        subject.attach(MagicMock())
         assert subject.observer_count == 1
 
     def test_no_observers_no_error(self):
@@ -208,7 +207,7 @@ class TestPipelineStageSubject:
                 )
 
         subject = StageSubject()
-        observer = MagicMock(spec=StageObserver)
+        observer = MagicMock()
         subject.attach(observer)
         orig = PipelineStage.subject
         PipelineStage.subject = subject
@@ -225,7 +224,7 @@ class TestPipelineStageSubject:
 
     def test_subject_notified_on_failure(self):
         subject = StageSubject()
-        observer = MagicMock(spec=StageObserver)
+        observer = MagicMock()
         subject.attach(observer)
         orig = PipelineStage.subject
         PipelineStage.subject = subject
@@ -266,7 +265,7 @@ class TestStageSubjectConcurrency:
         barrier = threading.Barrier(10)
 
         def worker() -> None:
-            obs = MagicMock(spec=StageObserver)
+            obs = MagicMock()
             barrier.wait()
             subject.attach(obs)
             event = StageEvent(stage="concurrent", duration=0.1, success=True)
@@ -292,7 +291,7 @@ class TestStageSubjectConcurrency:
         observers: list[MagicMock] = []
 
         def worker() -> None:
-            obs = MagicMock(spec=StageObserver)
+            obs = MagicMock()
             barrier.wait()
             subject.attach(obs)
             with threading.Lock():

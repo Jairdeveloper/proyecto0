@@ -15,7 +15,6 @@ from agentic_pipeline.prompt_chain.handler_base import (
 )
 from agentic_pipeline.prompt_chain.observer_base import (
     StageEvent,
-    StageObserver,
     StageSubject,
 )
 
@@ -28,6 +27,5 @@ __all__ = [
     "MacroCommand",
     "CommandHistory",
     "StageEvent",
-    "StageObserver",
     "StageSubject",
 ]

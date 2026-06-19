@@ -5,10 +5,10 @@ from __future__ import annotations
 import json
 from datetime import UTC, datetime
 
-from agentic_pipeline.prompt_chain.observer_base import StageEvent, StageObserver
+from agentic_pipeline.prompt_chain.observer_base import StageEvent
 
 
-class AuditObserver(StageObserver):
+class AuditObserver:
     """Registra cada compilacion en un archivo JSON append-only."""
 
     def __init__(self, log_path: str = ".recpl_audit.log") -> None:

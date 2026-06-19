@@ -1,4 +1,4 @@
-"""DebugObserver — StageObserver que invoca un callback de debug por evento."""
+"""DebugObserver — invoca un callback de debug por evento."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ from agentic_pipeline.prompt_chain.observer_base import StageEvent
 
 
 class DebugObserver:
-    """StageObserver que invoca un callback de debug por evento."""
+    """Invoca un callback de debug por evento."""
 
     def __init__(
         self,

@@ -14,7 +14,7 @@ class WebSocketClient:
 
 
 class DashboardObserver:
-    """StageObserver que mantiene un buffer de eventos recientes.
+    """Mantiene un buffer de eventos recientes para consumo del dashboard.
 
     Almacena los ultimos 1000 eventos en un deque para consumo
     del dashboard en tiempo real. El broadcast a WebSocket clients
