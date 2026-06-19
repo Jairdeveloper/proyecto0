@@ -4,6 +4,10 @@ Implementa el bus de eventos para el pipeline RECPL. Los PipelineStage
 y PromptHandler publican StageEvent via StageSubject, y los observers
 concretos (MetricsObserver, DebugObserver, etc.) reaccionan sin
 acoplamiento directo.
+
+StageSubject integra EventBus como bus global de eventos para unificar
+el mecanismo pub/sub del pipeline (observer_base) con el sistema
+multi-agente (agents/event_bus.py).
 """
 
 from __future__ import annotations
@@ -12,6 +16,8 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import Any
+
+from agentic_pipeline.agents.event_bus import EventBus
 
 
 @dataclass
@@ -59,6 +65,7 @@ class StageSubject:
 
     def __init__(self) -> None:
         self._observers: list[StageObserver] = []
+        self._bus = EventBus()
 
     def attach(self, observer: StageObserver) -> None:
         """Registra un observer para recibir eventos futuros."""
@@ -69,9 +76,10 @@ class StageSubject:
         self._observers.remove(observer)
 
     def notify(self, event: StageEvent) -> None:
-        """Notifica a todos los observers registrados con un evento."""
+        """Notifica a observers locales y publica en el EventBus global."""
         for observer in self._observers:
             observer.on_event(event)
+        self._bus.publish(event.stage, event)
 
     @property
     def observer_count(self) -> int:

@@ -4,11 +4,12 @@
 - **Tipo:** REP (Reporte)
 - **Área:** DEV
 - **Módulo:** agentic_pipeline
-- **Versión:** 1.0
+- **Versión:** 1.1
 - **Estado:** DRAFT
-- **Tags:** `execution-report`, `m3`, `isp`, `interface-segregation`, `base-stage`
-- **Fuente:** `docs/130_PLAN_DEV_MIGRATION_EXECUTION_1_0_DRAFT.md` (M3.1)
+- **Tags:** `execution-report`, `m3`, `isp`, `interface-segregation`, `event-bus`, `pub-sub`, `unification`
+- **Fuente:** `docs/130_PLAN_DEV_MIGRATION_EXECUTION_1_0_DRAFT.md` (M3.1–M3.2)
 - **Changelog:**
+  - 1.1 — 2026-06-19: Añadido M3.2 — Unificación de StageSubject y EventBus
   - 1.0 — 2026-06-19: Versión inicial — M3.1 Interface Segregation (ISP)
 
 ---
@@ -92,10 +93,71 @@ $ pytest tests/test_base_stage.py tests/test_integration.py tests/test_orchestra
 
 ---
 
-## 5. Estado de M3
+## 5. M3.2 — Unificar event buses (P5)
+
+### Motivo
+
+Existían dos mecanismos de pub/sub paralelos: `StageSubject` (para eventos del pipeline, en `prompt_chain/observer_base.py`) y `EventBus` (para coordinación multi-agente, en `agents/event_bus.py`). Cada uno con su propia lista de subscriptores y lógica de notificación. Se unificaron: `StageSubject` ahora delega la publicación global en `EventBus`, manteniendo los observers locales como mecanismo primario y el EventBus como bus global compartido.
+
+### Archivos modificados
+
+| Acción | Archivo | Cambio |
+|--------|---------|--------|
+| 🔧 Modificar | `prompt_chain/observer_base.py` | `StageSubject` crea `EventBus` interno y publica eventos en él |
+
+### Cambio en StageSubject
+
+```python
+class StageSubject:
+    def __init__(self) -> None:
+        self._observers: list[StageObserver] = []
+        self._bus = EventBus()  # nuevo: bus global
+
+    def notify(self, event: StageEvent) -> None:
+        for observer in self._observers:
+            observer.on_event(event)
+        self._bus.publish(event.stage, event)  # nuevo: publicación global
+```
+
+El resto del código no requiere cambios: `StageSubject` se importa desde el mismo módulo (`observer_base.py`). Los observers locales (MetricsObserver, DebugObserver, AuditObserver, etc.) siguen funcionando igual. `EventBus` se importa internamente.
+
+### Verificación
+
+```bash
+$ ruff check prompt_chain/observer_base.py
+# EXIT: 0
+
+$ python -c "
+from agentic_pipeline.prompt_chain.observer_base import StageSubject
+from agentic_pipeline.agents.event_bus import EventBus
+subject = StageSubject()
+assert hasattr(subject, '_bus')
+assert isinstance(subject._bus, EventBus)
+print('M3.2 OK: event buses unified')
+"
+
+$ pytest tests/test_observer_pattern.py tests/test_event_bus.py -v --tb=short -o "addopts="
+# 27 passed (17 observer + 10 event bus)
+
+$ pytest tests/test_integration.py tests/test_orchestrator_empty.py -v --tb=short -o "addopts="
+# 8 passed (pipeline integrity)
+```
+
+| Verificación | Resultado |
+|-------------|-----------|
+| `ruff check` — 0 errores | ✅ PASS |
+| `StageSubject._bus` es `EventBus` | ✅ PASS |
+| Observer pattern tests (17 tests) | ✅ PASS |
+| EventBus tests (10 tests) | ✅ PASS |
+| Integration tests (6 tests) | ✅ PASS |
+| Orchestrator tests (2 tests) | ✅ PASS |
+
+---
+
+## 6. Estado de M3
 
 | Sub-tarea | Estado |
 |-----------|--------|
 | **M3.1 — Interface Segregation (ISP)** | **✅ COMPLETADO** |
-| M3.2 — Unificar event buses (P5) | ⏳ Pendiente |
+| **M3.2 — Unificar event buses (P5)** | **✅ COMPLETADO** |
 | M3.3 — Tests integración agent-pipeline (T1) | ⏳ Pendiente |
