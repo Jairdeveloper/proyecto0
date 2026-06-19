@@ -4,11 +4,12 @@
 - **Tipo:** REP (Reporte)
 - **Área:** DEV
 - **Módulo:** agentic_pipeline
-- **Versión:** 1.3
+- **Versión:** 1.4
 - **Estado:** DRAFT
-- **Tags:** `execution-report`, `m1`, `rename`, `parser`, `larkparser`, `exports`, `init`, `srp`, `observers`, `optimizer`, `type-hints`
-- **Fuente:** `docs/130_PLAN_DEV_MIGRATION_EXECUTION_1_0_DRAFT.md` (M1.2–M1.5)
+- **Tags:** `execution-report`, `m1`, `rename`, `parser`, `larkparser`, `exports`, `init`, `srp`, `observers`, `optimizer`, `type-hints`, `audit-observer`
+- **Fuente:** `docs/130_PLAN_DEV_MIGRATION_EXECUTION_1_0_DRAFT.md` (M1.2–M1.6)
 - **Changelog:**
+  - 1.4 — 2026-06-19: Añadido M1.6 — AuditObserver para trazabilidad de compilaciones
   - 1.3 — 2026-06-19: Añadido M1.5 — Type hints concretos (StageMetrics TypedDict, SummaryResult, WebSocketClient stub)
   - 1.2 — 2026-06-19: Añadido M1.4 — SRP split feedback_loop → observers/ + optimizer.py
   - 1.1 — 2026-06-19: Añadido M1.3 — __init__.py exports for nodes, nlp, providers, grammars
@@ -284,7 +285,75 @@ $ pytest tests/ --ignore=... --ignore=...
 
 ---
 
-## 8. Estado de M1
+## 8. M1.6 — AuditObserver (S3)
+
+### Motivo
+
+No existía un mecanismo de auditoría que registre cada compilación del pipeline de forma durable. El `AuditObserver` llena ese vacío: cada evento de stage se escribe como una línea JSON en un archivo append-only.
+
+### Archivos modificados
+
+| Acción | Archivo | Cambio |
+|--------|---------|--------|
+| 📄 Crear | `observers/audit_observer.py` | `AuditObserver(StageObserver)` → 32 líneas |
+| 🔧 Modificar | `observers/__init__.py` | Export `AuditObserver` |
+| 🔧 Modificar | `base_stage.py` | Import + attach `AuditObserver()` en `PipelineStage.subject` |
+
+### AuditObserver
+
+```python
+class AuditObserver(StageObserver):
+    def __init__(self, log_path: str = ".recpl_audit.log") -> None:
+        self._log_path = log_path
+
+    def on_event(self, event: StageEvent) -> None:
+        entry = {
+            "timestamp": datetime.now(UTC).isoformat(),
+            "stage": event.stage,
+            "success": event.success,
+            "duration": event.duration,
+        }
+        with open(self._log_path, "a") as f:
+            f.write(json.dumps(entry) + "\n")
+```
+
+Es el primer observer que hereda explícitamente de `StageObserver(ABC)`, sirviendo como modelo para que los demás observers también migren a la interfaz formal.
+
+### Verificación
+
+```bash
+$ python -c "
+from agentic_pipeline.observers.audit_observer import AuditObserver
+from agentic_pipeline.prompt_chain.observer_base import StageEvent
+o = AuditObserver('/tmp/test_audit.log')
+o.on_event(StageEvent(stage='test', duration=0.1, success=True))
+with open('/tmp/test_audit.log') as f:
+    entry = json.loads(f.readline())
+    assert entry['stage'] == 'test'
+    print('AuditObserver OK')
+"
+AuditObserver OK
+
+$ ruff check . --quiet
+# EXIT: 0
+
+$ pytest tests/test_observer_pattern.py tests/test_prompt_optimizer.py tests/test_feedback_loop.py -v
+# 43 passed
+
+$ pytest tests/test_integration.py tests/test_orchestrator_empty.py -v
+# 8 passed
+```
+
+| Verificación | Resultado |
+|-------------|-----------|
+| Smoke test (crear + evento + leer log) | ✅ PASS |
+| `ruff check . --quiet` | ✅ PASS (0 errores) |
+| Observer + Optimizer + FeedbackLoop tests (43) | ✅ PASS |
+| Integration + Orchestrator tests (8) | ✅ PASS |
+
+---
+
+## 9. Estado de M1
 
 | Sub-tarea | Estado |
 |-----------|--------|
@@ -293,5 +362,5 @@ $ pytest tests/ --ignore=... --ignore=...
 | **M1.3 — __init__.py exports (Q3)** | **✅ COMPLETADO** |
 | **M1.4 — SRP feedback_loop → observers/ + optimizer/ (Q4)** | **✅ COMPLETADO** |
 | **M1.5 — Type hints concretos (Q5)** | **✅ COMPLETADO** |
-| M1.6 — AuditObserver (S3) | ⏳ Pendiente |
+| **M1.6 — AuditObserver (S3)** | **✅ COMPLETADO** |
 | M1.7 — Cablear LLMCache (DT3) | ⏳ Pendiente |

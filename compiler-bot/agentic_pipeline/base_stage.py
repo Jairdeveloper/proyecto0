@@ -3,6 +3,7 @@ import time
 from abc import ABC, abstractmethod
 
 from agentic_pipeline.contracts import STAGE_CONTRACTS
+from agentic_pipeline.observers.audit_observer import AuditObserver
 from agentic_pipeline.observers.metrics_observer import MetricsObserver as _MetricsObserver
 from agentic_pipeline.prompt_chain.observer_base import StageEvent, StageSubject
 from agentic_pipeline.state_models import ActionPlan, AnalysisResult, StageContext, StageOutput
@@ -77,6 +78,7 @@ class PipelineStage(ABC):
         return output
 
 
-# Attach MetricsObserver by default so existing stages keep recording
-# metrics via GlobalFeedbackLoop without modifying subclasses.
+# Attach default observers so all stages automatically record metrics
+# and audit logs without modifying subclasses.
 PipelineStage.subject.attach(_MetricsObserver())
+PipelineStage.subject.attach(AuditObserver())
