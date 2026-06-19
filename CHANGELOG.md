@@ -5,6 +5,11 @@ Todas las cambios notables de este proyecto se documentan en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es/1.0.0/),
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.8.1] — 2026-06-19
+
+### Added
+- `docs/136_GUIDE_DEV_PROJECT0_RUNBOOK_1_0_ACTIVE.md`: runbook operativo actualizado con estado verificado del proyecto al 2026-06-19 14:12 Europe/Madrid.
+
 ## [2.5.0] — 2026-06-16
 
 ### Added
