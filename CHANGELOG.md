@@ -17,6 +17,9 @@ y este proyecto se adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.
 - `compiler-bot/agentic_pipeline/dashboard/service.py`: DashboardService con metodos get_health, get_summary, get_stages, get_recent.
 - `compiler-bot/agentic_pipeline/tests/test_dashboard_service.py`: 5 tests unitarios para DashboardService.
 - `docs/142_REP_DEV_FASE4_DASHBOARD_SERVICE_1_0_DRAFT.md`: reporte de ejecucion de la Fase 4 del plan 138.
+- `compiler-bot/agentic_pipeline/dashboard/app.py`: servidor HTTP stdlib con 5 endpoints (/, /api/health, /api/summary, /api/stages, /api/stages/<stage>/recent).
+- `compiler-bot/agentic_pipeline/tests/test_dashboard_app.py`: 5 tests de integracion HTTP.
+- `docs/143_REP_DEV_FASE5_HTTP_SERVER_1_0_DRAFT.md`: reporte de ejecucion de la Fase 5 del plan 138.
 
 ### Changed
 - `VERSION`: actualizado de `2.0.0` a `2.8.4` para alinear con CHANGELOG.
