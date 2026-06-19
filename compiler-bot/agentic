@@ -8,6 +8,7 @@ import asyncio
 import json
 import sys
 
+from agentic_pipeline.config import config as pipeline_config
 from agentic_pipeline.debugger import PipelineDebugger
 from agentic_pipeline.feedback_loop import get_global_feedback
 from agentic_pipeline.orchestrator import PipelineOrchestrator
@@ -63,6 +64,11 @@ async def main() -> None:
         help="Enable interactive dialog mode for ambiguous prompts",
     )
     parser.add_argument(
+        "--offline",
+        action="store_true",
+        help="Run in offline mode (no LLM calls, heuristic only)",
+    )
+    parser.add_argument(
         "--metrics",
         type=str,
         choices=["json", "table"],
@@ -72,6 +78,9 @@ async def main() -> None:
     )
     add_chain_args(parser)
     args = parser.parse_args()
+
+    if args.offline:
+        pipeline_config.offline = True
 
     if args.metrics:
         fb = get_global_feedback()

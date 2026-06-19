@@ -4,11 +4,12 @@
 - **Tipo:** REP (Reporte)
 - **Área:** DEV
 - **Módulo:** agentic_pipeline
-- **Versión:** 1.1
+- **Versión:** 1.2
 - **Estado:** DRAFT
-- **Tags:** `execution-report`, `m2`, `circuit-breaker`, `exponential-backoff`, `stage-executor`, `resilience`, `llm-backend`
-- **Fuente:** `docs/130_PLAN_DEV_MIGRATION_EXECUTION_1_0_DRAFT.md` (M2.1–M2.2)
+- **Tags:** `execution-report`, `m2`, `circuit-breaker`, `exponential-backoff`, `stage-executor`, `offline-mode`, `resilience`, `graceful-degradation`
+- **Fuente:** `docs/130_PLAN_DEV_MIGRATION_EXECUTION_1_0_DRAFT.md` (M2.1–M2.3)
 - **Changelog:**
+  - 1.2 — 2026-06-19: Añadido M2.3 — Modo offline con graceful degradation
   - 1.1 — 2026-06-19: Añadido M2.2 — StageExecutor para aislamiento por stage
   - 1.0 — 2026-06-19: Versión inicial — M2.1 CircuitBreaker + ExponentialBackoff
 
@@ -171,11 +172,90 @@ $ pytest tests/test_orchestrator_empty.py tests/test_integration.py tests/test_c
 
 ---
 
-## 7. Estado de M2
+## 7. M2.3 — Modo offline / Graceful degradation (GD)
+
+### Motivo
+
+El pipeline dependía de componentes opcionales (SentenceTransformers, LLM) incluso para tareas que podían resolverse con lógica determinista. En entornos sin conectividad o recursos limitados, estos componentes fallaban ruidosamente. El modo offline provee una ruta de ejecución 100% determinista que degrada gracefulmente: salta enriquecimiento semántico y fuerza planificación heurística.
+
+### Archivos modificados/creados
+
+| Acción | Archivo | Cambio |
+|--------|---------|--------|
+| 🔧 Modificar | `config.py` | Agregado `offline: bool = False` a `PipelineConfig` |
+| 🔧 Modificar | `nodes/perception_unit.py` | Salta SentenceTransformer si `config.offline` |
+| 🔧 Modificar | `nodes/reasoning_engine.py` | Fuerza estrategia `"heuristic"` si `config.offline` |
+| 🔧 Modificar | `compiler-bot/agentic` (CLI) | Nuevo flag `--offline` setea `pipeline_config.offline = True` |
+| 📄 Crear | `docs/offline_mode.md` | Documentación del modo offline |
+
+### Detalle de cambios
+
+**config.py** — `PipelineConfig.offline: bool = False` (seteable vía `AGENTIC_OFFLINE` env var o flag CLI)
+
+**perception_unit.py** — En `act()`, el enriquecimiento con SentenceTransformers se salta si `config.offline` está activo:
+```python
+clf = None if config.offline else self._get_semantic_classifier()
+```
+
+**reasoning_engine.py** — En `reflect_and_plan()`, la estrategia se fuerza a `"heuristic"` si `config.offline`:
+```python
+strategy = "heuristic" if config.offline or complexity in ("simple", "moderate") else "llm"
+```
+
+**CLI** — Nuevo flag `--offline`:
+```python
+parser.add_argument("--offline", action="store_true", help="Run in offline mode")
+```
+
+**offline_mode.md** — Documenta qué stages funcionan y cómo usar `--offline`.
+
+### Stages no afectados
+
+| Stage | Razón |
+|-------|-------|
+| Preprocessor | Siempre determinista |
+| Lexer | Siempre DFA |
+| Parser | Siempre Lark |
+| Semantic | Siempre Visitor |
+| IR Generator | Siempre determinista |
+| Synthesis | Siempre scaffold |
+| UI Generator | Siempre con guarda |
+| Validator | Siempre Chain of Responsibility |
+
+### Verificación
+
+```bash
+$ ruff check config.py nodes/perception_unit.py nodes/reasoning_engine.py compiler-bot/agentic
+# EXIT: 0
+
+$ python -c "
+from agentic_pipeline.config import config
+assert config.offline == False
+config.offline = True
+assert config.offline == True
+print('Config offline mode OK')
+"
+
+$ pytest tests/test_integration.py tests/test_orchestrator_empty.py -v --tb=short -o "addopts="
+# 8 passed
+```
+
+| Verificación | Resultado |
+|-------------|-----------|
+| `ruff check` — 0 errores | ✅ PASS |
+| `config.offline` default `False` | ✅ PASS |
+| `config.offline = True` funcional | ✅ PASS |
+| Integration tests (6 tests) | ✅ PASS |
+| Orchestrator tests (2 tests) | ✅ PASS |
+| `docs/offline_mode.md` creado | ✅ PASS |
+
+---
+
+## 8. Estado de M2
 
 | Sub-tarea | Estado |
 |-----------|--------|
 | **M2.1 — CircuitBreaker + ExponentialBackoff (R1)** | **✅ COMPLETADO** |
 | **M2.2 — StageExecutor aislamiento (R3)** | **✅ COMPLETADO** |
-| M2.3 — Modo offline / Graceful degradation (GD) | ⏳ Pendiente |
+| **M2.3 — Modo offline / Graceful degradation (GD)** | **✅ COMPLETADO** |
 | M2.4 — StageContext frozen (INM) | ⏳ Pendiente |

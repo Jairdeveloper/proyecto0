@@ -11,6 +11,7 @@ from typing import Any, Literal
 from pydantic import BaseModel
 
 from agentic_pipeline.base_stage import PipelineStage
+from agentic_pipeline.config import config
 from agentic_pipeline.state_models import ActionPlan, AnalysisResult, StageContext, StageOutput
 
 logger = logging.getLogger(__name__)
@@ -378,7 +379,7 @@ class ReasoningEngine(PipelineStage):
 
     def reflect_and_plan(self, analysis: AnalysisResult) -> ActionPlan:
         complexity = self._heuristic.estimate_complexity(self._task_graph)
-        strategy = "heuristic" if complexity in ("simple", "moderate") else "llm"
+        strategy = "heuristic" if config.offline or complexity in ("simple", "moderate") else "llm"
         return ActionPlan(
             steps=[
                 {"action": "build_task_graph"},

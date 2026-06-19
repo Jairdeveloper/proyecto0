@@ -11,6 +11,7 @@ class PipelineConfig(BaseSettings):
     memory_dir: str = "/tmp/agentic_memory"
     max_retries: int = 3
     cache_enabled: bool = True
+    offline: bool = False
 
 
 config = PipelineConfig()

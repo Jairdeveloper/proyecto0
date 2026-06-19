@@ -3,6 +3,7 @@
 from datetime import datetime
 
 from agentic_pipeline.base_stage import PipelineStage
+from agentic_pipeline.config import config
 from agentic_pipeline.nlp.ambiguity_detector import AmbiguityDetector
 from agentic_pipeline.nlp.enriched_input import ContextState, EnrichedInput
 from agentic_pipeline.nlp.intent_classifier import IntentClassifier
@@ -134,11 +135,11 @@ class PerceptionUnit(PipelineStage):
             slots,
         )
 
-        # SentenceTransformers enrichment (N2.1b, opcional)
+        # SentenceTransformers enrichment (N2.1b, opcional — saltar en offline)
         semantic_intent = None
         semantic_score = 0.0
         semantic_confianza = None
-        clf = self._get_semantic_classifier()
+        clf = None if config.offline else self._get_semantic_classifier()
         if clf:
             si, ss = clf.classify(self._input_text)
             semantic_intent = si
