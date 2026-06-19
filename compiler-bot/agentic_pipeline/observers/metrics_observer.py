@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 from agentic_pipeline.feedback_loop import GlobalFeedbackLoop, get_global_feedback
+from agentic_pipeline.metrics_store import StageMetrics
 from agentic_pipeline.prompt_chain.observer_base import StageEvent
 
 
@@ -22,10 +21,10 @@ class MetricsObserver:
         self._feedback = feedback or get_global_feedback()
 
     def on_event(self, event: StageEvent) -> None:
-        metrics: dict[str, Any] = {
+        metrics: StageMetrics = {
             "duration_seconds": event.duration,
             "success": event.success,
             "error": event.error,
-            **event.metadata,
+            **event.metadata,  # type: ignore[arg-type]
         }
         self._feedback.record_stage(event.stage, metrics)

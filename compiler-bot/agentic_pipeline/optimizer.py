@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
 
-from agentic_pipeline.metrics_store import MetricsStore
+from agentic_pipeline.metrics_store import MetricsStore, StageMetrics
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +24,7 @@ class PromptOptimizer:
     def __init__(self, metrics_store: MetricsStore) -> None:
         self._store = metrics_store
 
-    def optimize(self, prompt_name: str) -> dict[str, Any]:
+    def optimize(self, prompt_name: str) -> StageMetrics:
         """Retorna parametros optimizados para el prompt.
 
         Args:
@@ -38,7 +37,7 @@ class PromptOptimizer:
         duration = self._store.get_prompt_avg_duration(prompt_name)
         fallback_rate = self._store.get_prompt_fallback_rate(prompt_name)
 
-        params: dict[str, Any] = {}
+        params: StageMetrics = {}
 
         if rate < 0.8:
             params["temperature"] = max(0.0, 0.3 - 0.1)

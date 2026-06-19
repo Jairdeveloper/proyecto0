@@ -4,11 +4,12 @@
 - **Tipo:** REP (Reporte)
 - **Área:** DEV
 - **Módulo:** agentic_pipeline
-- **Versión:** 1.2
+- **Versión:** 1.3
 - **Estado:** DRAFT
-- **Tags:** `execution-report`, `m1`, `rename`, `parser`, `larkparser`, `exports`, `init`, `srp`, `observers`, `optimizer`
-- **Fuente:** `docs/130_PLAN_DEV_MIGRATION_EXECUTION_1_0_DRAFT.md` (M1.2, M1.3, M1.4)
+- **Tags:** `execution-report`, `m1`, `rename`, `parser`, `larkparser`, `exports`, `init`, `srp`, `observers`, `optimizer`, `type-hints`
+- **Fuente:** `docs/130_PLAN_DEV_MIGRATION_EXECUTION_1_0_DRAFT.md` (M1.2–M1.5)
 - **Changelog:**
+  - 1.3 — 2026-06-19: Añadido M1.5 — Type hints concretos (StageMetrics TypedDict, SummaryResult, WebSocketClient stub)
   - 1.2 — 2026-06-19: Añadido M1.4 — SRP split feedback_loop → observers/ + optimizer.py
   - 1.1 — 2026-06-19: Añadido M1.3 — __init__.py exports for nodes, nlp, providers, grammars
   - 1.0 — 2026-06-19: Versión inicial — rename ParserGLR → LarkParser
@@ -216,7 +217,74 @@ feedback_loop.py              observers/               optimizer.py
 
 ---
 
-## 7. Estado de M1
+## 7. M1.5 — Type hints concretos (Q5)
+
+### Motivo
+
+Varios métodos públicos en `feedback_loop.py`, `metrics_store.py`, `optimizer.py` y los observers usaban `dict[str, Any]` en lugar de tipos concretos, reduciendo la capacidad de detección estática de errores.
+
+### Cambios
+
+#### metrics_store.py — TypedDicts agregados
+
+| TypedDict | Campos |
+|-----------|--------|
+| `StageMetrics` | `duration_seconds: float`, `success: bool`, `error: str | None`, `tokens_count: int`, `files_generated: int`, `task_count: int`, `errors: int`, `node_count: int` |
+| `PromptMetrics` | `success: bool`, `duration: float`, `error: str | None`, `fallback_used: bool`, `output_size: int`, `tokens_used: int` |
+| `SummaryResult` | `total_records: int`, `stages: dict[str, int]`, `total_errors: int`, `success_rate: float`, `fallback_rate: float`, `per_stage: dict` |
+
+#### Métodos actualizados con tipos concretos
+
+| Archivo | Método | Tipo anterior | Tipo nuevo |
+|---------|--------|---------------|------------|
+| `metrics_store.py` | `record()` | `metrics: dict[str, Any]` | `metrics: StageMetrics` |
+| `metrics_store.py` | `record_prompt()` | `metrics: dict[str, Any]` | `metrics: PromptMetrics` |
+| `metrics_store.py` | `summary()` | `dict[str, Any]` | `SummaryResult` |
+| `feedback_loop.py` | `record()` | `metrics: dict[str, Any]` | `metrics: StageMetrics` |
+| `feedback_loop.py` | `record_stage()` | `metrics: dict[str, Any]` | `metrics: StageMetrics` |
+| `feedback_loop.py` | `record_prompt()` | `metrics: dict[str, Any]` | `metrics: StageMetrics` |
+| `feedback_loop.py` | `get_adjustments()` | `dict[str, Any]` | `StageMetrics` |
+| `feedback_loop.py` | `get_lexer_adjustments()` | `dict[str, Any]` | `StageMetrics` |
+| `feedback_loop.py` | `_adjust_lexer_weights()` | `metrics: dict[str, Any]` | `metrics: StageMetrics` |
+| `feedback_loop.py` | `prompt_chain_summary()` | `dict[str, Any]` | `SummaryResult` |
+| `feedback_loop.py` | `get_recent()` (FeedbackLoop) | `list[dict[str, Any]]` | `list[dict[str, object]]` |
+| `feedback_loop.py` | `summary()` | `dict[str, Any]` | `dict[str, object]` |
+| `feedback_loop.py` | `get_recent()` (GlobalFeedbackLoop) | `list[dict[str, Any]]` | `list[dict[str, object]]` |
+| `optimizer.py` | `optimize()` | `dict[str, Any]` | `StageMetrics` |
+| `observers/dashboard_observer.py` | `_ws_clients` | `list[Any]` | `list[WebSocketClient]` |
+
+#### WebSocketClient stub
+
+Se creó un stub `WebSocketClient` en `dashboard_observer.py` para tipificar los clientes WebSocket en lugar de usar `list[Any]`:
+
+```python
+class WebSocketClient:
+    def send_json(self, data: object) -> None: ...
+```
+
+### Verificación
+
+```bash
+$ ruff check . --quiet
+# EXIT: 0
+
+$ pytest tests/test_observer_pattern.py tests/test_prompt_optimizer.py tests/test_feedback_loop.py -v
+# 43 passed
+
+$ pytest tests/ --ignore=... --ignore=...
+# 747 passed, 21 skipped
+```
+
+| Verificación | Resultado |
+|-------------|-----------|
+| `ruff check . --quiet` | ✅ PASS (0 errores) |
+| Observer + Optimizer + FeedbackLoop tests (43) | ✅ PASS |
+| Suite completa (747 tests) | ✅ PASS |
+| Sin `Any` no justificado en métodos públicos | ✅ PASS |
+
+---
+
+## 8. Estado de M1
 
 | Sub-tarea | Estado |
 |-----------|--------|
@@ -224,6 +292,6 @@ feedback_loop.py              observers/               optimizer.py
 | **M1.2 — Renombrar ParserGLR a LarkParser** | **✅ COMPLETADO** |
 | **M1.3 — __init__.py exports (Q3)** | **✅ COMPLETADO** |
 | **M1.4 — SRP feedback_loop → observers/ + optimizer/ (Q4)** | **✅ COMPLETADO** |
-| M1.5 — Type hints concretos (Q5) | ⏳ Pendiente |
+| **M1.5 — Type hints concretos (Q5)** | **✅ COMPLETADO** |
 | M1.6 — AuditObserver (S3) | ⏳ Pendiente |
 | M1.7 — Cablear LLMCache (DT3) | ⏳ Pendiente |

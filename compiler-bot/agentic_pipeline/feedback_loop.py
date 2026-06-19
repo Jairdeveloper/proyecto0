@@ -10,10 +10,9 @@ from __future__ import annotations
 import json
 import logging
 import os
-from typing import Any
 
 from agentic_pipeline.config import config
-from agentic_pipeline.metrics_store import MetricsStore
+from agentic_pipeline.metrics_store import MetricsStore, StageMetrics, SummaryResult
 
 logger = logging.getLogger(__name__)
 
@@ -28,9 +27,9 @@ class FeedbackLoop:
     def _stage_path(self, stage: str) -> str:
         return os.path.join(self._memory_dir, f"{stage}.json")
 
-    def record(self, stage: str, metrics: dict[str, Any]) -> None:
+    def record(self, stage: str, metrics: StageMetrics) -> None:
         path = self._stage_path(stage)
-        entries: list[dict[str, Any]] = []
+        entries: list[dict[str, object]] = []
         if os.path.exists(path):
             with open(path) as f:
                 entries = json.load(f)
@@ -42,7 +41,7 @@ class FeedbackLoop:
         self,
         stage: str,
         limit: int = 10,
-    ) -> list[dict[str, Any]]:
+    ) -> list[dict[str, object]]:
         path = self._stage_path(stage)
         if not os.path.exists(path):
             return []
@@ -60,16 +59,16 @@ class GlobalFeedbackLoop:
     ) -> None:
         self._store = metrics_store or MetricsStore()
         self._legacy = FeedbackLoop()
-        self._adjustments: dict[str, dict[str, Any]] = {}
+        self._adjustments: dict[str, StageMetrics] = {}
 
-    def record_stage(self, stage: str, metrics: dict[str, Any]) -> None:
+    def record_stage(self, stage: str, metrics: StageMetrics) -> None:
         self._store.record(stage, metrics)
         self._legacy.record(stage, metrics)
         self._adjust_lexer_weights(stage, metrics)
 
     # -- Prompt chain metrics (F5) -------------------------------------------
 
-    def record_prompt(self, prompt_name: str, metrics: dict[str, Any]) -> None:
+    def record_prompt(self, prompt_name: str, metrics: StageMetrics) -> None:
         """Registra metricas de una etapa del prompt chain."""
         self._store.record_prompt(prompt_name, metrics)
 
@@ -85,19 +84,19 @@ class GlobalFeedbackLoop:
         """Tasa de fallback del prompt."""
         return self._store.get_prompt_fallback_rate(prompt_name, n)
 
-    def prompt_chain_summary(self) -> dict[str, Any]:
+    def prompt_chain_summary(self) -> SummaryResult:
         """Resumen agregado de todas las etapas del prompt chain."""
         return self._store.get_prompt_chain_summary()
 
     # -- Existing API ---------------------------------------------------------
 
-    def get_adjustments(self, stage: str) -> dict[str, Any]:
+    def get_adjustments(self, stage: str) -> StageMetrics:
         return self._adjustments.get(stage, {})
 
     def _adjust_lexer_weights(
         self,
         stage: str,
-        metrics: dict[str, Any],
+        metrics: StageMetrics,
     ) -> None:
         if stage != "lexer":
             return
@@ -127,13 +126,13 @@ class GlobalFeedbackLoop:
                 node_count,
             )
 
-    def get_lexer_adjustments(self) -> dict[str, Any]:
+    def get_lexer_adjustments(self) -> StageMetrics:
         return self._adjustments.get("lexer", {})
 
-    def summary(self) -> dict[str, Any]:
+    def summary(self) -> dict[str, object]:
         return self._store.summary()
 
-    def get_recent(self, stage: str, limit: int = 10) -> list[dict[str, Any]]:
+    def get_recent(self, stage: str, limit: int = 10) -> list[dict[str, object]]:
         return self._store.get_recent(stage, limit)
 
 

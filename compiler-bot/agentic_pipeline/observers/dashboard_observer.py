@@ -3,9 +3,14 @@
 from __future__ import annotations
 
 from collections import deque
-from typing import Any
 
 from agentic_pipeline.prompt_chain.observer_base import StageEvent
+
+
+class WebSocketClient:
+    """Stub para cliente WebSocket."""
+
+    def send_json(self, data: object) -> None: ...
 
 
 class DashboardObserver:
@@ -18,7 +23,7 @@ class DashboardObserver:
 
     def __init__(self, max_events: int = 1000) -> None:
         self._recent_events: deque[StageEvent] = deque(maxlen=max_events)
-        self._ws_clients: list[Any] = []
+        self._ws_clients: list[WebSocketClient] = []
 
     def on_event(self, event: StageEvent) -> None:
         self._recent_events.append(event)

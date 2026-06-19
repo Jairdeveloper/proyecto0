@@ -7,7 +7,7 @@ import logging
 import os
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, TypedDict
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +21,41 @@ except ModuleNotFoundError:
 
 
 MAX_ENTRIES_PER_STAGE = 1000
+
+
+class StageMetrics(TypedDict, total=False):
+    """Metricas tipadas para stages del pipeline."""
+
+    duration_seconds: float
+    success: bool
+    error: str | None
+    tokens_count: int
+    files_generated: int
+    task_count: int
+    errors: int
+    node_count: int
+
+
+class PromptMetrics(TypedDict, total=False):
+    """Metricas tipadas para etapas del prompt chain."""
+
+    success: bool
+    duration: float
+    error: str | None
+    fallback_used: bool
+    output_size: int
+    tokens_used: int
+
+
+class SummaryResult(TypedDict, total=False):
+    """Resultado tipado de summary()."""
+
+    total_records: int
+    stages: dict[str, int]
+    total_errors: int
+    success_rate: float
+    fallback_rate: float
+    per_stage: dict[str, dict[str, float | int]]
 
 
 class MetricsStore:
@@ -78,7 +113,7 @@ class MetricsStore:
 
     # -- Public API -----------------------------------------------------------
 
-    def record(self, stage: str, metrics: dict[str, Any]) -> None:
+    def record(self, stage: str, metrics: StageMetrics) -> None:
         if HAS_SQLITE:
             with sqlite3.connect(str(self.db_path)) as conn:
                 conn.execute(
@@ -123,7 +158,7 @@ class MetricsStore:
             for e in entries[-limit:]
         ]
 
-    def summary(self) -> dict[str, Any]:
+    def summary(self) -> SummaryResult:
         if HAS_SQLITE:
             with sqlite3.connect(str(self.db_path)) as conn:
                 total = conn.execute("SELECT COUNT(*) FROM stage_metrics").fetchone()[0]
@@ -203,7 +238,7 @@ class MetricsStore:
 
     # -- Prompt chain metrics (F5) -------------------------------------------
 
-    def record_prompt(self, prompt_name: str, metrics: dict[str, Any]) -> None:
+    def record_prompt(self, prompt_name: str, metrics: PromptMetrics) -> None:
         """Registra metricas de una etapa del prompt chain.
 
         Args:
