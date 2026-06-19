@@ -24,6 +24,7 @@ from agentic_pipeline.nodes.semantic_analyzer import SemanticAnalyzer
 from agentic_pipeline.nodes.ui_generator import UIGenerator
 from agentic_pipeline.nodes.validator import ValidatorPipeline
 from agentic_pipeline.prompt_chain.command_base import Command, CommandResult
+from agentic_pipeline.stage_executor import StageExecutor
 from agentic_pipeline.state_models import ContextWindow, Stage, StageContext, StageOutput
 
 logger = logging.getLogger(__name__)
@@ -101,13 +102,14 @@ class AgentOrchestrator:
         self._build()
 
     def _make_node(self, stage: Stage) -> Callable[[StageContext], dict[str, Any]]:
+        executor = StageExecutor()
         cls = NODE_MAP[stage]
 
-        def node_fn(ctx: StageContext) -> dict[str, Any]:
+        async def node_fn(ctx: StageContext) -> dict[str, Any]:
             ctx.stage = stage
             ctx.config_overrides["output_dir"] = self._output_dir
             instance = cls(ctx)
-            output = instance.execute(ctx.input_data)
+            output = await executor.execute(instance, ctx.input_data)
             if self._stream_callback:
                 self._stream_callback(stage.value, output)
             updated: dict[str, Any] = {"input_data": output.output_data}

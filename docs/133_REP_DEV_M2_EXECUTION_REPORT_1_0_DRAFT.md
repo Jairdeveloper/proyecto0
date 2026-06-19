@@ -4,11 +4,12 @@
 - **Tipo:** REP (Reporte)
 - **Área:** DEV
 - **Módulo:** agentic_pipeline
-- **Versión:** 1.0
+- **Versión:** 1.1
 - **Estado:** DRAFT
-- **Tags:** `execution-report`, `m2`, `circuit-breaker`, `exponential-backoff`, `resilience`, `llm-backend`
-- **Fuente:** `docs/130_PLAN_DEV_MIGRATION_EXECUTION_1_0_DRAFT.md` (M2.1)
+- **Tags:** `execution-report`, `m2`, `circuit-breaker`, `exponential-backoff`, `stage-executor`, `resilience`, `llm-backend`
+- **Fuente:** `docs/130_PLAN_DEV_MIGRATION_EXECUTION_1_0_DRAFT.md` (M2.1–M2.2)
 - **Changelog:**
+  - 1.1 — 2026-06-19: Añadido M2.2 — StageExecutor para aislamiento por stage
   - 1.0 — 2026-06-19: Versión inicial — M2.1 CircuitBreaker + ExponentialBackoff
 
 ---
@@ -111,11 +112,70 @@ $ pytest tests/test_circuit_breaker.py tests/test_llm_backend.py -v --tb=short -
 
 ---
 
-## 6. Estado de M2
+## 6. M2.2 — StageExecutor aislamiento (R3)
+
+### Motivo
+
+`_make_node()` en `orchestrator.py` llamaba `instance.execute(ctx.input_data)` directamente sin try/except. Si un stage lanzaba una excepción (ej. TypeError, KeyError, ConnectionError), ésta se propagaba sin control hasta el StateGraph, abortando todo el pipeline sin un mensaje de error claro. El `StageExecutor` añade una barrera de error que atrapa cualquier excepción y la convierte en un `StageOutput(success=False)` limpio.
+
+### Archivos creados/modificados
+
+| Acción | Archivo | Cambio |
+|--------|---------|--------|
+| 📄 Crear | `stage_executor.py` | `StageExecutor` con método `execute()` async + try/except |
+| 🔧 Modificar | `orchestrator.py` | Import + uso de `StageExecutor` en `_make_node()` |
+
+### StageExecutor
+
+```python
+class StageExecutor:
+    async def execute(self, stage: PipelineStage, input_data: object) -> StageOutput:
+        try:
+            return stage.execute(input_data)
+        except Exception as exc:
+            logger.exception("Stage %s failed: %s", stage.name, exc)
+            return StageOutput(
+                stage=stage.context.stage,
+                output_data={},
+                success=False,
+                error=str(exc),
+                metrics={"exception": type(exc).__name__},
+            )
+```
+
+### Cambio en _make_node()
+
+| Antes | Después |
+|-------|---------|
+| `def node_fn(ctx)` (sync) | `async def node_fn(ctx)` |
+| `instance.execute(ctx.input_data)` | `await executor.execute(instance, ctx.input_data)` |
+| Sin protección | Error boundary por stage |
+
+### Verificación
+
+```bash
+$ ruff check stage_executor.py orchestrator.py
+# EXIT: 0 — all checks passed
+
+$ pytest tests/test_orchestrator_empty.py tests/test_integration.py tests/test_chain_orchestrator.py -v --tb=short -o "addopts="
+# 16 passed
+```
+
+| Verificación | Resultado |
+|-------------|-----------|
+| `ruff check` — 0 errores | ✅ PASS |
+| Orchestrator test (2 tests) | ✅ PASS |
+| Integration tests (6 tests) | ✅ PASS |
+| Chain orchestrator tests (8 tests) | ✅ PASS |
+| Import correcto (`from agentic_pipeline.stage_executor import StageExecutor`) | ✅ PASS |
+
+---
+
+## 7. Estado de M2
 
 | Sub-tarea | Estado |
 |-----------|--------|
 | **M2.1 — CircuitBreaker + ExponentialBackoff (R1)** | **✅ COMPLETADO** |
-| M2.2 — StageExecutor aislamiento (R3) | ⏳ Pendiente |
+| **M2.2 — StageExecutor aislamiento (R3)** | **✅ COMPLETADO** |
 | M2.3 — Modo offline / Graceful degradation (GD) | ⏳ Pendiente |
 | M2.4 — StageContext frozen (INM) | ⏳ Pendiente |
