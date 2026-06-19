@@ -72,16 +72,22 @@ class ActionExecutor(PipelineStage):
         if not tasks and goal_tree:
             subtasks = goal_tree.get("subtasks", [])
             nombre = enriched.get("slots", {}).get("nombre", "app")
-            tasks = [{
-                "id": s["id"],
-                "description": s["description"],
-                "target": "nestjs",
-            } for s in subtasks]
-            commands = [{
-                "task_id": s["id"],
-                "type": "scaffold",
-                "path": f"modules/{nombre}",
-            } for s in subtasks]
+            tasks = [
+                {
+                    "id": s["id"],
+                    "description": s["description"],
+                    "target": "nestjs",
+                }
+                for s in subtasks
+            ]
+            commands = [
+                {
+                    "task_id": s["id"],
+                    "type": "scaffold",
+                    "path": f"modules/{nombre}",
+                }
+                for s in subtasks
+            ]
 
         generated_files: list[str] = []
         errors: list[str] = []

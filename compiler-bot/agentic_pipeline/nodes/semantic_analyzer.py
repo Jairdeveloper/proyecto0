@@ -171,11 +171,14 @@ class SemanticVisitor:
         value = node.get("name", node.get("value", ""))
         if not target:
             self.warnings.append(f"Action '{value}' has no target")
-        self.symbols.define(f"$action_{value}", {
-            "type": "action",
-            "target": target,
-            "node": node,
-        })
+        self.symbols.define(
+            f"$action_{value}",
+            {
+                "type": "action",
+                "target": target,
+                "node": node,
+            },
+        )
 
     def exit_action(self, node: dict[str, Any]) -> None:
         pass

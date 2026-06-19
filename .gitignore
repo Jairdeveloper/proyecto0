@@ -26,3 +26,5 @@ output/
 site/
 misc/
 ./prompts/
+./docs/diagrams/mermaidToimage.py
+*.recpl_audit.log

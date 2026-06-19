@@ -12,6 +12,15 @@ class PipelineConfig(BaseSettings):
     max_retries: int = 3
     cache_enabled: bool = True
     offline: bool = False
+    stage_models: dict[str, str] = {
+        "preprocess": "gpt-4o-mini",
+        "intent": "gpt-4o",
+        "plan": "gpt-4o",
+        "reasoning": "gpt-4o",
+        "generate": "gpt-4o",
+        "verify": "gpt-4o",
+        "format": "gpt-4o-mini",
+    }
 
 
 config = PipelineConfig()

@@ -4,11 +4,12 @@
 - **Tipo:** REP (Reporte)
 - **Área:** DEV
 - **Módulo:** agentic_pipeline
-- **Versión:** 1.2
+- **Versión:** 1.3
 - **Estado:** DRAFT
-- **Tags:** `execution-report`, `m4`, `fixtures`, `conftest`, `testing`, `security`, `bandit`, `blocked-patterns`, `rate-limiter`, `token-bucket`
-- **Fuente:** `docs/130_PLAN_DEV_MIGRATION_EXECUTION_1_0_DRAFT.md` (M4.1–M4.3)
+- **Tags:** `execution-report`, `m4`, `fixtures`, `conftest`, `testing`, `security`, `bandit`, `blocked-patterns`, `rate-limiter`, `token-bucket`, `stage-models`
+- **Fuente:** `docs/130_PLAN_DEV_MIGRATION_EXECUTION_1_0_DRAFT.md` (M4.1–M4.4)
 - **Changelog:**
+  - 1.3 — 2026-06-19: Añadido M4.4 — Modelos LLM diferenciados por stage
   - 1.2 — 2026-06-19: Añadido M4.3 — TokenBucket rate limiter
   - 1.1 — 2026-06-19: Añadido M4.2 — SecurityScanner + BanditScanner
   - 1.0 — 2026-06-19: Versión inicial — M4.1 Fixtures compartidas
@@ -235,10 +236,82 @@ $ pytest tests/test_llm_backend.py -v --tb=short -o "addopts="
 
 ---
 
-## 7. Estado de M4
+## 7. M4.4 — Modelos LLM diferenciados por stage (E2)
+
+### Motivo
+
+Todos los stages del pipeline usaban el mismo modelo LLM (`gpt-4o-mini` por defecto). Tareas simples como preprocesamiento o formateo no necesitan un modelo grande, mientras que tareas complejas como planificación o generación se benefician de `gpt-4o`. Se agregó un mapa `stage_models` en la configuración para asignar modelos específicos por stage, y se añadió soporte para override de modelo por llamada en `LLMBackend`.
+
+### Archivos modificados
+
+| Acción | Archivo | Cambio |
+|--------|---------|--------|
+| 🔧 Modificar | `config.py` | Agregado `stage_models: dict[str, str]` con 7 entradas |
+| 🔧 Modificar | `prompt_chain/llm_backend.py` | Parámetro `model` opcional en `generate()`, `generate_structured()`, y `_ensure_llm()` |
+
+### Config
+
+```python
+stage_models: dict[str, str] = {
+    "preprocess": "gpt-4o-mini",
+    "intent": "gpt-4o",
+    "plan": "gpt-4o",
+    "reasoning": "gpt-4o",
+    "generate": "gpt-4o",
+    "verify": "gpt-4o",
+    "format": "gpt-4o-mini",
+}
+```
+
+- `gpt-4o-mini` para tareas ligeras (preprocess, format)
+- `gpt-4o` para tareas que requieren razonamiento (intent, plan, reasoning, generate, verify)
+
+### LLMBackend model override
+
+Se agregó el parámetro opcional `model: str | None` a:
+- `LLMBackend.generate()` (abstracto)
+- `LLMBackend.generate_structured()` (abstracto)
+- `OpenAIBackend.generate()` — si se provee, recrea el cliente con el modelo indicado
+- `OpenAIBackend.generate_structured()` — ídem
+- `OpenAIBackend._ensure_llm()` — recrea `self._llm` si el modelo cambia
+
+El override permite que los handlers del prompt chain seleccionen el modelo según `config.stage_models[stage_name]` al llamar a `generate()`.
+
+### Verificación
+
+```bash
+$ ruff check config.py prompt_chain/llm_backend.py
+# EXIT: 0
+
+$ python -c "
+from agentic_pipeline.config import PipelineConfig
+c = PipelineConfig()
+assert 'preprocess' in c.stage_models
+assert c.stage_models['intent'] == 'gpt-4o'
+print('M4.4 OK')
+"
+
+$ pytest tests/test_llm_backend.py -v --tb=short -o "addopts="
+# 8 passed
+```
+
+| Verificación | Resultado |
+|-------------|-----------|
+| `ruff check` — 0 errores | ✅ PASS |
+| `PipelineConfig.stage_models` tiene 7 entradas | ✅ PASS |
+| `stage_models["preprocess"] == "gpt-4o-mini"` | ✅ PASS |
+| `stage_models["intent"] == "gpt-4o"` | ✅ PASS |
+| `generate()` acepta `model` keyword | ✅ PASS |
+| `generate_structured()` acepta `model` keyword | ✅ PASS |
+| LLMBackend tests (8 tests) | ✅ PASS |
+
+---
+
+## 8. Estado de M4
 
 | Sub-tarea | Estado |
 |-----------|--------|
 | **M4.1 — Fixtures compartidas (T2)** | **✅ COMPLETADO** |
 | **M4.2 — SecurityScanner + BanditScanner (S1)** | **✅ COMPLETADO** |
 | **M4.3 — TokenBucket rate limiter (S4)** | **✅ COMPLETADO** |
+| **M4.4 — Modelos LLM diferenciados (E2)** | **✅ COMPLETADO** |

@@ -322,14 +322,14 @@ class TestChainOrchestratorCLI:
 
         with patch(
             "agentic_pipeline.prompt_chain.orchestrator.ChainOrchestrator",
-        ) as MockOrch:
+        ) as mock_orch:
             instance = AsyncMock()
             instance.run.return_value = mock_result
-            MockOrch.return_value = instance
+            mock_orch.return_value = instance
 
             result = await run_chain("crea modulo pagos")
 
-            MockOrch.assert_called_once()
+            mock_orch.assert_called_once()
             instance.run.assert_awaited_once_with("crea modulo pagos")
             assert result["success"] is True
             assert result["output"]["summary"] == "test"

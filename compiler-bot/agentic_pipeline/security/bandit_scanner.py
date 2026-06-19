@@ -26,6 +26,4 @@ class BanditScanner(StageObserver):
                 continue
             for pattern in BLOCKED_PATTERNS:
                 if pattern.search(content):
-                    event.metadata["security_alert"] = (
-                        f"Blocked pattern in {filepath}"
-                    )
+                    event.metadata["security_alert"] = f"Blocked pattern in {filepath}"

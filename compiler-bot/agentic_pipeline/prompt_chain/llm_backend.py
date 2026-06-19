@@ -66,8 +66,9 @@ class LLMBackend(ABC):
         system: str = "",
         temperature: float = 0.3,
         max_tokens: int = 4096,
+        model: str | None = None,
     ) -> LLMResult:
-        """Genera texto libre."""
+        """Genera texto libre. `model` override para el modelo usado."""
 
     @abstractmethod
     async def generate_structured(
@@ -76,8 +77,9 @@ class LLMBackend(ABC):
         system: str = "",
         output_schema: type[BaseModel] | None = None,
         temperature: float = 0.3,
+        model: str | None = None,
     ) -> LLMResult:
-        """Genera output estructurado validado contra schema."""
+        """Genera output estructurado validado contra schema. `model` override."""
 
 
 class OpenAIBackend(LLMBackend):
@@ -128,14 +130,15 @@ class OpenAIBackend(LLMBackend):
 
         raise last_exc  # type: ignore[misc]
 
-    def _ensure_llm(self) -> None:
-        if self._llm is not None:
+    def _ensure_llm(self, model: str | None = None) -> None:
+        target_model = model or self._model
+        if self._llm is not None and target_model == getattr(self._llm, "model_name", None):
             return
         try:
             from langchain_openai import ChatOpenAI
 
             kwargs: dict[str, Any] = {
-                "model": self._model,
+                "model": target_model,
                 "api_key": self._api_key,
                 "temperature": 0,
             }
@@ -155,7 +158,9 @@ class OpenAIBackend(LLMBackend):
         system: str = "",
         temperature: float = 0.3,
         max_tokens: int = 4096,
+        model: str | None = None,
     ) -> LLMResult:
+        used_model = model or self._model
         # Check cache first
         if self._cache is not None:
             cached = await self._cache.get(prompt, "")
@@ -163,11 +168,11 @@ class OpenAIBackend(LLMBackend):
                 logger.debug("LLM cache HIT for prompt: %.60s", prompt)
                 return LLMResult(**cached)
 
-        self._ensure_llm()
+        self._ensure_llm(model)
         if not hasattr(self._llm, "ainvoke"):
             return LLMResult(
                 provider="openai",
-                model=self._model,
+                model=used_model,
                 success=False,
                 error="OpenAI backend unavailable (init failed)",
             )
@@ -186,7 +191,7 @@ class OpenAIBackend(LLMBackend):
             result = LLMResult(
                 content=response.content,
                 provider="openai",
-                model=self._model,
+                model=used_model,
                 duration=duration,
                 success=True,
             )
@@ -198,7 +203,7 @@ class OpenAIBackend(LLMBackend):
             logger.warning("OpenAI generate rejected: circuit breaker OPEN")
             return LLMResult(
                 provider="openai",
-                model=self._model,
+                model=used_model,
                 duration=duration,
                 success=False,
                 error="Circuit breaker OPEN — LLM temporarily unavailable",
@@ -208,7 +213,7 @@ class OpenAIBackend(LLMBackend):
             logger.warning("OpenAI generate failed: %s", exc)
             return LLMResult(
                 provider="openai",
-                model=self._model,
+                model=used_model,
                 duration=duration,
                 success=False,
                 error=str(exc),
@@ -220,7 +225,9 @@ class OpenAIBackend(LLMBackend):
         system: str = "",
         output_schema: type[BaseModel] | None = None,
         temperature: float = 0.3,
+        model: str | None = None,
     ) -> LLMResult:
+        used_model = model or self._model
         # Check cache first (schema-aware)
         schema_name = output_schema.__name__ if output_schema else ""
         if self._cache is not None:
@@ -229,17 +236,17 @@ class OpenAIBackend(LLMBackend):
                 logger.debug("LLM cache HIT for structured: %.60s", prompt)
                 return LLMResult(**cached)
 
-        self._ensure_llm()
+        self._ensure_llm(model)
         if not hasattr(self._llm, "ainvoke"):
             return LLMResult(
                 provider="openai",
-                model=self._model,
+                model=used_model,
                 success=False,
                 error="OpenAI backend unavailable (init failed)",
             )
 
         if output_schema is None:
-            return await self.generate(prompt, system, temperature)
+            return await self.generate(prompt, system, temperature, model=model)
 
         from langchain_core.messages import HumanMessage, SystemMessage
 
@@ -262,7 +269,7 @@ class OpenAIBackend(LLMBackend):
                 content=response.content,
                 structured=parsed.model_dump(),
                 provider="openai",
-                model=self._model,
+                model=used_model,
                 duration=duration,
                 success=True,
             )
@@ -274,7 +281,7 @@ class OpenAIBackend(LLMBackend):
             logger.warning("OpenAI generate_structured rejected: circuit breaker OPEN")
             return LLMResult(
                 provider="openai",
-                model=self._model,
+                model=used_model,
                 duration=duration,
                 success=False,
                 error="Circuit breaker OPEN — LLM temporarily unavailable",
@@ -284,7 +291,7 @@ class OpenAIBackend(LLMBackend):
             logger.warning("OpenAI generate_structured failed: %s", exc)
             return LLMResult(
                 provider="openai",
-                model=self._model,
+                model=used_model,
                 duration=duration,
                 success=False,
                 error=str(exc),
