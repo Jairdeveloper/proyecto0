@@ -4,11 +4,12 @@
 - **Tipo:** REP (Reporte)
 - **Área:** DEV
 - **Módulo:** agentic_pipeline
-- **Versión:** 1.0
+- **Versión:** 1.1
 - **Estado:** DRAFT
-- **Tags:** `execution-report`, `m4`, `fixtures`, `conftest`, `testing`
-- **Fuente:** `docs/130_PLAN_DEV_MIGRATION_EXECUTION_1_0_DRAFT.md` (M4.1)
+- **Tags:** `execution-report`, `m4`, `fixtures`, `conftest`, `testing`, `security`, `bandit`, `blocked-patterns`
+- **Fuente:** `docs/130_PLAN_DEV_MIGRATION_EXECUTION_1_0_DRAFT.md` (M4.1–M4.2)
 - **Changelog:**
+  - 1.1 — 2026-06-19: Añadido M4.2 — SecurityScanner + BanditScanner
   - 1.0 — 2026-06-19: Versión inicial — M4.1 Fixtures compartidas
 
 ---
@@ -74,10 +75,85 @@ $ pytest tests/test_base_stage.py tests/test_integration.py tests/test_orchestra
 
 ---
 
-## 5. Estado de M4
+## 5. M4.2 — SecurityScanner + BanditScanner (S1)
+
+### Motivo
+
+El pipeline generaba código NestJS/Prisma sin verificar que no contuviera constructos peligrosos (`eval`, `exec`, `os.system`, etc.). Un prompt malicioso o un modelo comprometido podría inyectar código inseguro en los archivos generados. Se implementó un doble mecanismo de defensa:
+1. `BanditScanner(StageObserver)` — reacciona a eventos del pipeline (synthesis)
+2. `SecurityScanner(Validator)` — escanea directorios de salida como eslabón final de Chain of Responsibility
+
+Ambos usan `BLOCKED_PATTERNS` del módulo `security/policies.py`.
+
+### Archivos creados/modificados
+
+| Acción | Archivo | Cambio |
+|--------|---------|--------|
+| 📄 Crear | `security/__init__.py` | Init del módulo security |
+| 📄 Crear | `security/policies.py` | `BLOCKED_PATTERNS` — 6 regex para eval, exec, os.system, subprocess.call, pickle.loads, __import__ |
+| 📄 Crear | `security/bandit_scanner.py` | `BanditScanner(StageObserver)` — escanea archivos generados en evento `synthesis` |
+| 🔧 Modificar | `nodes/validator.py` | `SecurityScanner` ahora también verifica `BLOCKED_PATTERNS` |
+
+### BanditScanner
+
+```python
+class BanditScanner(StageObserver):
+    def on_event(self, event: StageEvent) -> None:
+        if event.stage != "synthesis":
+            return
+        for filepath in event.output.get("generated_files", []):
+            content = Path(filepath).read_text()
+            for pattern in BLOCKED_PATTERNS:
+                if pattern.search(content):
+                    event.metadata["security_alert"] = f"Blocked pattern in {filepath}"
+```
+
+### SecurityScanner (modificado)
+
+El `SecurityScanner` existente en `validator.py` ya era el eslabón final de la cadena CoR (`syntax → types → security`). Se modificó su método `validate()` para también iterar sobre `BLOCKED_PATTERNS` y reportar hallazgos como errores.
+
+```python
+# Dentro de SecurityScanner.validate():
+for blocked in _BLOCKED_PATTERNS:
+    if blocked.search(content):
+        rel = filepath.relative_to(output_dir)
+        findings.append(f"Blocked pattern in {rel}")
+```
+
+### Verificación
+
+```bash
+$ ruff check security/ nodes/validator.py
+# EXIT: 0
+
+$ python -c "
+from agentic_pipeline.security.bandit_scanner import BanditScanner
+from agentic_pipeline.security.policies import BLOCKED_PATTERNS
+from agentic_pipeline.nodes.validator import SecurityScanner
+assert len(BLOCKED_PATTERNS) == 6
+print('OK')
+"
+
+$ pytest tests/test_validator_chain.py tests/test_observer_pattern.py tests/test_integration.py -v --tb=short -o "addopts="
+# 36 passed (11 validator + 19 observer + 6 integration)
+```
+
+| Verificación | Resultado |
+|-------------|-----------|
+| `ruff check` — 0 errores | ✅ PASS |
+| `BLOCKED_PATTERNS` tiene 6 patrones | ✅ PASS |
+| `BanditScanner` se instancia correctamente | ✅ PASS |
+| `SecurityScanner` importa sin errores | ✅ PASS |
+| Validator chain tests (11 tests) | ✅ PASS |
+| Observer pattern tests (19 tests) | ✅ PASS |
+| Integration tests (6 tests) | ✅ PASS |
+
+---
+
+## 6. Estado de M4
 
 | Sub-tarea | Estado |
 |-----------|--------|
 | **M4.1 — Fixtures compartidas (T2)** | **✅ COMPLETADO** |
-| M4.2 — SecurityScanner (S1) | ⏳ Pendiente |
+| **M4.2 — SecurityScanner + BanditScanner (S1)** | **✅ COMPLETADO** |
 | M4.3 — TokenBucket rate limiter (S4) | ⏳ Pendiente |

@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any
 
 from agentic_pipeline.base_stage import PipelineStage
+from agentic_pipeline.security.policies import BLOCKED_PATTERNS as _BLOCKED_PATTERNS
 from agentic_pipeline.state_models import ActionPlan, AnalysisResult, StageContext, StageOutput
 
 logger = logging.getLogger(__name__)
@@ -145,7 +146,7 @@ SECRET_PATTERNS: list[tuple[str, str]] = [
 
 
 class SecurityScanner(Validator):
-    """Scans for hardcoded secrets using regex patterns + trufflehog."""
+    """Scans for hardcoded secrets and blocked patterns (eval, exec, ...)."""
 
     def __init__(
         self,
@@ -165,6 +166,10 @@ class SecurityScanner(Validator):
                     if re.search(pattern, content):
                         rel = filepath.relative_to(output_dir)
                         findings.append(f"{desc} in {rel}")
+                for blocked in _BLOCKED_PATTERNS:
+                    if blocked.search(content):
+                        rel = filepath.relative_to(output_dir)
+                        findings.append(f"Blocked pattern in {rel}")
             except (UnicodeDecodeError, PermissionError):
                 continue
         try:
