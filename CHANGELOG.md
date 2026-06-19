@@ -29,6 +29,8 @@ y este proyecto se adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.
 - `docs/146_REP_DEV_FASE8_OPERATIONAL_DOCS_1_0_DRAFT.md`: reporte de ejecucion de la Fase 8 del plan 138.
 - `scripts/daily_check.sh`: script ejecutable del gate diario con los 4 comandos de smoke test.
 - `docs/147_REP_DEV_FASE9_DAILY_GATE_1_0_DRAFT.md`: reporte de ejecucion de la Fase 9 del plan 138.
+- `scripts/release_check.sh`: script ejecutable del gate de release con 6 pasos (incluye pytest completo).
+- `docs/148_REP_DEV_FASE10_RELEASE_GATE_1_0_DRAFT.md`: reporte de ejecucion de la Fase 10 del plan 138.
 
 ### Changed
 - `docs/136_GUIDE_DEV_PROJECT0_RUNBOOK_1_0_ACTIVE.md`: section 11.1 ahora recomienda `./scripts/daily_check.sh`.
