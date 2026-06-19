@@ -20,8 +20,10 @@ y este proyecto se adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.
 - `compiler-bot/agentic_pipeline/dashboard/app.py`: servidor HTTP stdlib con 5 endpoints (/, /api/health, /api/summary, /api/stages, /api/stages/<stage>/recent).
 - `compiler-bot/agentic_pipeline/tests/test_dashboard_app.py`: 5 tests de integracion HTTP.
 - `docs/143_REP_DEV_FASE5_HTTP_SERVER_1_0_DRAFT.md`: reporte de ejecucion de la Fase 5 del plan 138.
+- `docs/144_REP_DEV_FASE6_CLI_DASHBOARD_1_0_DRAFT.md`: reporte de ejecucion de la Fase 6 del plan 138.
 
 ### Changed
+- `compiler-bot/agentic`: agregados flags `--dashboard`, `--host`, `--port` para arrancar servidor dashboard local.
 - `VERSION`: actualizado de `2.0.0` a `2.8.4` para alinear con CHANGELOG.
 - `compiler-bot/agentic_pipeline/pyproject.toml`: version del paquete actualizada de `0.1.0` a `2.8.4`.
 - `.github/workflows/ci.yml`: agregado paso `bash scripts/check_version_alignment.sh` en job lint, antes de setup-python.
