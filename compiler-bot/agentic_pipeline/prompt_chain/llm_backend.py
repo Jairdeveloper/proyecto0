@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import os
 import time
@@ -10,7 +11,10 @@ from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel
 
+from agentic_pipeline.circuit_breaker import CircuitBreakerOpenError
+
 if TYPE_CHECKING:
+    from agentic_pipeline.circuit_breaker import CircuitBreaker, ExponentialBackoff
     from agentic_pipeline.prompt_chain.llm_cache import LLMCache
 
 logger = logging.getLogger(__name__)
@@ -33,10 +37,21 @@ class LLMBackend(ABC):
 
     def __init__(self) -> None:
         self._cache: LLMCache | None = None
+        self._circuit_breaker: CircuitBreaker | None = None
+        self._backoff: ExponentialBackoff | None = None
 
     def set_cache(self, cache: LLMCache | None) -> None:
         """Inyecta cache de respuestas LLM."""
         self._cache = cache
+
+    def set_circuit_breaker(
+        self,
+        cb: CircuitBreaker | None = None,
+        backoff: ExponentialBackoff | None = None,
+    ) -> None:
+        """Inyecta circuit breaker + exponential backoff para resiliencia."""
+        self._circuit_breaker = cb
+        self._backoff = backoff
 
     @abstractmethod
     async def generate(
@@ -79,6 +94,30 @@ class OpenAIBackend(LLMBackend):
         self._model = model or os.getenv("AGENTIC_OPENAI_MODEL", "gpt-4o-mini")
         self._base_url = base_url or os.getenv("AGENTIC_OPENAI_BASE_URL")
         self._llm: Any = None
+
+    async def _call_with_retry(
+        self,
+        fn: Any,
+        max_retries: int = 3,
+    ) -> Any:
+        """Execute fn with circuit breaker protection and exponential backoff retry."""
+        last_exc: Exception | None = None
+        for attempt in range(max_retries):
+            try:
+                if self._circuit_breaker is not None:
+                    return await self._circuit_breaker.call_async(fn)
+                return await fn()
+            except CircuitBreakerOpenError:
+                raise
+            except Exception as e:
+                last_exc = e
+                if attempt < max_retries - 1:
+                    if self._backoff is not None:
+                        await asyncio.sleep(self._backoff.delay(attempt))
+                    continue
+                raise
+
+        raise last_exc  # type: ignore[misc]
 
     def _ensure_llm(self) -> None:
         if self._llm is not None:
@@ -123,16 +162,17 @@ class OpenAIBackend(LLMBackend):
                 success=False,
                 error="OpenAI backend unavailable (init failed)",
             )
+
+        from langchain_core.messages import HumanMessage, SystemMessage
+
+        messages = []
+        if system:
+            messages.append(SystemMessage(content=system))
+        messages.append(HumanMessage(content=prompt))
+
         t0 = time.time()
         try:
-            from langchain_core.messages import HumanMessage, SystemMessage
-
-            messages = []
-            if system:
-                messages.append(SystemMessage(content=system))
-            messages.append(HumanMessage(content=prompt))
-
-            response = await self._llm.ainvoke(messages)
+            response = await self._call_with_retry(lambda: self._llm.ainvoke(messages))
             duration = time.time() - t0
             result = LLMResult(
                 content=response.content,
@@ -141,10 +181,19 @@ class OpenAIBackend(LLMBackend):
                 duration=duration,
                 success=True,
             )
-            # Store in cache
             if self._cache is not None:
                 await self._cache.set(prompt, "", result.model_dump())
             return result
+        except CircuitBreakerOpenError:
+            duration = time.time() - t0
+            logger.warning("OpenAI generate rejected: circuit breaker OPEN")
+            return LLMResult(
+                provider="openai",
+                model=self._model,
+                duration=duration,
+                success=False,
+                error="Circuit breaker OPEN — LLM temporarily unavailable",
+            )
         except Exception as exc:
             duration = time.time() - t0
             logger.warning("OpenAI generate failed: %s", exc)
@@ -179,24 +228,25 @@ class OpenAIBackend(LLMBackend):
                 success=False,
                 error="OpenAI backend unavailable (init failed)",
             )
+
+        if output_schema is None:
+            return await self.generate(prompt, system, temperature)
+
+        from langchain_core.messages import HumanMessage, SystemMessage
+
+        schema_instructions = (
+            f"Responde SOLO con JSON valido que cumpla este schema:\n"
+            f"{output_schema.model_json_schema()}"
+        )
+        full_system = f"{system}\n\n{schema_instructions}" if system else schema_instructions
+        messages = [
+            SystemMessage(content=full_system),
+            HumanMessage(content=prompt),
+        ]
+
         t0 = time.time()
         try:
-            if output_schema is None:
-                return await self.generate(prompt, system, temperature)
-
-            from langchain_core.messages import HumanMessage, SystemMessage
-
-            schema_instructions = (
-                f"Responde SOLO con JSON valido que cumpla este schema:\n"
-                f"{output_schema.model_json_schema()}"
-            )
-            full_system = f"{system}\n\n{schema_instructions}" if system else schema_instructions
-            messages = [
-                SystemMessage(content=full_system),
-                HumanMessage(content=prompt),
-            ]
-
-            response = await self._llm.ainvoke(messages)
+            response = await self._call_with_retry(lambda: self._llm.ainvoke(messages))
             parsed = output_schema.model_validate_json(response.content)
             duration = time.time() - t0
             result = LLMResult(
@@ -207,10 +257,19 @@ class OpenAIBackend(LLMBackend):
                 duration=duration,
                 success=True,
             )
-            # Store in cache
             if self._cache is not None:
                 await self._cache.set(prompt, schema_name, result.model_dump())
             return result
+        except CircuitBreakerOpenError:
+            duration = time.time() - t0
+            logger.warning("OpenAI generate_structured rejected: circuit breaker OPEN")
+            return LLMResult(
+                provider="openai",
+                model=self._model,
+                duration=duration,
+                success=False,
+                error="Circuit breaker OPEN — LLM temporarily unavailable",
+            )
         except Exception as exc:
             duration = time.time() - t0
             logger.warning("OpenAI generate_structured failed: %s", exc)
