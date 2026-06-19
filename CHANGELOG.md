@@ -5,6 +5,16 @@ Todas las cambios notables de este proyecto se documentan en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es/1.0.0/),
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.8.4] — 2026-06-19
+
+### Added
+- `docs/139_REP_DEV_PHASE0_PREPARATION_METRICS_DASHBOARD_1_0_DRAFT.md`: reporte de ejecucion de la Fase 0 del plan 138, con verificacion de git, ruff, tests shell y metricas CLI.
+- `docs/139_REP_DEV_FASE1_VERSION_ALIGNMENT_1_0_DRAFT.md`: reporte de ejecucion de la Fase 1 del plan 138, alineacion de versionado a 2.8.4.
+
+### Changed
+- `VERSION`: actualizado de `2.0.0` a `2.8.4` para alinear con CHANGELOG.
+- `compiler-bot/agentic_pipeline/pyproject.toml`: version del paquete actualizada de `0.1.0` a `2.8.4`.
+
 ## [2.8.3] — 2026-06-19
 
 ### Added

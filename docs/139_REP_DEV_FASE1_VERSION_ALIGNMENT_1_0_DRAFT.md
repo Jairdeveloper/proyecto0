@@ -1,0 +1,63 @@
+---
+id: 139
+area: dev
+type: REP
+module: VERSION_ALIGNMENT
+version: 1.0
+status: DRAFT
+tags:
+  - execution-report
+  - fase1
+  - version-alignment
+  - versioning
+source: docs/138_PLAN_DEV_METRICS_DASHBOARD_VERSION_ALIGNMENT_EXECUTION_1_0_DRAFT.md (Fase 1)
+changelog:
+  - 1.0 — 2026-06-19: Ejecucion de Fase 1 completada — versiones alineadas a 2.8.4
+---
+
+# Reporte de Ejecucion — Fase 1: Alineacion de Versionado
+
+## 1. Resumen
+
+| Aspecto | Valor |
+|---------|-------|
+| Plan fuente | `138_PLAN_DEV_METRICS_DASHBOARD_VERSION_ALIGNMENT_EXECUTION_1_0_DRAFT.md` |
+| Fase | 1 — Alineacion de Versionado |
+| Version canonica | `2.8.4` (extraida de primera cabecera de `CHANGELOG.md`) |
+| Estado | **COMPLETADO** |
+
+## 2. Tareas Ejecutadas
+
+| ID | Tarea | Archivo | Cambio | Resultado |
+|----|-------|---------|--------|-----------|
+| V1.1 | Actualizar VERSION | `VERSION` | `2.0.0` → `2.8.4` | ✅ |
+| V1.2 | Actualizar paquete Python | `compiler-bot/agentic_pipeline/pyproject.toml` | `0.1.0` → `2.8.4` | ✅ |
+| V1.3 | Confirmar cabecera changelog | `CHANGELOG.md` | `## [2.8.4]` ya era la primera cabecera | ✅ (sin cambios) |
+| V1.4 | No tocar versiones legacy shell | `compiler-bot/recpl.sh` | `VERSION="1.2.0"` intacto | ✅ |
+
+## 3. Verificacion
+
+```sh
+$ cat VERSION
+2.8.4
+
+$ grep '^version' compiler-bot/agentic_pipeline/pyproject.toml
+version = "2.8.4"
+
+$ awk '/^## \[/{gsub(/[\[\]]/,""); print $2; exit}' CHANGELOG.md
+2.8.4
+
+$ grep 'VERSION=' compiler-bot/recpl.sh
+VERSION="1.2.0"
+```
+
+## 4. Resultado
+
+| Archivo | Version anterior | Version actual | Coincide? |
+|---------|-----------------|----------------|-----------|
+| `VERSION` | `2.0.0` | `2.8.4` | ✅ |
+| `pyproject.toml` | `0.1.0` | `2.8.4` | ✅ |
+| `CHANGELOG.md` (1ra cabecera) | `2.8.4` | `2.8.4` | ✅ |
+| `recpl.sh` (legacy) | `1.2.0` | `1.2.0` (intacto) | ✅ (legacy) |
+
+**Fase 1 completada.** Los tres archivos de version (`VERSION`, `pyproject.toml`, `CHANGELOG.md`) coinciden en `2.8.4`. La version legacy de shell (`recpl.sh`) se mantiene en `1.2.0` sin modificaciones.
