@@ -12,6 +12,7 @@ multi-agente (agents/event_bus.py).
 
 from __future__ import annotations
 
+import threading
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
@@ -61,23 +62,35 @@ class StageSubject:
 
     Los PipelineStage y PromptHandler usan una instancia compartida
     de StageSubject para publicar eventos sin conocer a los observers.
+
+    Thread-safe: attach/detach usan un lock; notify itera sobre una
+    copia congelada para evitar RuntimeError por modificacion concurrente.
     """
 
     def __init__(self) -> None:
+        self._lock = threading.Lock()
         self._observers: list[StageObserver] = []
         self._bus = EventBus()
 
     def attach(self, observer: StageObserver) -> None:
         """Registra un observer para recibir eventos futuros."""
-        self._observers.append(observer)
+        with self._lock:
+            self._observers.append(observer)
 
     def detach(self, observer: StageObserver) -> None:
         """Elimina un observer registrado previamente."""
-        self._observers.remove(observer)
+        with self._lock:
+            self._observers.remove(observer)
 
     def notify(self, event: StageEvent) -> None:
-        """Notifica a observers locales y publica en el EventBus global."""
-        for observer in self._observers:
+        """Notifica a observers locales y publica en el EventBus global.
+
+        Itera sobre copia congelada de _observers para seguridad
+        ante modificaciones concurrentes desde otros hilos.
+        """
+        with self._lock:
+            snapshot = list(self._observers)
+        for observer in snapshot:
             observer.on_event(event)
         self._bus.publish(event.stage, event)
 

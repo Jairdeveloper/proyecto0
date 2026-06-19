@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import threading
 from unittest.mock import MagicMock
 
 import pytest
@@ -253,3 +254,54 @@ class TestPipelineStageSubject:
             assert "intentional failure" in call_args.error
         finally:
             PipelineStage.subject = orig
+
+
+class TestStageSubjectConcurrency:
+    """Tests that StageSubject handles concurrent attach/detach/notify safely."""
+
+    def test_concurrent_attach_detach_notify(self):
+        subject = StageSubject()
+        results: list[bool] = []
+        results_lock = threading.Lock()
+        barrier = threading.Barrier(10)
+
+        def worker() -> None:
+            obs = MagicMock(spec=StageObserver)
+            barrier.wait()
+            subject.attach(obs)
+            event = StageEvent(stage="concurrent", duration=0.1, success=True)
+            subject.notify(event)
+            subject.detach(obs)
+            subject.notify(event)
+            with results_lock:
+                results.append(True)
+
+        threads = [threading.Thread(target=worker) for _ in range(10)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+
+        assert len(results) == 10
+        assert subject.observer_count == 0
+        assert subject._bus.has_subscribers("concurrent") is False
+
+    def test_concurrent_attach_without_race(self):
+        subject = StageSubject()
+        barrier = threading.Barrier(10)
+        observers: list[MagicMock] = []
+
+        def worker() -> None:
+            obs = MagicMock(spec=StageObserver)
+            barrier.wait()
+            subject.attach(obs)
+            with threading.Lock():
+                observers.append(obs)
+
+        threads = [threading.Thread(target=worker) for _ in range(10)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+
+        assert subject.observer_count == 10
