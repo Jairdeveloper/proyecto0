@@ -85,6 +85,7 @@ class AsyncEventBus:
         self._wildcard_handlers: list[tuple[str, Callable]] = []
 
     def set_max_log_size(self, size: int) -> None:
+        """Set the maximum number of events kept in the replay log."""
         self._max_log_size = size
 
     def _next_sequence(self, project_id: str) -> int:

@@ -90,6 +90,12 @@ class CoderAgent(BaseAgent):
         )
 
     async def handle_event(self, event: Event) -> None:
+        """Process a ``requirement.created`` event.
+
+        Reads requirements from the KG, maps them to generator targets,
+        builds IR node trees, and delegates to GeneratorFactory.
+        Emits ``code.committed`` or ``code.failed`` per target.
+        """
         project_id: str = event.project_id
         requirement_ids: list[str] = event.data.get("requirement_ids", [])
         if not requirement_ids:

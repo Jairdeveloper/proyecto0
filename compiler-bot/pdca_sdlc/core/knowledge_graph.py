@@ -70,6 +70,7 @@ class KnowledgeGraph:
         self._graph: nx.DiGraph = nx.DiGraph()
 
     def add_node(self, node: Node) -> None:
+        """Add a node to the graph."""
         self._graph.add_node(
             node.id,
             node_type=node.node_type,
@@ -79,6 +80,7 @@ class KnowledgeGraph:
         )
 
     def get_node(self, node_id: str) -> Node | None:
+        """Retrieve a node by ID. Returns None if not found."""
         if node_id not in self._graph:
             return None
         data = self._graph.nodes[node_id]
@@ -91,6 +93,7 @@ class KnowledgeGraph:
         )
 
     def update_node(self, node_id: str, **updates: Any) -> bool:
+        """Update node properties. Returns True if node existed."""
         if node_id not in self._graph:
             return False
         for key, value in updates.items():
@@ -103,12 +106,14 @@ class KnowledgeGraph:
         return True
 
     def remove_node(self, node_id: str) -> bool:
+        """Remove a node by ID. Returns True if node existed."""
         if node_id not in self._graph:
             return False
         self._graph.remove_node(node_id)
         return True
 
     def add_edge(self, edge: Edge) -> None:
+        """Add a directed edge between two nodes."""
         self._graph.add_edge(
             edge.source_id,
             edge.target_id,
@@ -117,6 +122,7 @@ class KnowledgeGraph:
         )
 
     def get_outgoing(self, node_id: str) -> list[Edge]:
+        """Get all outgoing edges from a node."""
         if node_id not in self._graph:
             return []
         result: list[Edge] = []
@@ -132,6 +138,7 @@ class KnowledgeGraph:
         return result
 
     def get_incoming(self, node_id: str) -> list[Edge]:
+        """Get all incoming edges to a node."""
         if node_id not in self._graph:
             return []
         result: list[Edge] = []
@@ -212,16 +219,20 @@ class KnowledgeGraph:
         return result
 
     def all_nodes(self) -> Generator[Node, None, None]:
+        """Yield all nodes in the graph."""
         for node_id in self._graph.nodes:
             node = self.get_node(node_id)
             if node is not None:
                 yield node
 
     def node_count(self) -> int:
+        """Return the number of nodes in the graph."""
         return self._graph.number_of_nodes()
 
     def edge_count(self) -> int:
+        """Return the number of edges in the graph."""
         return self._graph.number_of_edges()
 
     def clear(self) -> None:
+        """Remove all nodes and edges from the graph."""
         self._graph.clear()

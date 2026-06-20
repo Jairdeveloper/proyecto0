@@ -35,15 +35,18 @@ class CapabilityRegistry:
         self._manifests: dict[str, CapabilityManifest] = {}
 
     def register(self, manifest: CapabilityManifest) -> None:
+        """Register an agent capability manifest."""
         self._manifests[manifest.agent_id] = manifest
 
     def unregister(self, agent_id: str) -> bool:
+        """Remove a manifest. Returns True if existed."""
         if agent_id not in self._manifests:
             return False
         del self._manifests[agent_id]
         return True
 
     def get(self, agent_id: str) -> CapabilityManifest | None:
+        """Get a manifest by agent ID."""
         return self._manifests.get(agent_id)
 
     def find_by_event(self, topic: str) -> list[CapabilityManifest]:
@@ -65,13 +68,16 @@ class CapabilityRegistry:
         ]
 
     def get_all(self) -> list[CapabilityManifest]:
+        """Return all registered manifests."""
         return list(self._manifests.values())
 
     def update_status(self, agent_id: str, status: str) -> bool:
+        """Update the status of a registered agent. Returns True if existed."""
         if agent_id not in self._manifests:
             return False
         self._manifests[agent_id].status = status
         return True
 
     def count(self) -> int:
+        """Return the number of registered agents."""
         return len(self._manifests)

@@ -25,6 +25,7 @@ logger = logging.getLogger(__name__)
 
 
 def _setup_logging(verbose: bool = False) -> None:
+    """Configure logging level and format based on verbosity flag."""
     level = logging.DEBUG if verbose else logging.INFO
     logging.basicConfig(
         level=level,
@@ -34,6 +35,12 @@ def _setup_logging(verbose: bool = False) -> None:
 
 
 async def main() -> None:
+    """Run the PDCA-sdlc pipeline from the command line.
+
+    Parses args, creates infrastructure and agents, publishes
+    ``project.initialized``, waits for async processing,
+    and prints a Knowledge Graph summary.
+    """
     parser = argparse.ArgumentParser(
         description="PDCA-sdlc: SDLC orquestador ISO 12207 reactivo",
     )
