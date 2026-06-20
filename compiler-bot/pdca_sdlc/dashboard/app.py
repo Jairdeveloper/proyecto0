@@ -128,9 +128,7 @@ class DashboardHTTPHandler(BaseHTTPRequestHandler):
                     self._send_json({"error": "Missing project parameter"}, 400)
                     return
                 granularity = params.get("granularity", ["1m"])[0]
-                self._send_json(
-                    self.service.get_event_timeline(pid, granularity)
-                )
+                self._send_json(self.service.get_event_timeline(pid, granularity))
 
             elif path == "/api/events/live":
                 self._handle_sse(params)
@@ -139,9 +137,7 @@ class DashboardHTTPHandler(BaseHTTPRequestHandler):
                 event_id = path.replace("/api/events/", "")
                 result = self.service.get_event_detail(event_id)
                 if result is None:
-                    self._send_json(
-                        {"error": f"Event not found: {event_id}"}, 404
-                    )
+                    self._send_json({"error": f"Event not found: {event_id}"}, 404)
                 else:
                     self._send_json(result)
 
@@ -162,12 +158,8 @@ class DashboardHTTPHandler(BaseHTTPRequestHandler):
                     offset_val = max(0, int(offset_str)) if offset_str else 0
                 except (ValueError, TypeError):
                     offset_val = 0
-                since_f: float | None = (
-                    float(since_time) if since_time else None
-                )
-                until_f: float | None = (
-                    float(until_time) if until_time else None
-                )
+                since_f: float | None = float(since_time) if since_time else None
+                until_f: float | None = float(until_time) if until_time else None
                 self._send_json(
                     self.service.query_events(
                         project_id=pid if pid and pid != "_all" else None,
@@ -211,9 +203,7 @@ class DashboardHTTPHandler(BaseHTTPRequestHandler):
     ) -> None:
         """Handle Server-Sent Events connection for live event streaming."""
         if self.bus is None:
-            self._send_json(
-                {"error": "EventBus not available for SSE"}, 500
-            )
+            self._send_json({"error": "EventBus not available for SSE"}, 500)
             return
         pid = params.get("project", [""])[0]
         if not pid:

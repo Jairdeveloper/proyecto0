@@ -10,6 +10,7 @@
   <nav class="nav">
     <h1 class="nav-title">PDCA-sdlc Dashboard</h1>
     <span class="nav-subtitle">ISO 12207 — SDLC Pipeline</span>
+    <span id="live-badge" class="live-badge" style="display:none">LIVE <span id="live-counter">0</span></span>
     <button class="btn-refresh" onclick="loadDashboard()" title="Refresh">&#x21bb;</button>
   </nav>
 
@@ -32,6 +33,27 @@
         <span class="kpi-value">--</span>
         <span class="kpi-label">Artefactos</span>
       </div>
+      <div class="kpi-card" id="kpi-usage">
+        <span class="kpi-value">--</span>
+        <span class="kpi-label">Log usado</span>
+      </div>
+    </section>
+
+    <!-- Distribution Chart -->
+    <section class="section" id="section-chart">
+      <h2>Distribucion de Eventos</h2>
+      <div class="chart-row">
+        <canvas id="distribution-chart" width="500" height="200"></canvas>
+        <div class="chart-sidebar">
+          <div id="topic-list" class="topic-list"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Timeline -->
+    <section class="section" id="section-timeline">
+      <h2>Timeline de Actividad</h2>
+      <svg id="timeline-svg" width="100%" height="120" style="display:block"></svg>
     </section>
 
     <!-- Projects Table -->
@@ -109,6 +131,47 @@
         </div>
       </div>
 
+      <!-- Distribution per project -->
+      <div class="detail-card" id="detail-distribution">
+        <h3>Distribucion de Eventos</h3>
+        <canvas id="detail-distribution-chart" width="500" height="160"></canvas>
+      </div>
+
+      <!-- Timeline per project -->
+      <div class="detail-card" id="detail-timeline-card">
+        <h3>Timeline</h3>
+        <svg id="detail-timeline-svg" width="100%" height="100" style="display:block"></svg>
+      </div>
+
+      <!-- Event Explorer -->
+      <div class="detail-card" id="detail-explorer">
+        <h3>Explorador de Eventos</h3>
+        <div class="explorer-filters">
+          <input type="text" id="expl-topic" placeholder="Topic (ej: *.committed)" class="explorer-input">
+          <input type="text" id="expl-source" placeholder="Source" class="explorer-input">
+          <input type="text" id="expl-search" placeholder="Buscar en data..." class="explorer-input">
+          <button onclick="searchEvents()" class="explorer-btn">Buscar</button>
+          <button onclick="startLiveStream()" class="explorer-btn live-btn">Live</button>
+          <button onclick="stopLiveStream()" class="explorer-btn stop-btn" style="display:none">Stop</button>
+        </div>
+        <div class="table-wrapper">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Topic</th>
+                <th>Source</th>
+                <th>Timestamp</th>
+                <th>Accion</th>
+              </tr>
+            </thead>
+            <tbody id="explorer-body">
+              <tr><td colspan="5" class="empty">Usa los filtros y haz clic en Buscar</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       <!-- Events -->
       <div class="detail-card" id="detail-events">
         <h3>Eventos Recientes <span id="events-count" class="badge"></span></h3>
@@ -128,6 +191,17 @@
       </div>
     </section>
   </main>
+
+  <!-- Event Detail Modal -->
+  <div id="event-modal" class="modal" style="display:none" onclick="closeEventModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Detalle del Evento</h3>
+        <button class="modal-close" onclick="closeEventModal()">&times;</button>
+      </div>
+      <pre id="event-detail-json" class="modal-body"></pre>
+    </div>
+  </div>
 
   <div class="loading-overlay" id="loading" style="display:none">
     <div class="spinner"></div>

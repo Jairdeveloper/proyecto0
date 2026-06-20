@@ -4,6 +4,8 @@
 let projectsCache = [];
 let sortField = null;
 let sortAsc = true;
+let eventSource = null;
+let currentProjectId = null;
 
 /* ---- Init ---- */
 document.addEventListener('DOMContentLoaded', () => {
@@ -19,14 +21,19 @@ function showLoading(show) {
 async function loadDashboard() {
   showLoading(true);
   try {
-    const [projRes, agentsRes, eventsRes] = await Promise.all([
+    const endpoints = [
       fetch('/api/projects'),
       fetch('/api/agents'),
       fetch('/api/events?project=_all&limit=1'),
-    ]);
+      fetch('/api/events/distribution?project=_all'),
+      fetch('/api/health/metrics'),
+    ];
+    const [projRes, agentsRes, eventsRes, distRes, metricsRes] = await Promise.all(endpoints);
     const projects = await projRes.json();
     const agents = await agentsRes.json();
-    // get total events from first project or empty
+    const dist = await distRes.json();
+    const metrics = await metricsRes.json();
+
     let totalEvents = 0;
     let totalArtifacts = 0;
     if (projects.projects && projects.projects.length > 0) {
@@ -42,7 +49,11 @@ async function loadDashboard() {
     document.querySelector('#kpi-agents .kpi-value').textContent = (agents.total || 0) + ' active';
     document.querySelector('#kpi-events .kpi-value').textContent = totalEvents;
     document.querySelector('#kpi-artifacts .kpi-value').textContent = totalArtifacts;
+    document.querySelector('#kpi-usage .kpi-value').textContent = (metrics.usage_pct || 0) + '%';
 
+    renderDistributionChart('distribution-chart', dist.distribution || {});
+    renderTopicList(dist.distribution || {});
+    renderTimelineSVG('timeline-svg', []);
     renderProjects(projectsCache);
   } catch (err) {
     document.getElementById('projects-body').innerHTML =
@@ -50,6 +61,72 @@ async function loadDashboard() {
   } finally {
     showLoading(false);
   }
+}
+
+/* ---- Distribution Bar Chart (Canvas API) ---- */
+function renderDistributionChart(canvasId, distribution) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const entries = Object.entries(distribution);
+  if (entries.length === 0) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    return;
+  }
+  const maxVal = Math.max(...Object.values(distribution), 1);
+  const barArea = canvas.width - 50;
+  const barWidth = barArea / (entries.length * 2);
+  const chartH = canvas.height - 30;
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  entries.forEach(([topic, count], i) => {
+    const x = 45 + i * barWidth * 2 + barWidth * 0.3;
+    const h = (count / maxVal) * chartH;
+    const y = canvas.height - 15 - h;
+    const hue = (i * 40) % 360;
+    ctx.fillStyle = `hsl(${hue}, 60%, 55%)`;
+    ctx.fillRect(x, y, barWidth * 0.7, h);
+    ctx.fillStyle = '#aab';
+    ctx.font = '9px monospace';
+    const label = topic.length > 10 ? topic.substring(0, 8) + '..' : topic;
+    ctx.fillText(label, x - 2, canvas.height - 3);
+    ctx.fillText(String(count), x + 2, y - 4);
+  });
+}
+
+/* ---- Topic list sidebar ---- */
+function renderTopicList(distribution) {
+  const el = document.getElementById('topic-list');
+  if (!el) return;
+  const entries = Object.entries(distribution);
+  if (entries.length === 0) {
+    el.innerHTML = '<span class="empty">Sin eventos</span>';
+    return;
+  }
+  el.innerHTML = entries.map(([topic, count]) =>
+    `<div class="topic-item"><span class="topic-name">${escapeHTML(topic)}</span><span class="topic-count">${count}</span></div>`
+  ).join('');
+}
+
+/* ---- Timeline SVG ---- */
+function renderTimelineSVG(svgId, buckets) {
+  const svg = document.getElementById(svgId);
+  if (!svg) return;
+  const W = svg.clientWidth || 600;
+  const H = 120;
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  if (!buckets || buckets.length === 0) {
+    svg.innerHTML = `<text x="${W/2}" y="${H/2}" text-anchor="middle" fill="#8899b4" font-size="13">Sin datos de timeline</text>`;
+    return;
+  }
+  const maxC = Math.max(...buckets.map(b => b.count), 1);
+  const step = W / Math.max(buckets.length, 1);
+  const points = buckets.map((b, i) => {
+    const x = i * step + step / 2;
+    const y = H - 20 - (b.count / maxC) * (H - 40);
+    return `${x},${y}`;
+  }).join(' ');
+  svg.innerHTML = `<polyline points="${points}" fill="none" stroke="#4a9eff" stroke-width="2"/>`;
 }
 
 /* ---- Projects table ---- */
@@ -72,16 +149,19 @@ function renderProjects(projects) {
 
 /* ---- Project detail ---- */
 async function showProject(projectId) {
+  currentProjectId = projectId;
   showLoading(true);
   try {
-    const [projRes, traceRes, eventsRes] = await Promise.all([
+    const [projRes, traceRes, eventsRes, distRes] = await Promise.all([
       fetch('/api/projects/' + encodeURIComponent(projectId)),
       fetch('/api/projects/' + encodeURIComponent(projectId) + '/trace'),
       fetch('/api/events?project=' + encodeURIComponent(projectId) + '&limit=20'),
+      fetch('/api/events/distribution?project=' + encodeURIComponent(projectId)),
     ]);
     const project = await projRes.json();
     const trace = await traceRes.json();
     const events = await eventsRes.json();
+    const dist = await distRes.json();
 
     if (project.error) {
       alert(project.error);
@@ -97,6 +177,8 @@ async function showProject(projectId) {
     renderTrace(trace);
     renderArtifacts(project);
     renderEvents(events);
+    renderDistributionChart('detail-distribution-chart', dist.distribution || {});
+    fetchAndRenderTimeline(projectId, 'detail-timeline-svg');
   } catch (err) {
     alert('Error: ' + err.message);
   } finally {
@@ -104,7 +186,19 @@ async function showProject(projectId) {
   }
 }
 
+async function fetchAndRenderTimeline(projectId, svgId) {
+  try {
+    const res = await fetch('/api/events/timeline?project=' + encodeURIComponent(projectId) + '&granularity=1m');
+    const data = await res.json();
+    renderTimelineSVG(svgId, data.buckets || []);
+  } catch (e) {
+    // silent
+  }
+}
+
 function showDashboard() {
+  currentProjectId = null;
+  stopLiveStream();
   document.getElementById('section-detail').style.display = 'none';
   document.getElementById('section-projects').style.display = 'block';
 }
@@ -166,12 +260,10 @@ function renderTrace(trace) {
   }
   const nodes = trace.trace;
   let html = '';
-  let indent = 0;
   for (let i = 0; i < nodes.length; i++) {
     const n = nodes[i];
     const cls = n.type;
     const label = n.id;
-    const isLast = i === nodes.length - 1;
     html += '<div class="trace-node ' + cls + '">';
     if (i > 0) html += '<span class="trace-connector">&#x2514; </span>';
     html += escapeHTML(label);
@@ -215,7 +307,7 @@ function renderEvents(events) {
     return;
   }
   tbody.innerHTML = list.map(e => `
-    <tr>
+    <tr onclick="showEventDetail('${escapeHTML(e.id)}')">
       <td>${e.sequence}</td>
       <td>${escapeHTML(e.topic)}</td>
       <td>${escapeHTML(e.source)}</td>
@@ -241,6 +333,120 @@ function sortTable(field) {
     return sortAsc ? va - vb : vb - va;
   });
   renderProjects(sorted);
+}
+
+/* ---- Event Explorer ---- */
+async function searchEvents() {
+  const pid = currentProjectId;
+  if (!pid) return;
+  const topic = document.getElementById('expl-topic').value.trim();
+  const source = document.getElementById('expl-source').value.trim();
+  const search = document.getElementById('expl-search').value.trim();
+  let url = '/api/events?project=' + encodeURIComponent(pid) + '&limit=50';
+  if (topic) url += '&topic=' + encodeURIComponent(topic);
+  if (source) url += '&source=' + encodeURIComponent(source);
+  if (search) url += '&search=' + encodeURIComponent(search);
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    renderExplorerResults(data.events || []);
+  } catch (err) {
+    document.getElementById('explorer-body').innerHTML =
+      '<tr><td colspan="5" class="error-msg">Error: ' + escapeHTML(err.message) + '</td></tr>';
+  }
+}
+
+function renderExplorerResults(events) {
+  const tbody = document.getElementById('explorer-body');
+  if (events.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5" class="empty">Sin resultados</td></tr>';
+    return;
+  }
+  tbody.innerHTML = events.map(e => `
+    <tr onclick="showEventDetail('${escapeHTML(e.id)}')">
+      <td>${e.sequence}</td>
+      <td>${escapeHTML(e.topic)}</td>
+      <td>${escapeHTML(e.source)}</td>
+      <td>${formatTime(e.timestamp)}</td>
+      <td><button class="explorer-btn-small" onclick="event.stopPropagation(); showEventDetail('${escapeHTML(e.id)}')">Ver</button></td>
+    </tr>
+  `).join('');
+}
+
+/* ---- Event Detail Modal ---- */
+function showEventDetail(eventId) {
+  fetch('/api/events/' + encodeURIComponent(eventId))
+    .then(r => r.json())
+    .then(data => {
+      document.getElementById('event-detail-json').textContent =
+        JSON.stringify(data, null, 2);
+      document.getElementById('event-modal').style.display = 'flex';
+    })
+    .catch(err => {
+      alert('Error al cargar evento: ' + err.message);
+    });
+}
+
+function closeEventModal(event) {
+  if (!event || event.target === document.getElementById('event-modal')) {
+    document.getElementById('event-modal').style.display = 'none';
+  }
+}
+
+/* ---- SSE Live Stream ---- */
+function startLiveStream() {
+  const pid = currentProjectId;
+  if (!pid) return;
+  if (eventSource) eventSource.close();
+  document.getElementById('live-badge').style.display = 'inline-block';
+  document.querySelector('.live-btn').style.display = 'none';
+  document.querySelector('.stop-btn').style.display = 'inline-block';
+  document.getElementById('live-counter').textContent = '0';
+
+  eventSource = new EventSource('/api/events/live?project=' + encodeURIComponent(pid));
+  eventSource.onmessage = (e) => {
+    try {
+      const evt = JSON.parse(e.data);
+      const counter = document.getElementById('live-counter');
+      counter.textContent = parseInt(counter.textContent || '0') + 1;
+      // Prepend to explorer table
+      const tbody = document.getElementById('explorer-body');
+      if (tbody) {
+        const firstChild = tbody.firstChild;
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${evt.sequence}</td>
+          <td>${escapeHTML(evt.topic)}</td>
+          <td>${escapeHTML(evt.source)}</td>
+          <td>${formatTime(evt.timestamp)}</td>
+          <td><button class="explorer-btn-small" onclick="showEventDetail('${escapeHTML(evt.id)}')">Ver</button></td>
+        `;
+        row.style.backgroundColor = '#2a3a5e';
+        row.style.transition = 'background 2s';
+        setTimeout(() => { row.style.backgroundColor = ''; }, 2000);
+        tbody.insertBefore(row, firstChild);
+        // Keep max 100 rows
+        while (tbody.children.length > 100) {
+          tbody.removeChild(tbody.lastChild);
+        }
+      }
+    } catch (ex) {
+      // ignore parse errors
+    }
+  };
+  eventSource.onerror = () => {
+    // Reconnect is automatic
+  };
+}
+
+function stopLiveStream() {
+  if (eventSource) {
+    eventSource.close();
+    eventSource = null;
+  }
+  document.getElementById('live-badge').style.display = 'none';
+  document.querySelector('.live-btn').style.display = 'inline-block';
+  document.querySelector('.stop-btn').style.display = 'none';
 }
 
 /* ---- Helpers ---- */
