@@ -1,0 +1,37 @@
+# PDCA-sdlc Configuration
+# Orquestador SDLC ISO 12207 reactivo
+
+llm:
+  flash:
+    model: "deepseek-chat"
+    temperature: 0.3
+    max_tokens: 4096
+  pro:
+    model: "deepseek-reasoner"
+    temperature: 0.2
+    max_tokens: 8192
+  fallback:
+    enabled: true
+    order: ["flash", "pro", "mock"]
+
+event_bus:
+  max_event_log_size: 10000
+  replay_batch_size: 100
+
+agents:
+  adaptation_agent:
+    enabled: true
+  requirements_analyst:
+    enabled: true
+  coder_agent:
+    enabled: true
+    mode: "hybrid"  # llm | synthesis | hybrid
+  architect_agent:
+    enabled: false  # Fase 2
+  verification_agent:
+    enabled: false  # Fase 2
+  project_tracker:
+    enabled: false  # Fase 2
+
+knowledge_graph:
+  backend: "networkx"  # networkx | neo4j (Fase 3)
