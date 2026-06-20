@@ -96,6 +96,7 @@ def dashboard_server():
         host="127.0.0.1",
         port=DASHBOARD_PORT,
         service=service,
+        bus=bus,
     )
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
@@ -159,12 +160,12 @@ class TestDashboardAPI:
     def test_events(self, dashboard_server) -> None:
         status, data = _fetch("/api/events?project=p-dash-01")
         assert status == 200
-        assert data["project_id"] == "p-dash-01"
-        assert data["count"] >= 1
+        assert "events" in data
+        assert data["total"] >= 1
 
     def test_events_missing_project_param(self, dashboard_server) -> None:
         status, data = _fetch("/api/events")
-        assert status == 400
+        assert status == 200  # Sin project devuelve todos los proyectos
 
     def test_health_returns_timestamp(self, dashboard_server) -> None:
         _, data = _fetch("/api/health")

@@ -171,7 +171,12 @@ def _start_dashboard(
     service = SdlcDashboardService(kg, bus, registry)
     thread = threading.Thread(
         target=run_server,
-        kwargs={"host": "127.0.0.1", "port": port, "service": service},
+        kwargs={
+            "host": "127.0.0.1",
+            "port": port,
+            "service": service,
+            "bus": bus,
+        },
         daemon=True,
     )
     thread.start()

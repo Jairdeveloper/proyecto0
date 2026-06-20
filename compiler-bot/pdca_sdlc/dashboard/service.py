@@ -8,7 +8,7 @@ from __future__ import annotations
 import time
 
 from pdca_sdlc.core.capability_registry import CapabilityRegistry
-from pdca_sdlc.core.event_bus import AsyncEventBus
+from pdca_sdlc.core.event_bus import AsyncEventBus, Event
 from pdca_sdlc.core.knowledge_graph import KnowledgeGraph, NodeType
 
 
@@ -148,14 +148,109 @@ class SdlcDashboardService:
         return {
             "project_id": project_id,
             "count": len(limited),
-            "events": [
-                {
-                    "sequence": e.sequence,
-                    "topic": e.topic,
-                    "source": e.source,
-                    "timestamp": e.timestamp,
-                    "data": e.data,
-                }
-                for e in limited
-            ],
+            "events": [self._serialize_event(e) for e in limited],
+        }
+
+    # --- Nuevos metodos Fase B ---
+
+    @staticmethod
+    def _serialize_event(e: Event) -> dict[str, object]:
+        """Serialize an Event to a JSON-safe dict."""
+        return {
+            "id": e.id,
+            "sequence": e.sequence,
+            "topic": e.topic,
+            "source": e.source,
+            "project_id": e.project_id,
+            "timestamp": e.timestamp,
+            "data": e.data,
+        }
+
+    def query_events(
+        self,
+        project_id: str | None = None,
+        topic: str | None = None,
+        source: str | None = None,
+        since_time: float | None = None,
+        until_time: float | None = None,
+        search: str | None = None,
+        limit: int = 100,
+        offset: int = 0,
+    ) -> dict[str, object]:
+        """Query events with filters and pagination."""
+        events, total = self._bus.query_events(
+            project_id=project_id,
+            topic_pattern=topic,
+            source=source,
+            since_time=since_time,
+            until_time=until_time,
+            search_text=search,
+            limit=limit,
+            offset=offset,
+        )
+        return {
+            "events": [self._serialize_event(e) for e in events],
+            "total": total,
+            "limit": limit,
+            "offset": offset,
+        }
+
+    def get_event_detail(self, event_id: str) -> dict[str, object] | None:
+        """Return a single event by ID, or None."""
+        event = self._bus.get_event(event_id)
+        if event is None:
+            return None
+        return self._serialize_event(event)
+
+    def get_event_distribution(self, project_id: str) -> dict[str, object]:
+        """Return event count per topic for a project."""
+        dist = self._bus.get_topic_distribution(project_id)
+        return {
+            "project_id": project_id,
+            "distribution": dist,
+            "total": sum(dist.values()),
+        }
+
+    def get_event_timeline(
+        self,
+        project_id: str,
+        granularity: str = "1m",
+    ) -> dict[str, object]:
+        """Return event timeline buckets for a project."""
+        buckets = self._bus.get_timeline(project_id, granularity)
+        return {
+            "project_id": project_id,
+            "granularity": granularity,
+            "buckets": buckets,
+        }
+
+    def get_topics(self) -> dict[str, object]:
+        """Return all unique topics with metadata."""
+        return {
+            "topics": self._bus.get_topics(),
+            "total": 0,
+        }
+
+    def get_sources(self) -> dict[str, object]:
+        """Return all unique sources with metadata."""
+        return {
+            "sources": self._bus.get_sources(),
+            "total": 0,
+        }
+
+    def get_subscriptions(self) -> dict[str, object]:
+        """Return all registered subscribers."""
+        subs = self._bus.get_subscribers()
+        return {
+            "subscriptions": subs,
+            "total": len(subs),
+        }
+
+    def get_metrics(self) -> dict[str, object]:
+        """Return extended health metrics."""
+        stats = self._bus.get_stats()
+        return {
+            "status": "ok",
+            "timestamp": time.time(),
+            **stats,
         }
