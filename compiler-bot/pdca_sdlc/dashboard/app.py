@@ -54,8 +54,10 @@ class DashboardHTTPHandler(BaseHTTPRequestHandler):
         ext = Path(path).suffix
         mime = _MIME_TYPES.get(ext, "application/octet-stream")
 
+        # Strip /static/ prefix if present (path joining with static_dir)
+        clean = path[len("/static/") :] if path.startswith("/static/") else path
         # Security: prevent directory traversal
-        requested = (static_dir / path.lstrip("/")).resolve()
+        requested = (static_dir / clean.lstrip("/")).resolve()
         if not str(requested).startswith(str(static_dir.resolve())):
             self._send_json({"error": "Forbidden"}, 403)
             return

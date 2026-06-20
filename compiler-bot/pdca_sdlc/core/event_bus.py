@@ -7,6 +7,7 @@ query engine with filters/pagination, event aggregations, SSE callbacks.
 
 from __future__ import annotations
 
+import asyncio
 import fnmatch
 import time
 import uuid
@@ -144,9 +145,10 @@ class AsyncEventBus:
                 proj_events.pop(0)
         for pattern, handler in self._wildcard_handlers:
             if TopicMatcher.matches(pattern, event.topic):
-                if hasattr(handler, "_async") or hasattr(handler, "__call__"):
-                    pass
-                handler(event.topic, event)
+                if asyncio.iscoroutinefunction(handler):
+                    await handler(event.topic, event)
+                else:
+                    handler(event.topic, event)
         for cb in self._sse_callbacks.get(event.project_id, []):
             cb(event)
         for cb in self._sse_callbacks.get("_all", []):
