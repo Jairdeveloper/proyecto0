@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import logging
+import threading
 
 from pdca_sdlc.agents.adaptation_agent import AdaptationAgent
 from pdca_sdlc.agents.coder_agent import CoderAgent
@@ -60,6 +61,17 @@ async def main() -> None:
         "--project-id",
         default=None,
         help="ID del proyecto (auto-generado si no se especifica)",
+    )
+    parser.add_argument(
+        "--dashboard",
+        action="store_true",
+        help="Iniciar servidor dashboard HTTP tras el pipeline",
+    )
+    parser.add_argument(
+        "--port",
+        type=int,
+        default=8764,
+        help="Puerto para el dashboard (default: 8764)",
     )
     args = parser.parse_args()
 
@@ -142,6 +154,34 @@ async def main() -> None:
     for agent in agents:
         await agent.stop()
     logger.info("Pipeline completado para %s", project_id)
+
+    if args.dashboard:
+        _start_dashboard(bus, kg, registry, args.port)
+
+
+def _start_dashboard(
+    bus: AsyncEventBus,
+    kg: KnowledgeGraph,
+    registry: CapabilityRegistry,
+    port: int,
+) -> None:
+    """Start the dashboard HTTP server in a daemon thread."""
+    from pdca_sdlc.dashboard import SdlcDashboardService, run_server
+
+    service = SdlcDashboardService(kg, bus, registry)
+    thread = threading.Thread(
+        target=run_server,
+        kwargs={"host": "127.0.0.1", "port": port, "service": service},
+        daemon=True,
+    )
+    thread.start()
+    logger.info("Dashboard en segundo plano en http://127.0.0.1:%d", port)
+    print(f"\nDashboard: http://127.0.0.1:{port}")
+    print("Presiona Ctrl+C para detener el servidor.")
+    try:
+        thread.join()
+    except KeyboardInterrupt:
+        logger.info("Dashboard detenido por el usuario")
 
 
 if __name__ == "__main__":

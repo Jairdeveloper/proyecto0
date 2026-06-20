@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PDCA-sdlc Dashboard</title>
+  <link rel="stylesheet" href="/static/dashboard.css">
+</head>
+<body>
+  <nav class="nav">
+    <h1 class="nav-title">PDCA-sdlc Dashboard</h1>
+    <span class="nav-subtitle">ISO 12207 — SDLC Pipeline</span>
+    <button class="btn-refresh" onclick="loadDashboard()" title="Refresh">&#x21bb;</button>
+  </nav>
+
+  <main class="container">
+    <!-- KPIs -->
+    <section class="kpi-row" id="kpi-row">
+      <div class="kpi-card" id="kpi-projects">
+        <span class="kpi-value">--</span>
+        <span class="kpi-label">Proyectos</span>
+      </div>
+      <div class="kpi-card" id="kpi-agents">
+        <span class="kpi-value">--</span>
+        <span class="kpi-label">Agentes activos</span>
+      </div>
+      <div class="kpi-card" id="kpi-events">
+        <span class="kpi-value">--</span>
+        <span class="kpi-label">Eventos</span>
+      </div>
+      <div class="kpi-card" id="kpi-artifacts">
+        <span class="kpi-value">--</span>
+        <span class="kpi-label">Artefactos</span>
+      </div>
+    </section>
+
+    <!-- Projects Table -->
+    <section class="section" id="section-projects">
+      <h2>Proyectos</h2>
+      <div class="table-wrapper">
+        <table class="table" id="projects-table">
+          <thead>
+            <tr>
+              <th data-sort="project_id" onclick="sortTable('project_id')">ID &#x25b4;&#x25be;</th>
+              <th data-sort="complexity" onclick="sortTable('complexity')">Complejidad</th>
+              <th data-sort="requirement_count" onclick="sortTable('requirement_count')">Reqs</th>
+              <th data-sort="artifact_count" onclick="sortTable('artifact_count')">Artefactos</th>
+              <th data-sort="event_count" onclick="sortTable('event_count')">Eventos</th>
+            </tr>
+          </thead>
+          <tbody id="projects-body">
+            <tr><td colspan="5" class="empty">Cargando...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Detail View -->
+    <section class="section" id="section-detail" style="display:none">
+      <h2>
+        <a href="#" onclick="showDashboard(); return false" class="back-link">&larr; Proyectos</a>
+        <span id="detail-title"></span>
+      </h2>
+
+      <!-- Goal -->
+      <div class="detail-card" id="detail-goal">
+        <h3>Goal</h3>
+        <div id="detail-goal-content"></div>
+      </div>
+
+      <!-- Requirements -->
+      <div class="detail-card" id="detail-reqs">
+        <h3>Requirements <span id="reqs-count" class="badge"></span></h3>
+        <div class="table-wrapper">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Texto</th>
+                <th>Tipo</th>
+                <th>Prioridad</th>
+              </tr>
+            </thead>
+            <tbody id="reqs-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Traceability -->
+      <div class="detail-card" id="detail-trace">
+        <h3>Trazabilidad</h3>
+        <div id="trace-content" class="trace-tree"></div>
+      </div>
+
+      <!-- Artifacts -->
+      <div class="detail-card" id="detail-artifacts">
+        <h3>Artefactos Generados <span id="artifacts-count" class="badge"></span></h3>
+        <div class="table-wrapper">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Target</th>
+                <th>Estado</th>
+                <th>Archivos</th>
+              </tr>
+            </thead>
+            <tbody id="artifacts-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Events -->
+      <div class="detail-card" id="detail-events">
+        <h3>Eventos Recientes <span id="events-count" class="badge"></span></h3>
+        <div class="table-wrapper">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Topic</th>
+                <th>Source</th>
+                <th>Timestamp</th>
+              </tr>
+            </thead>
+            <tbody id="events-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="loading-overlay" id="loading" style="display:none">
+    <div class="spinner"></div>
+  </div>
+
+  <script src="/static/dashboard.js"></script>
+</body>
+</html>
