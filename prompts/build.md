@@ -881,4 +881,5 @@ Analiza el archivo: '/home/john/proyects/proyect0/docs/123_PLAN_DEV_PATTERNS_ACT
 ### B8 — Tests de Mediator
 ### B9 — Crear `AgentStageAdapter`
 ### B10 — Agregar `build_from_agents()` en Orchestrator
-Escribe reporte en : /home/john/proyects/proyect0/docs/124_REP_DEV_PATTERNS_ACTION_TRACK-A_1_0_DRAFT.md. de las acciones realizadas.
+### B11 — Tests de Adapter
+Escribe reporte en un archivo .md de las acciones realizadas.
