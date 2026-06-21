@@ -39,7 +39,7 @@ changelog:
 
 ## Resumen Ejecutivo
 
-Proyecto0 (RECPL Compiler Bot v2.0) es un compilador de lenguaje natural
+Proyecto0 (RECPL Compiler Bot v2.0) es un compilador de lenguaje natural a codigo IR
 a codigo con 10 etapas de pipeline, 516 tests pasando y ~11,000 lineas de
 Python. El proyecto ha evolucionado de un prototipo shell (v1.0, 6,625
 lineas, congelado) a un sistema Python modular con arquitectura StateGraph.

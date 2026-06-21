@@ -55,7 +55,7 @@ Se deduce de la suma de archivos existentes:
 
 **Objetivo implicito del proyecto:**
 
-> Construir un **RECPL Compiler Bot** — un compilador de lenguaje natural a codigo.
+> Construir un **RECPL Compiler Bot** — un compilador de lenguaje natural a codigo IR.
 > Toma instrucciones en espanol ("crea un modulo de pagos en NestJS") y genera
 > scaffolding de modulos NestJS, entidades y modelos Prisma.
 >
@@ -436,7 +436,7 @@ no esta completo, el proyecto esta en riesgo.
 
 ## 8. Resumen Ejecutivo
 
-**Que es @Proyecto0:** Un compilador de lenguaje natural a codigo (RECPL).
+**Que es @Proyecto0:** Un compilador de lenguaje natural a codigo IR (RECPL).
 Toma instrucciones en espanol y genera scaffolding de modulos NestJS, entidades
 y modelos Prisma.
 

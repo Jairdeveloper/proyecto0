@@ -44,7 +44,7 @@ changelog:
 
 ### 1.1 Propósito
 
-RECPL Compiler Bot v2.0+ es un **compilador de lenguaje natural a código**. Toma instrucciones en español (ej. *"crea un módulo de pagos en NestJS"*) y genera scaffolding completo de módulos NestJS, entidades Prisma, componentes React, y configuraciones Docker/Next.js/Tailwind.
+RECPL Compiler Bot v2.0+ es un **compilador de lenguaje natural a código IR** (Intermediate Representation). Toma instrucciones en lenguaje natural y produce una representación intermedia canónica que describe la intención del usuario. Generadores opcionales traducen el IR a código específico (NestJS, Prisma, React, Docker, Next.js, Tailwind, etc.).
 
 ### 1.2 Principio de Funcionamiento
 

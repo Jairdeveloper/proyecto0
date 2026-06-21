@@ -14,7 +14,7 @@ tags:
   - architecture
   - open-source
   - recpl
-summary: "Analisis y propuesta de nuevo concepto para Proyecto0: de un compilador de lenguaje natural que genera scaffolding NestJS/Prisma a un agente de IA de codigo abierto multi-proposito para desarrollo de software. Define alcance, analisis de viabilidad, mapeo contra el codigo existente, arquitectura de agentes, y plan de migracion."
+summary: "Analisis y propuesta de nuevo concepto para Proyecto0: de un compilador de lenguaje natural a codigo IR a un agente de IA de codigo abierto multi-proposito para desarrollo de software. Define alcance, analisis de viabilidad, mapeo contra el codigo existente, arquitectura de agentes, y plan de migracion."
 keywords:
   - propuesta
   - concepto
@@ -36,7 +36,7 @@ changelog:
 # Propuesta de Nuevo Concepto: Proyecto0(RECPL) como Agente de IA Open-Source
 
 > **Documento de analisis.** Evalua el cambio de paradigma de Proyecto0: de un
-> "compilador de lenguaje natural a scaffolding NestJS/Prisma" a un
+> "compilador de lenguaje natural a codigo IR" a un
 > "agente de IA de codigo abierto para escribir y ejecutar codigo con
 > cualquier modelo de IA".
 
@@ -150,7 +150,7 @@ El pipeline RECPL actual proporciona una base solida para el nuevo concepto:
 
 ### 3.1 El pipeline compilador como nucleo deterministico del agente
 
-El pipeline RECPL actual implementa un **compilador de lenguaje natural** que
+El pipeline RECPL actual implementa un **compilador de lenguaje natural a codigo IR** que
 transforma una instruccion en una accion estructurada (IR.json). En el nuevo
 concepto, este pipeline se convierte en el **modo deterministico** del agente:
 rapido, sin costo, y predecible.

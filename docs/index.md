@@ -1,6 +1,6 @@
 # RECPL Pipeline v2.0
 
-Compilador de lenguaje natural a codigo NestJS/Prisma/React.
+Compilador de lenguaje natural a codigo IR (Intermediate Representation).
 
 ```mermaid
 graph LR

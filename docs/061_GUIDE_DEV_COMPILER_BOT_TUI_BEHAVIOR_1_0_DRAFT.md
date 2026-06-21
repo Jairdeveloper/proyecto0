@@ -310,7 +310,7 @@ ultimas 20 entradas.
 ```
 RECPL Compiler Bot v1.0
 
-Un compilador de lenguaje natural a codigo NestJS/Prisma.
+Un compilador de lenguaje natural a codigo IR.
 
 EJEMPLOS:
   - crea modulo pagos en nestjs

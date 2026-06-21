@@ -36,7 +36,7 @@ changelog:
 
 ## 1. Estado Ejecutivo
 
-Proyecto0 implementa RECPL, un compilador de lenguaje natural a codigo. El
+Proyecto0 implementa RECPL, un compilador de lenguaje natural a codigo IR. El
 producto activo es el pipeline Python `compiler-bot/agentic_pipeline`, expuesto
 por el CLI `compiler-bot/agentic`. La capa shell `compiler-bot/recpl.sh` y
 `compiler-bot/agent-robot/` sigue existiendo y pasa sus tests, pero funciona como

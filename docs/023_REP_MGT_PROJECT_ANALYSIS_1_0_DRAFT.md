@@ -60,7 +60,7 @@ changelog:
 | Marco de ciclo de vida generico | COMPLETO | `022_GUIDE_DEV_LIFECYCLE_*` |
 
 **Logro clave:** El pipeline RECPL shell es funcional y esta testeado.
-La semilla del proyecto (compilador de lenguaje natural → codigo) esta operativa.
+La semilla del proyecto (compilador de lenguaje natural → codigo IR) esta operativa.
 
 ---
 

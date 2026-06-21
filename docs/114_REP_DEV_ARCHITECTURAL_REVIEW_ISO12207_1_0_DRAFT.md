@@ -27,7 +27,7 @@ changelog:
 
 ## Resumen
 
-**Proyecto0** se redefine de "compilador de lenguaje natural a codigo NestJS/Prisma"
+**Proyecto0** se redefine de "compilador de lenguaje natural a codigo NestJS/Prisma" a "compilador de lenguaje natural a codigo IR"
 a **orquestador SDLC completo basado en ISO/IEC/IEEE 12207**. El sistema recibe
 una idea de producto SaaS en lenguaje natural y la transforma en codigo
 funcional mediante una cadena de agentes especializados, cada uno con
@@ -215,7 +215,7 @@ complejas → GPT/Claude), y presupuesto por tarea con corte automatico.
 
 ### 🟡 Riesgo 6: El pipeline actual (RECPL v2.0) no se integra naturalmente con la vision ISO 12207
 
-**Problema:** El pipeline RECPL actual es un compilador de lenguaje natural
+**Problema:** El pipeline RECPL actual es un compilador de lenguaje natural a codigo IR
 a scaffolding NestJS/Prisma (preprocess → lexer → parser → semantic → IR →
 synthesis). La vision ISO 12207 es un orquestador SDLC completo con
 agentes especializados. Son 2 cosas diferentes.

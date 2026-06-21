@@ -49,7 +49,7 @@ changelog:
 ## 0. Que es el Bucle RECPL
 
 El bucle RECPL implementa el patron **REPL** (Read-Eval-Print Loop)
-adaptado a un compilador de lenguaje natural:
+adaptado a un compilador de lenguaje natural a codigo IR:
 
 ```
 RECPL = READ (lexer) → EVAL (parser + semantic) → PRINT (synthesis)

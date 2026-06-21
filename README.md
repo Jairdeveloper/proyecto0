@@ -1,4 +1,4 @@
-# RECPL — Natural Language to NestJS/Prisma Scaffolding
+# RECPL — Natural Language to IR Compiler
 
 [![Python](https://img.shields.io/badge/python-3.11-blue)](https://python.org)
 [![Tests](https://img.shields.io/badge/tests-516_passing-green)](https://github.com/proyect0)
@@ -6,8 +6,10 @@
 [![License](https://img.shields.io/badge/license-MIT-yellow)](LICENSE)
 
 **RECPL** (READ-EVAL-PRINT Compiler Loop) es un compilador de lenguaje
-natural a codigo. Toma instrucciones en espanol y genera scaffolding de
-modulos NestJS, entidades Prisma, componentes React, y mas.
+natural a codigo IR (Intermediate Representation). Toma instrucciones en
+lenguaje natural y produce una representacion intermedia canonica.
+Generadores opcionales traducen el IR a codigo especifico (NestJS, Prisma,
+React, etc.).
 
 ```
 INPUT: "crea un modulo de pagos con NestJS y Prisma"
@@ -19,9 +21,9 @@ INPUT: "crea un modulo de pagos con NestJS y Prisma"
 [ Semantic ]        → tabla de simbolos + type checking
 [ IR Generator ]    → representacion intermedia canonica
 [ Planner ]         → plan de ejecucion con dependencias
-[ Synthesis ]       → generacion de codigo (NestJS/Prisma/React/...)
+[ Synthesis ]       → generacion de codigo IR (plugins opcionales)
   ↓
-OUTPUT: modules/pagos/pagos.controller.ts, schema.prisma, ...
+OUTPUT: IR canonico (JSON) → [opcional] codigo especifico
 ```
 
 ## Quick Start

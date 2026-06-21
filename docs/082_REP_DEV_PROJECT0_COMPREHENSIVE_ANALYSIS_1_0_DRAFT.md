@@ -33,7 +33,7 @@ status: IMPLEMENTED
 
 ## 1. Executive Summary
 
-Proyecto0 es un **RECPL Compiler Bot** — un compilador de lenguaje natural a código que toma instrucciones en español (e.g., "crea un módulo de pagos en NestJS") y genera scaffolding de módulos NestJS/Prisma. El pipeline sigue el patrón clásico de compiladores (Aho, Dragon Book): preprocess → lexer → parser → semantic → IR → synthesis.
+Proyecto0 es un **RECPL Compiler Bot** — un compilador de lenguaje natural a código IR que toma instrucciones en lenguaje natural y produce una representación intermedia canónica. Generadores opcionales traducen el IR a código específico (NestJS, Prisma, React, etc.). El pipeline sigue el patrón clásico de compiladores (Aho, Dragon Book): preprocess → lexer → parser → semantic → IR → synthesis.
 
 El proyecto tiene **tres implementaciones paralelas**:
 

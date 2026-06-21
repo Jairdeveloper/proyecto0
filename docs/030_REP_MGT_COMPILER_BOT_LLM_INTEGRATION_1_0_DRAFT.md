@@ -81,7 +81,7 @@ Body:
 {
   "model": "claude-sonnet-4-20250514",
   "max_tokens": 8192,
-  "system": "Eres un compilador de lenguaje natural...",
+  "system": "Eres un compilador de lenguaje natural a codigo IR...",
   "messages": [
     {"role": "user", "content": "crea un modulo de pagos en NestJS"}
   ],
@@ -286,7 +286,7 @@ Cada herramienta es una funcion que el LLM puede invocar:
 ### 2.5 System prompt del compilador LLM
 
 ```
-Eres un compilador de lenguaje natural a codigo (RECPL).
+Eres un compilador de lenguaje natural a codigo IR (RECPL).
 Traduces instrucciones del usuario en acciones del compilador.
 
 REGLAS:

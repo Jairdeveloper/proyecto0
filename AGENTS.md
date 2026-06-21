@@ -65,12 +65,14 @@ planea construir.
 ### Objetivo implicito del proyecto
 
 > Construir un RECPL Compiler Bot — un compilador de lenguaje natural a
-> codigo. Toma instrucciones en espanol ("crea un modulo de pagos en NestJS")
-> y genera scaffolding de modulos NestJS, entidades y modelos Prisma.
->
+> codigo IR (Intermediate Representation). Toma instrucciones en lenguaje
+> natural y produce una representacion intermedia canonica que describe la
+> intencion del usuario en terminos de acciones, entidades y relaciones.
+> >
 > El pipeline compilador (preprocess → lexer → parser → semantic → IR →
-> synthesis) es el producto. NestJS/Prisma es el formato de salida, no un
-> proyecto separado.
+> synthesis) es el producto. El IR es el formato de salida central; los
+> generadores a codigo especifico (NestJS, Prisma, React, etc.) son
+> plugins opcionales intercambiables.
 
 ### Shell script rules
 

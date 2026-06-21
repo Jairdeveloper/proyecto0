@@ -46,7 +46,7 @@ changelog:
 
 ### ¿Que hace el sistema?
 
-RECPL (READ-EVAL-PRINT Compiler Loop) es un **compilador de lenguaje natural a codigo**. Toma instrucciones en espanol como *"crea un modulo de pagos en NestJS"* y genera scaffolding de modulos NestJS, entidades Prisma, componentes React, configuracion Docker, y mas.
+RECPL (READ-EVAL-PRINT Compiler Loop) es un **compilador de lenguaje natural a codigo IR**. Toma instrucciones en lenguaje natural y produce una representacion intermedia canonica. Generadores opcionales traducen el IR a codigo especifico (NestJS, Prisma, React, Docker, etc.).
 
 ### ¿Cual es su proposito?
 

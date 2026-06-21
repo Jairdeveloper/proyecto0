@@ -367,7 +367,7 @@ El system prompt es la "guia de estilo" del LLM. Le dice como
 comportarse:
 
 ```
-Eres un compilador de lenguaje natural a codigo (RECPL).
+Eres un compilador de lenguaje natural a codigo IR (RECPL).
 Traduces instrucciones del usuario en acciones del compilador.
 
 REGLAS:
@@ -636,7 +636,7 @@ No es un archivo separado, sino una funcion en `llm_classifier.sh`:
 ```sh
 get_system_prompt() {
     cat <<'SYSTEM'
-Eres un compilador de lenguaje natural a codigo (RECPL).
+Eres un compilador de lenguaje natural a codigo IR (RECPL).
 Traduces instrucciones del usuario en acciones del compilador.
 
 REGLAS:
@@ -777,7 +777,7 @@ SCRIPT_DIR="$(dirname "$0")"
 # --- System prompt del compilador ---
 get_system_prompt() {
     cat <<'SYSTEM'
-Eres un compilador de lenguaje natural a codigo (RECPL).
+Eres un compilador de lenguaje natural a codigo IR (RECPL).
 Traduces instrucciones del usuario en acciones del compilador.
 
 REGLAS:

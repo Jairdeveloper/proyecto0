@@ -11,7 +11,7 @@ tags:
   - overview
   - components
   - data-flow
-summary: "Guia de arquitectura de Proyecto0(RECPL). Explica de forma sencilla como funciona el compilador de lenguaje natural a codigo, sus componentes principales, el flujo de datos, y como conviven el pipeline deterministico, el agente inteligente y los generadores de codigo."
+summary: "Guia de arquitectura de Proyecto0(RECPL). Explica de forma sencilla como funciona el compilador de lenguaje natural a codigo IR, sus componentes principales, el flujo de datos, y como conviven el pipeline deterministico, el agente inteligente y los generadores de codigo."
 keywords:
   - arquitectura
   - pipeline
@@ -37,7 +37,7 @@ changelog:
 
 ## 1. La idea central
 
-Proyecto0 funciona como un **compilador de lenguaje natural**: toma texto
+Proyecto0 funciona como un **compilador de lenguaje natural a codigo IR**: toma texto
 escrito por una persona y lo convierte en codigo. Para lograrlo, imita el
 diseno de los compiladores clasicos (como los que usan C, Java o Python),
 pero adaptado para entender espanol y generar archivos NestJS/Prisma.

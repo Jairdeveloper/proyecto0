@@ -41,7 +41,7 @@ get_system_prompt() {
         return
     fi
     cat <<'SYSTEM'
-Eres un compilador de lenguaje natural a codigo (RECPL).
+Eres un compilador de lenguaje natural a codigo IR (RECPL).
 Traduces instrucciones del usuario en acciones del compilador.
 
 REGLAS:

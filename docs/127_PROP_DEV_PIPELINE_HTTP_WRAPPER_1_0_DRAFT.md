@@ -21,7 +21,7 @@ status: DRAFT
 
 ## 1. Contexto
 
-El pipeline `agentic_pipeline` (RECPL v2.0) está diseñado como un **compilador de lenguaje natural a código** que ejecuta un StateGraph con 10+ PipelineStages conectados secuencialmente (INTENT → PREPROCESSOR → LEXER → PARSER → SEMANTIC_ANALYZER → IR_GENERATOR → PLANNER → SYNTHESIS → UI_GENERATOR → VALIDATOR).
+El pipeline `agentic_pipeline` (RECPL v2.0) está diseñado como un **compilador de lenguaje natural a código IR** que ejecuta un StateGraph con 10+ PipelineStages conectados secuencialmente (INTENT → PREPROCESSOR → LEXER → PARSER → SEMANTIC_ANALYZER → IR_GENERATOR → PLANNER → SYNTHESIS → UI_GENERATOR → VALIDATOR).
 
 Actualmente el pipeline se invoca desde:
 

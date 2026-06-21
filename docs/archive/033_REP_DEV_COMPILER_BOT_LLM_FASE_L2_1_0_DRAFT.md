@@ -88,7 +88,7 @@ llm_classify("crea un modulo de pagos en NestJS")
 **System prompt del compilador:**
 
 ```
-Eres un compilador de lenguaje natural a codigo (RECPL).
+Eres un compilador de lenguaje natural a codigo IR (RECPL).
 Traduces instrucciones del usuario en acciones del compilador.
 
 REGLAS:
