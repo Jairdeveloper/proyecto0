@@ -4,7 +4,7 @@ area: DEV
 type: REP
 module: COMPILER_BOT
 version: 1.0.0
-status: DRAFT
+status: IMPLEMENTED
 tags:
   - sprint
   - preprocessor

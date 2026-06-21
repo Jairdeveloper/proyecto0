@@ -4,7 +4,7 @@ area: dev
 type: PROP
 module: METRICS_DASHBOARD_VERSIONING
 version: 1.0
-status: DRAFT
+status: IMPLEMENTED
 tags:
   - proposal
   - dashboard

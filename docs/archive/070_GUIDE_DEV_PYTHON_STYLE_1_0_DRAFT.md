@@ -4,7 +4,7 @@ area: dev
 type: GUIDE
 module: python-style
 version: 1.0
-status: DRAFT
+status: ACTIVE
 tags:
   - python
   - style

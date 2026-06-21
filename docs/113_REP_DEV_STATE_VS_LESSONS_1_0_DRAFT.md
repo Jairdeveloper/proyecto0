@@ -4,7 +4,7 @@ area: "DEV"
 type: "REP"
 module: "STATE_VS_LESSONS"
 version: "1.0"
-status: "DRAFT"
+status: IMPLEMENTED
 tags:
   - "state"
   - "lessons"

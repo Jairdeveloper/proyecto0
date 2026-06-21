@@ -1,3 +1,10 @@
+---
+area: dev
+type: REP
+module: M0
+version: 1.0
+status: IMPLEMENTED
+---
 # Reporte de Ejecución — M0: Fundaciones + Fixes Críticos
 
 - **ID:** 131_REP_DEV_M0_EXECUTION_REPORT_1_0_DRAFT

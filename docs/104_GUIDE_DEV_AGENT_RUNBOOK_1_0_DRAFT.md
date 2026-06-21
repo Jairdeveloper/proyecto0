@@ -4,7 +4,7 @@ area: dev
 type: GUIDE
 module: AGENT_CORE
 version: 1.0
-status: DRAFT
+status: ACTIVE
 tags:
   - guide
   - runbook

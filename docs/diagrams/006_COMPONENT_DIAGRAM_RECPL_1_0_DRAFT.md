@@ -4,7 +4,7 @@ area: "DEV"
 type: "DIAGRAM"
 module: "RECPL_COMPONENT"
 version: "1.0"
-status: "DRAFT"
+status: ACTIVE
 tags: ["uml", "component-diagram", "architecture"]
 summary: "Diagrama de componentes del sistema RECPL mostrando modulos, interfaces y dependencias entre subsistemas"
 ---

@@ -1,3 +1,10 @@
+---
+area: dev
+type: REP
+module: M2
+version: 1.0
+status: IMPLEMENTED
+---
 # Reporte de Ejecución — M2: Resiliencia + SOLID Básico
 
 - **ID:** 133_REP_DEV_M2_EXECUTION_REPORT_1_0_DRAFT

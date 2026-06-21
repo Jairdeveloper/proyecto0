@@ -4,7 +4,7 @@ area: "DEV"
 type: "PLAN"
 module: "RECPL_PATTERNS"
 version: "1.0"
-status: "DRAFT"
+status: IMPLEMENTED
 tags: ["plan", "refactor", "patterns", "mediator", "adapter", "visitor", "gof"]
 summary: "Plan de implementacion para formalizar 4 patrones GoF en el sistema RECPL: Mediator (agentes), Adapter (agente↔pipeline), Visitor canónico (AST), y Strategy/Visitor (AST→IR)"
 changelog:

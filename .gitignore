@@ -1,9 +1,7 @@
 modules/
 tmp_modules/
 *.o
-recpl-core
-.env
-prompts/build.md
+
 
 # Python
 __pycache__/
@@ -25,6 +23,5 @@ output/
 # MkDocs
 site/
 misc/
-./prompts/
 ./docs/diagrams/mermaidToimage.py
 *.recpl_audit.log

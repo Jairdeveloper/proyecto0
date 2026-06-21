@@ -4,7 +4,7 @@ area: dev
 type: REP
 module: VERSION_ALIGNMENT
 version: 1.0
-status: DRAFT
+status: IMPLEMENTED
 tags:
   - execution-report
   - fase1

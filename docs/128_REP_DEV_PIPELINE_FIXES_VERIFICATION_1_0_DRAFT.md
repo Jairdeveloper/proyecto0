@@ -1,3 +1,10 @@
+---
+area: dev
+type: REP
+module: agentic_pipeline
+version: 1.0
+status: IMPLEMENTED
+---
 # Reporte de Verificación — Pipeline Fixes Plan vs. Código Base
 
 - **ID:** 128_REP_DEV_PIPELINE_FIXES_VERIFICATION_1_0_DRAFT

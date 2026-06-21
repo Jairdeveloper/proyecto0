@@ -1,3 +1,10 @@
+---
+area: dev
+type: PROP
+module: agentic_pipeline
+version: 1.0
+status: DRAFT
+---
 # Propuesta: HTTP Request Handler Wrapper para AgenticPipeline RECPL v2.0
 
 - **ID:** 127_PROP_DEV_PIPELINE_HTTP_WRAPPER_1_0_DRAFT

@@ -4,7 +4,7 @@ area: algorithms
 type: ALGP
 module: documentation
 version: 1.0
-status: DRAFT
+status: ACTIVE
 author: system
 created: 2026-05-30
 last_updated: 2026-05-30

@@ -4,7 +4,7 @@ area: DEV
 type: PLAN
 module: COMPILER_BOT
 version: 1.0
-status: DRAFT
+status: IMPLEMENTED
 tags:
   - plan
   - sprint

@@ -4,7 +4,7 @@ area: "DEV"
 type: "DIAGRAM"
 module: "RECPL_SEQUENCE"
 version: "1.0"
-status: "DRAFT"
+status: ACTIVE
 tags: ["uml", "sequence-diagram", "pipeline-flow"]
 summary: "Diagrama de secuencia del pipeline RECPL mostrando la interaccion entre stages, observers y el flujo de datos"
 ---

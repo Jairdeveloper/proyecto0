@@ -4,7 +4,7 @@ area: "DEV"
 type: "REP"
 module: "BUGS_FIXES"
 version: "1.0"
-status: "DRAFT"
+status: IMPLEMENTED
 tags:
   - "bugs"
   - "fixes"

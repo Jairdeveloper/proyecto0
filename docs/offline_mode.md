@@ -1,3 +1,10 @@
+---
+area: dev
+type: GUIDE
+module: offline_mode
+version: 1.0
+status: ACTIVE
+---
 # Modo Offline RECPL v2.0+
 
 ## ¿Qué funciona sin LLM?

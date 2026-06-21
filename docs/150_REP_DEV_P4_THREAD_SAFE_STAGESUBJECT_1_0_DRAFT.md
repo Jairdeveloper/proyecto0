@@ -4,7 +4,7 @@ area: "DEV"
 type: "REP"
 module: "RECPL_ARCH_REMAINING"
 version: "1.0"
-status: "DRAFT"
+status: IMPLEMENTED
 tags: ["report", "p4", "thread-safety", "observer", "stage-subject"]
 summary: "Reporte de ejecucion de P4 — StageSubject thread-safe con threading.Lock y copy-on-write, incluyendo test de concurrencia con 10 hilos"
 changelog:

@@ -4,7 +4,7 @@ area: "DEV"
 type: "ANALYSIS"
 module: "PDCA_SDLC"
 version: "1.0"
-status: "DRAFT"
+status: IMPLEMENTED
 tags: ["analysis", "event-bus", "api", "dashboard", "async-event-bus", "replay"]
 summary: "Analisis de la API AsyncEventBus (replay) y oportunidades de implementacion de funcionalidades/endpoints para el dashboard."
 changelog:

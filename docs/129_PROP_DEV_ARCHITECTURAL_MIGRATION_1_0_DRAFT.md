@@ -1,3 +1,10 @@
+---
+area: dev
+type: PROP
+module: agentic_pipeline
+version: 1.0
+status: DRAFT
+---
 # Propuesta de Migración — Arquitectura RECPL v2.0+ (basado en 121_PLAN)
 
 - **ID:** 129_PROP_DEV_ARCHITECTURAL_MIGRATION_1_0_DRAFT

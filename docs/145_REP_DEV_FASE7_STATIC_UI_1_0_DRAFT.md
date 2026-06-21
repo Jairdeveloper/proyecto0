@@ -4,7 +4,7 @@ area: dev
 type: REP
 module: STATIC_DASHBOARD_UI
 version: 1.0
-status: DRAFT
+status: IMPLEMENTED
 tags:
   - execution-report
   - fase7

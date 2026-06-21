@@ -4,7 +4,7 @@ area: dev
 type: REP
 module: PDCA_SDLC_EVENTBUS_DASHBOARD
 version: 1.0
-status: DRAFT
+status: IMPLEMENTED
 tags:
   - report
   - fix

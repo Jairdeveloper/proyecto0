@@ -4,7 +4,7 @@ area: "DEV"
 type: "PROP"
 module: "RECPL_ADAPTIVE"
 version: "2.0"
-status: "DRAFT"
+status: IMPLEMENTED
 tags: ["proposal", "adaptive", "requirement-decomposer", "pipeline"]
 summary: "Propuesta de implementacion adaptativa — el pipeline RECPL procesa cualquier entrada de lenguaje natural generando codigo util, sin extender DFA/gramatica/IR por cada nuevo tipo de output. El RequirementDecomposer es el componente central adaptativo."
 changelog:

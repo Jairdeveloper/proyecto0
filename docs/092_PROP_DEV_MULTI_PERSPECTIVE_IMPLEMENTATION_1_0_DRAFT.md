@@ -4,7 +4,7 @@ area: DEV
 type: PROP
 module: COMPILER_BOT
 version: 1.0
-status: DRAFT
+status: IMPLEMENTED
 tags:
   - proposal
   - implementation

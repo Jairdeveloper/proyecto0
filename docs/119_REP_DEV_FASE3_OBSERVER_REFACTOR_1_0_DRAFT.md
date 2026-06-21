@@ -4,7 +4,7 @@ area: "DEV"
 type: "REP"
 module: "BEHAVIORAL_PATTERNS_REFACTOR"
 version: "1.0"
-status: "DRAFT"
+status: IMPLEMENTED
 tags:
   - "report"
   - "observer"

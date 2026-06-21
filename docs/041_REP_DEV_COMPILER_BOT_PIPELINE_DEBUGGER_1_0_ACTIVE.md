@@ -4,7 +4,7 @@ area: dev
 type: REP
 module: compiler-bot
 version: 1.0
-status: ACTIVE
+status: DRAFT
 tags:
   - report
   - implementation

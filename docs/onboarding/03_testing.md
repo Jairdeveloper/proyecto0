@@ -4,7 +4,7 @@ area: DEV
 type: GUIDE
 module: ONBOARDING
 version: 1.0
-status: DRAFT
+status: ACTIVE
 tags:
   - onboarding
   - testing

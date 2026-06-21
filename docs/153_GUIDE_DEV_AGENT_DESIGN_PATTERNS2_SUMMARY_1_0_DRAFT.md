@@ -4,7 +4,7 @@ area: "DEV"
 type: "GUIDE"
 module: "AGENT_PATTERNS"
 version: "1.0"
-status: "DRAFT"
+status: ACTIVE
 tags: ["guide", "reference", "agent-patterns", "design-patterns", "llm", "architecture", "reasoning", "guardrails", "evaluation"]
 summary: "Resumen del documento misc/AgentDesignPattern2.md — Capitulos 10-21 + Apendice A: MCP, Goal Setting, Exception Handling, HITL, RAG, A2A, Resource-Aware Optimization, Reasoning Techniques, Guardrails, Evaluation, Prioritization, Exploration & Discovery, Advanced Prompting"
 changelog:

@@ -4,7 +4,7 @@ area: "DEV"
 type: "PLAN"
 module: "PDCA_SDLC"
 version: "1.0"
-status: "DRAFT"
+status: IMPLEMENTED
 tags: ["plan", "execution", "event-bus", "api", "dashboard", "sse", "replay"]
 summary: "Plan de ejecucion para extender AsyncEventBus con query engine, nuevos endpoints dashboard, SSE en tiempo real y visualizaciones Canvas."
 changelog:

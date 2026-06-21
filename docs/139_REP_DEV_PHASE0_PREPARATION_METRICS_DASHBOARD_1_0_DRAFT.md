@@ -4,7 +4,7 @@ area: dev
 type: REP
 module: METRICS_DASHBOARD_PHASE0
 version: 1.0
-status: DRAFT
+status: IMPLEMENTED
 tags:
   - report
   - phase-0

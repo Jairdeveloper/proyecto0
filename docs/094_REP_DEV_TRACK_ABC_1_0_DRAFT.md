@@ -4,7 +4,7 @@ area: DEV
 type: REP
 module: COMPILER_BOT
 version: 1.1
-status: DRAFT
+status: IMPLEMENTED
 tags:
   - report
   - track-a

@@ -1,3 +1,10 @@
+---
+area: dev
+type: REP
+module: M3
+version: 1.0
+status: IMPLEMENTED
+---
 # Reporte de Ejecución — M3: Arquitectura + Testing
 
 - **ID:** 134_REP_DEV_M3_EXECUTION_REPORT_1_0_DRAFT

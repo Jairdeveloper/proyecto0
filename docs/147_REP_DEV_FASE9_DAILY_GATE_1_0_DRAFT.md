@@ -4,7 +4,7 @@ area: dev
 type: REP
 module: DAILY_GATE
 version: 1.0
-status: DRAFT
+status: IMPLEMENTED
 tags:
   - execution-report
   - fase9

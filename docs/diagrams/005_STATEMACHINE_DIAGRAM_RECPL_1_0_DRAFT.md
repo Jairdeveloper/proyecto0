@@ -4,7 +4,7 @@ area: "DEV"
 type: "DIAGRAM"
 module: "RECPL_STATEMACHINE"
 version: "1.0"
-status: "DRAFT"
+status: ACTIVE
 tags: ["uml", "state-machine-diagram", "lifecycle"]
 summary: "Diagrama de maquina de estados mostrando el ciclo de vida de PipelineStage, Task, y los modos de operacion del compilador"
 ---

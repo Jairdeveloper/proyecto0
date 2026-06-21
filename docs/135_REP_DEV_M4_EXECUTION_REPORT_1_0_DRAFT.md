@@ -1,3 +1,10 @@
+---
+area: dev
+type: REP
+module: M4
+version: 1.0
+status: IMPLEMENTED
+---
 # Reporte de Ejecución — M4: Rendimiento + Seguridad
 
 - **ID:** 135_REP_DEV_M4_EXECUTION_REPORT_1_0_DRAFT

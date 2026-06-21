@@ -1,3 +1,10 @@
+---
+area: dev
+type: DIAGRAM
+module: RECPL
+version: 1.0
+status: ACTIVE
+---
 
 
 

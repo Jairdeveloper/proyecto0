@@ -4,7 +4,7 @@ area: dev
 type: PROP
 module: PROMPT_CHAIN
 version: 1.0
-status: DRAFT
+status: IMPLEMENTED
 tags:
   - proposal
   - prompt-chaining

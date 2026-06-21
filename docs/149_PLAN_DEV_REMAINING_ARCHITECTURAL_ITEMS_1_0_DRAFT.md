@@ -4,7 +4,7 @@ area: "DEV"
 type: "PLAN"
 module: "RECPL_ARCH_REMAINING"
 version: "1.0"
-status: "DRAFT"
+status: IMPLEMENTED
 tags: ["plan", "implementation", "refactor", "thread-safety", "event-bus", "dead-code"]
 summary: "Plan de ejecucion para los items arquitectonicos pendientes del plan 121: P4 (thread-safe StageSubject), P5 (unificacion EventBus), y apertura de decision para P2 (RequirementDecomposer dead code)"
 changelog:

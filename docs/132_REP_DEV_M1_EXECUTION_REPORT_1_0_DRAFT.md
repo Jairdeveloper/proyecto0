@@ -1,3 +1,10 @@
+---
+area: dev
+type: REP
+module: M1
+version: 1.0
+status: IMPLEMENTED
+---
 # Reporte de Ejecución — M1: Renombrar ParserGLR a LarkParser
 
 - **ID:** 132_REP_DEV_M1_EXECUTION_REPORT_1_0_DRAFT

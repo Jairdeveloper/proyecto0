@@ -4,7 +4,7 @@ area: "DEV"
 type: "PROP"
 module: "ISO12207_AGENT_SYSTEM"
 version: "1.0"
-status: "DRAFT"
+status: IMPLEMENTED
 tags: ["proposal", "implementation", "iso12207", "event-driven", "python", "pydantic", "protocols", "swarm", "class-skeleton"]
 summary: "Implementacion concreta del sistema agentico ISO 12207 reactivo — esqueleto de clases Python, protocolos de comunicacion Pydantic, y trace completo del ejemplo 'sistema de inventario simple'. Misma vision que 155_PROP, perspectiva de Arquitecto Senior."
 changelog:

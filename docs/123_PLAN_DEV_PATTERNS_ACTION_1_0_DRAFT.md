@@ -4,7 +4,7 @@ area: "DEV"
 type: "PLAN"
 module: "RECPL_PATTERNS_ACTION"
 version: "1.0"
-status: "DRAFT"
+status: IMPLEMENTED
 tags:
   - "plan"
   - "action"

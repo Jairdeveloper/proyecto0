@@ -4,7 +4,7 @@ area: "DEV"
 type: "DIAGRAM"
 module: "RECPL_ACTIVITY"
 version: "1.0"
-status: "DRAFT"
+status: ACTIVE
 tags: ["uml", "activity-diagram", "pipeline-flow"]
 summary: "Diagrama de actividad del pipeline RECPL completo mostrando el flujo de control, decisiones y caminos alternativos"
 ---

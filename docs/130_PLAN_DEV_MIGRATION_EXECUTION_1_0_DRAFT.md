@@ -1,3 +1,10 @@
+---
+area: dev
+type: PLAN
+module: agentic_pipeline
+version: 1.0
+status: DRAFT
+---
 # Plan de Ejecución — Migración Arquitectónica RECPL v2.0+
 
 - **ID:** 130_PLAN_DEV_MIGRATION_EXECUTION_1_0_DRAFT

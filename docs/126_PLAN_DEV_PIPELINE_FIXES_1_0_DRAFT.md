@@ -4,7 +4,7 @@ area: "DEV"
 type: "PLAN"
 module: "PIPELINE_FIXES"
 version: "1.1"
-status: "DRAFT"
+status: IMPLEMENTED
 tags:
   - "plan"
   - "action"

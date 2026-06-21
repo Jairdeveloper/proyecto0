@@ -4,7 +4,7 @@ area: dev
 type: REP
 module: PROMPT_CHAIN_F5
 version: 1.0
-status: DRAFT
+status: IMPLEMENTED
 tags:
   - report
   - prompt-chaining

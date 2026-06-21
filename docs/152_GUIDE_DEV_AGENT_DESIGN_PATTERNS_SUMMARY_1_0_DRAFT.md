@@ -4,7 +4,7 @@ area: "DEV"
 type: "GUIDE"
 module: "AGENT_PATTERNS"
 version: "1.0"
-status: "DRAFT"
+status: ACTIVE
 tags: ["guide", "reference", "agent-patterns", "design-patterns", "llm", "architecture"]
 summary: "Resumen del documento misc/agentDesignPattern.md — 9 patrones de diseno para sistemas agente con LLM: Prompt Chaining, Routing, Parallelization, Reflection, Tool Use, Planning, Multi-Agent, Memory Management, Learning & Adaptation"
 changelog:

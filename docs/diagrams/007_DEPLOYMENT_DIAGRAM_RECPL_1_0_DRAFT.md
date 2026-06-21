@@ -4,7 +4,7 @@ area: "DEV"
 type: "DIAGRAM"
 module: "RECPL_DEPLOYMENT"
 version: "1.0"
-status: "DRAFT"
+status: ACTIVE
 tags: ["uml", "deployment-diagram", "infrastructure"]
 summary: "Diagrama de despliegue del sistema RECPL mostrando nodos fisicos/virtuales, artefactos y protocolos de comunicacion"
 ---

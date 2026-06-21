@@ -4,7 +4,7 @@ area: "DEV"
 type: "PROP"
 module: "ISO12207_AGENT_SYSTEM"
 version: "1.0"
-status: "DRAFT"
+status: IMPLEMENTED
 tags: ["proposal", "alternative", "iso12207", "event-driven", "capability-based", "reactive", "multi-agent", "swarm"]
 summary: "Propuesta alternativa al sistema agentico ISO 12207 — arquitectura reactiva basada en capacidades, bus de eventos, y composicion dinamica, en contraste con la vision jerarquica de 154_PROP."
 changelog:

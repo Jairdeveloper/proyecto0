@@ -4,7 +4,7 @@ area: "DEV"
 type: "DIAGRAM"
 module: "RECPL_USECASE"
 version: "1.0"
-status: "DRAFT"
+status: ACTIVE
 tags: ["uml", "usecase-diagram", "requirements"]
 summary: "Diagrama de casos de uso del pipeline RECPL mostrando actores, funcionalidades y limites del sistema"
 ---

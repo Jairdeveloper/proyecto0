@@ -4,7 +4,7 @@ area: "DEV"
 type: "REP"
 module: "RECPL_ARCH_REMAINING"
 version: "1.0"
-status: "DRAFT"
+status: IMPLEMENTED
 tags: ["report", "p5", "event-bus", "observer", "stage-subject", "unification"]
 summary: "Reporte de ejecucion de P5 — unificacion de EventBus + StageSubject: StageSubject como fachada sobre EventBus, eliminacion de StageObserver, limpieza de imports"
 changelog:

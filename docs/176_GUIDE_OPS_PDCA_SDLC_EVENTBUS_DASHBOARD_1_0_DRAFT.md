@@ -4,7 +4,7 @@ area: ops
 type: GUIDE
 module: PDCA_SDLC_EVENTBUS_DASHBOARD
 version: 1.0
-status: DRAFT
+status: ACTIVE
 tags:
   - guide
   - runbook

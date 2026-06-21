@@ -4,7 +4,7 @@ area: prompts
 type: PRM
 module: build-agent
 version: 1.0
-status: DRAFT
+status: ACTIVE
 author: system
 created: 2026-05-23
 last_updated: 2026-05-23

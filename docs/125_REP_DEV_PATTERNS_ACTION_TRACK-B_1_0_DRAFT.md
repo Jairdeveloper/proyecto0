@@ -4,7 +4,7 @@ area: "DEV"
 type: "REP"
 module: "PATTERNS_ACTION_TRACK_B"
 version: "1.0"
-status: "DRAFT"
+status: IMPLEMENTED
 tags:
   - "report"
   - "patterns"

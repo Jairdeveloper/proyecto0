@@ -4,7 +4,7 @@ area: "DEV"
 type: "ARCH"
 module: "RECPL_V2"
 version: "1.0"
-status: "DRAFT"
+status: ACTIVE
 tags: ["architecture", "review", "as-is", "to-be", "risk-assessment"]
 summary: "Reporte de arquitectura completo del sistema RECPL Compiler Bot v2.0+ — analisis AS-IS, problemas detectados, deuda tecnica, propuesta TO-BE y recomendaciones priorizadas"
 changelog:

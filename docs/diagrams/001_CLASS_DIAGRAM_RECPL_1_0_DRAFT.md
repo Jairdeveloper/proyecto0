@@ -4,7 +4,7 @@ area: "DEV"
 type: "DIAGRAM"
 module: "RECPL_CLASS"
 version: "1.0"
-status: "DRAFT"
+status: ACTIVE
 tags: ["uml", "class-diagram", "architecture"]
 summary: "Diagrama de clases completo del pipeline RECPL v2.0+ mostrando jerarquias, relaciones y patrones GoF"
 ---

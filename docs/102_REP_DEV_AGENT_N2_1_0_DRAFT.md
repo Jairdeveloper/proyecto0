@@ -4,7 +4,7 @@ area: dev
 type: REP
 module: AGENT_CORE
 version: 1.0
-status: DRAFT
+status: IMPLEMENTED
 tags:
   - report
   - nivel-2

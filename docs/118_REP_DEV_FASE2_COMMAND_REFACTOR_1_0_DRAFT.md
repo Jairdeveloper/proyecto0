@@ -4,7 +4,7 @@ area: DEV
 type: REP
 module: FASE2_COMMAND
 version: 1.0
-status: DRAFT
+status: IMPLEMENTED
 tags: [refactor, command-pattern, behavioral-patterns, fase-2]
 summary: Reporte de la Fase 2 del refactor de patrones GoF — Command Pattern
 keywords: [Command, CommandResult, MacroCommand, CommandHistory, ToolCommand]

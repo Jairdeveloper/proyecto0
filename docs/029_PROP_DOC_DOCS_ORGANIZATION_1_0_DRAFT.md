@@ -4,7 +4,7 @@ area: doc
 type: PROP
 module: documentation
 version: 1.0
-status: DRAFT
+status: ACTIVE
 tags:
   - prop
   - documentation

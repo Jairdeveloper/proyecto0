@@ -4,7 +4,7 @@ area: DEV
 type: PROP
 module: AGENT_CORE
 version: 2.0
-status: DRAFT
+status: IMPLEMENTED
 tags:
   - proposal
   - agent-vision

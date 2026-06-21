@@ -1,3 +1,10 @@
+---
+area: dev
+type: REP
+module: PROJECT
+version: 1.0
+status: IMPLEMENTED
+---
 # Comprehensive Analysis of Proyecto0 (RECPL Compiler Bot)
 
 **Document ID:** 082_REP_DEV_PROJECT0_COMPREHENSIVE_ANALYSIS_1_0_DRAFT  

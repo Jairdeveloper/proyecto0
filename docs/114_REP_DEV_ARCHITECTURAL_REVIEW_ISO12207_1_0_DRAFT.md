@@ -4,7 +4,7 @@ area: "DEV"
 type: "REP"
 module: "ARCHITECTURAL_REVIEW_ISO12207"
 version: "1.0"
-status: "DRAFT"
+status: IMPLEMENTED
 tags:
   - "architectural-review"
   - "iso-12207"

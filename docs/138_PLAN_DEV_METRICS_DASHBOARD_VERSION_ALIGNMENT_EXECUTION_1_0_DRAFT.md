@@ -4,7 +4,7 @@ area: dev
 type: PLAN
 module: METRICS_DASHBOARD_VERSIONING_EXECUTION
 version: 1.0
-status: DRAFT
+status: IMPLEMENTED
 tags:
   - plan
   - dashboard
