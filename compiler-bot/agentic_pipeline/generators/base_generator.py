@@ -1,3 +1,5 @@
+"""Generadores — plugins opcionales que traducen IR canonico a codigo especifico por tecnologia."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -5,12 +7,16 @@ from pathlib import Path
 
 
 class BaseGenerator(ABC):
+    """Plugin base para generadores de codigo especifico. Registra un nuevo generador en GeneratorFactory."""
+
     @abstractmethod
     def generate(self, ir_node: object, output_dir: Path) -> list[Path]:
         """Generate files from IR node. Returns list of created paths."""
 
 
 class GeneratorFactory:
+    """Factory de generadores plugin. Cada tecnologia (NestJS, Prisma, React, etc.) es un plugin intercambiable."""
+
     @staticmethod
     def get_generator(target: str) -> BaseGenerator:
         if target == "react":

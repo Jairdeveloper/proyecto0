@@ -1,4 +1,4 @@
-"""ActionExecutor — generates code files from planner output using generators."""
+"""ActionExecutor — genera codigo desde el plan de ejecucion usando generadores plugin."""
 
 from __future__ import annotations
 
@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 class ActionExecutor(PipelineStage):
-    """Stage 8: generates target code files from planned tasks and IR tree."""
+    """Stage 8: genera archivos de codigo desde el plan de tareas y el arbol IR usando generadores plugin opcionales."""
 
     name = "synthesis"
 

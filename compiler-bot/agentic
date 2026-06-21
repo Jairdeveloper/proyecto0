@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""RECPL Compiler Bot v2.0 — CLI entrypoint."""
+"""RECPL Compiler Bot v2.0 — CLI entrypoint. Compila lenguaje natural a IR canonico."""
 
 from __future__ import annotations
 
@@ -21,7 +21,7 @@ def _stream_callback(stage: str, output: object) -> None:
 
 async def main() -> None:
     parser = argparse.ArgumentParser(
-        description="RECPL Compiler Bot v2.0 — Natural language to NestJS/Prisma code",
+        description="RECPL Compiler Bot v2.0 — Natural language to IR code compiler",
     )
     parser.add_argument(
         "--prompt",
@@ -69,6 +69,11 @@ async def main() -> None:
         help="Run in offline mode (no LLM calls, heuristic only)",
     )
     parser.add_argument(
+        "--ir-only",
+        action="store_true",
+        help="Stop after IR generation and output IR JSON (skip code generation)",
+    )
+    parser.add_argument(
         "--metrics",
         type=str,
         choices=["json", "table"],
@@ -105,6 +110,8 @@ async def main() -> None:
 
     if args.offline:
         pipeline_config.offline = True
+    if args.ir_only:
+        pipeline_config.ir_only = True
 
     if args.metrics:
         fb = get_global_feedback()

@@ -1,4 +1,4 @@
-"""IR Generator stage — builds IR tree and serializes output."""
+"""IR Generator stage — construye el arbol IR canonico y lo serializa. El IR es el producto central del compilador."""
 
 from __future__ import annotations
 
@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 
 class IRGenerator(PipelineStage):
-    """Stage 6: builds validated IR tree and serializes to multiple formats."""
+    """Stage 6: construye el arbol IR validado y lo serializa a multiples formatos. El IR es independiente de tecnologia."""
 
     name = "ir_generator"
 

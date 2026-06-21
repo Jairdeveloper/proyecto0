@@ -1,4 +1,4 @@
-"""AgentOrchestrator — StateGraph integration for RECPL v2.0."""
+"""AgentOrchestrator — StateGraph integration for RECPL v2.0. Compila lenguaje natural a IR canonico."""
 
 from __future__ import annotations
 
@@ -12,6 +12,7 @@ from langgraph.graph import END, StateGraph
 from agentic_pipeline.agents.agent_stage_adapter import AgentStageAdapter
 from agentic_pipeline.agents.base_agent import Agent
 from agentic_pipeline.base_stage import PipelineStage
+from agentic_pipeline.config import config as pipeline_config
 from agentic_pipeline.error_guard import ErrorGuard
 from agentic_pipeline.nodes.action_executor import ActionExecutor
 from agentic_pipeline.nodes.ir_generator import IRGenerator
@@ -139,12 +140,14 @@ class AgentOrchestrator:
         for i in range(len(stages) - 1):
             current = stages[i].value
             next_stage = stages[i + 1].value
+            if pipeline_config.ir_only and stages[i] == Stage.IR_GENERATOR:
+                next_stage = END
             self.graph.add_conditional_edges(
                 current,
                 ErrorGuard.should_continue,
                 {"continue": next_stage, "abort": END},
             )
-        self.graph.set_finish_point(stages[-1].value)
+        self.graph.set_finish_point(stages[-1].value if not pipeline_config.ir_only else END)
         self.compiled = self.graph.compile()
 
     def build_from_agents(self, agents: dict[str, Agent]) -> None:
