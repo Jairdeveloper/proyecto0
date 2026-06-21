@@ -1,7 +1,7 @@
 # RECPL — Natural Language to IR Compiler
 
 [![Python](https://img.shields.io/badge/python-3.11-blue)](https://python.org)
-[![Tests](https://img.shields.io/badge/tests-516_passing-green)](https://github.com/proyect0)
+[![Tests](https://img.shields.io/badge/tests-699_passing-green)](https://github.com/proyect0)
 [![Ruff](https://img.shields.io/badge/ruff-0_errors-brightgreen)](https://github.com/astral-sh/ruff)
 [![License](https://img.shields.io/badge/license-MIT-yellow)](LICENSE)
 
@@ -37,6 +37,23 @@ pip install -e compiler-bot/agentic_pipeline/
 
 # 3. Ver resultado
 ls modules/pagos/
+```
+
+### Solo IR (sin generacion de codigo)
+
+```bash
+# Obtener solo el IR canonico sin generar codigo especifico
+./compiler-bot/agentic --prompt "crea un modulo de pagos" --ir-only
+
+# El output es un JSON con accion, entidades y relaciones:
+# {
+#   "accion": "create",
+#   "modulo": "pagos",
+#   "entidades": ["Pago"],
+#   "relaciones": [],
+#   "tecnologias": [],
+#   "plan": []
+# }
 ```
 
 ### Dashboard Local
@@ -101,7 +118,7 @@ compiler-bot/
 │   ├── grammars/                    # Gramaticas Lark
 │   ├── orchestrator.py              # StateGraph integrador
 │   ├── feedback_loop.py             # Metricas + ajuste de pesos
-│   └── tests/                       # 516 tests (pytest)
+│   └── tests/                       # 699 tests (pytest)
 ├── recpl.sh                         # Shell v1.0 (legacy, reference)
 └── agent-robot/                     # Shell agent layer (legacy, reference)
 ```
@@ -146,7 +163,7 @@ cd compiler-bot/agentic_pipeline
 python -m pytest tests/ -v --tb=short
 ```
 
-516 tests cubriendo todos los stages del pipeline.
+699 tests cubriendo todos los stages del pipeline.
 
 ## Documentacion
 

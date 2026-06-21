@@ -5,6 +5,21 @@ Todas las cambios notables de este proyecto se documentan en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es/1.0.0/),
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.9.0] — 2026-06-21
+
+### Added
+- `--ir-only` flag en CLI: permite obtener solo el IR canonico sin ejecutar generadores de codigo
+- `docs/183_PROP_DEV_CONCEPT_SHIFT_1_0_DRAFT.md`: propuesta de cambio de concepto central a "Compilador NL a codigo IR"
+- `docs/184_REP_DEV_CONCEPT_SHIFT_F2_1_0_IMPLEMENTED.md`: reporte de ejecucion Fase 2 del cambio de concepto
+- `scripts/migrate_concept_to_ir.py`: script de migracion masiva de documentacion al nuevo concepto
+
+### Changed
+- Concepto central del proyecto migrado de "Compilador NL a NestJS/Prisma/React" a "Compilador NL a codigo IR"
+- **Fase 1 (Documentacion)**: 24 archivos actualizados (AGENTS.md, README.md, docs/index.md, architecture, runbook, 16 docs historicos, 2 prompts shell)
+- **Fase 2 (Codigo)**: 7 archivos modificados (pyproject.toml descripcion, config.py, CLI con --ir-only, orchestrator.py routing, action_executor/ir_generator/base_generator docstrings)
+- **Fase 3 (Comunicacion)**: README.md con ejemplo --ir-only y output IR JSON, CHANGELOG.md con entrada del cambio, test count actualizado de 516 a 699
+- Suite de tests: 699 funciones de test
+
 ## [2.8.5] — 2026-06-21
 
 ### Added
