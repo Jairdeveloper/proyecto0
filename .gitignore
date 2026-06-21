@@ -25,3 +25,16 @@ site/
 misc/
 ./docs/diagrams/mermaidToimage.py
 *.recpl_audit.log
+
+.env
+
+# macOS
+.DS_Store
+
+# Editor swap files
+*.swp
+*.swo
+
+# Coverage
+.coverage
+htmlcov/

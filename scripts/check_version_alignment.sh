@@ -6,6 +6,7 @@
 # No set -e, no eval.
 
 PROJECT_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+PDCA_VERSION="0.1.0"
 FAIL=0
 
 read_version_file() {
@@ -69,7 +70,8 @@ echo "=== Version Alignment Check ==="
 echo ""
 
 version_file=$(read_version_file "$PROJECT_ROOT/VERSION" "VERSION") || FAIL=1
-pyproject_ver=$(read_pyproject_version "$PROJECT_ROOT/compiler-bot/agentic_pipeline/pyproject.toml" "pyproject.toml") || FAIL=1
+pyproject_ver=$(read_pyproject_version "$PROJECT_ROOT/compiler-bot/agentic_pipeline/pyproject.toml" "agentic_pipeline/pyproject.toml") || FAIL=1
+pdca_pyproject_ver=$(read_pyproject_version "$PROJECT_ROOT/compiler-bot/pdca_sdlc/pyproject.toml" "pdca_sdlc/pyproject.toml") || FAIL=1
 changelog_ver=$(read_changelog_version "$PROJECT_ROOT/CHANGELOG.md" "CHANGELOG.md") || FAIL=1
 
 if [ "$FAIL" -ne 0 ]; then
@@ -78,9 +80,10 @@ if [ "$FAIL" -ne 0 ]; then
     exit 1
 fi
 
-echo "  VERSION:        $version_file"
-echo "  pyproject.toml: $pyproject_ver"
-echo "  CHANGELOG.md:   $changelog_ver"
+echo "  VERSION:                 $version_file"
+echo "  agentic_pipeline/pyproject.toml: $pyproject_ver"
+echo "  pdca_sdlc/pyproject.toml:       $pdca_pyproject_ver"
+echo "  CHANGELOG.md:            $changelog_ver"
 echo ""
 
 if [ "$version_file" != "$pyproject_ver" ]; then
@@ -90,6 +93,11 @@ fi
 
 if [ "$version_file" != "$changelog_ver" ]; then
     echo "FAIL: VERSION ($version_file) != CHANGELOG.md ($changelog_ver)"
+    FAIL=1
+fi
+
+if [ "$pdca_pyproject_ver" != "$PDCA_VERSION" ]; then
+    echo "FAIL: pdca_sdlc/pyproject.toml ($pdca_pyproject_ver) != expected ($PDCA_VERSION)"
     FAIL=1
 fi
 
