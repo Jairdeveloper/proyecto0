@@ -1,8 +1,8 @@
 ---
 id: 180
-area: DEV
-type: PROP
-module: CODE_ASSISTANT_AGENTIC_PLATFORM
+area: dev
+type: prop
+module: code_assistant_agentic_platform
 version: 1.0
 status: DRAFT
 tags:

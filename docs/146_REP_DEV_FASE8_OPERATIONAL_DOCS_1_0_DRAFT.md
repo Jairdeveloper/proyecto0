@@ -1,8 +1,8 @@
 ---
 id: 146
 area: dev
-type: REP
-module: OPERATIONAL_DOCS
+type: rep
+module: operational_docs
 version: 1.0
 status: IMPLEMENTED
 tags:

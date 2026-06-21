@@ -1,8 +1,8 @@
 ---
 id: 142
 area: dev
-type: REP
-module: DASHBOARD_SERVICE
+type: rep
+module: dashboard_service
 version: 1.0
 status: IMPLEMENTED
 tags:

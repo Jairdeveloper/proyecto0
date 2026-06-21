@@ -1,8 +1,8 @@
 ---
 id: 136
 area: dev
-type: GUIDE
-module: PROJECT0_RUNBOOK
+type: guide
+module: project0_runbook
 version: 1.0
 status: ACTIVE
 tags:

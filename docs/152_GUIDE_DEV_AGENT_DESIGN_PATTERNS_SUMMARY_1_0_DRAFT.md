@@ -1,8 +1,8 @@
 ---
 id: "R01"
-area: "DEV"
-type: "GUIDE"
-module: "AGENT_PATTERNS"
+area: dev
+type: guide
+module: agent_patterns
 version: "1.0"
 status: ACTIVE
 tags: ["guide", "reference", "agent-patterns", "design-patterns", "llm", "architecture"]

@@ -1,8 +1,8 @@
 ---
 id: 144
 area: dev
-type: REP
-module: CLI_DASHBOARD
+type: rep
+module: cli_dashboard
 version: 1.0
 status: IMPLEMENTED
 tags:

@@ -1,8 +1,8 @@
 ---
 id: 147
 area: dev
-type: REP
-module: DAILY_GATE
+type: rep
+module: daily_gate
 version: 1.0
 status: IMPLEMENTED
 tags:

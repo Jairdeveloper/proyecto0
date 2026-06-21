@@ -1,8 +1,8 @@
 ---
 id: "D01A"
-area: "DEV"
-type: "DIAGRAM"
-module: "RECPL_CLASS_ASCII"
+area: dev
+type: diagram
+module: recpl_class_ascii
 version: "1.0"
 status: ACTIVE
 tags: ["uml", "class-diagram", "ascii", "architecture"]

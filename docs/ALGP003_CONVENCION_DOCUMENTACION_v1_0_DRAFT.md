@@ -1,7 +1,7 @@
 ---
 id: alg_p_003
 area: algorithms
-type: ALGP
+type: algp
 module: documentation
 version: 1.0
 status: ACTIVE

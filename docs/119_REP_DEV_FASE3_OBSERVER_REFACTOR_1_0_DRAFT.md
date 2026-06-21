@@ -1,8 +1,8 @@
 ---
 id: "119"
-area: "DEV"
-type: "REP"
-module: "BEHAVIORAL_PATTERNS_REFACTOR"
+area: dev
+type: rep
+module: behavioral_patterns_refactor
 version: "1.0"
 status: IMPLEMENTED
 tags:

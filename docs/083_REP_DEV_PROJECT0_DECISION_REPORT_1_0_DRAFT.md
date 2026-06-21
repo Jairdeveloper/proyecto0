@@ -1,8 +1,8 @@
 ---
 id: 083
-area: DEV
-type: REP
-module: PROJECT
+area: dev
+type: rep
+module: project
 version: 1.0
 status: DRAFT
 tags:

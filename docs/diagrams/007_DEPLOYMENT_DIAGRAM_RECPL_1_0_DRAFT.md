@@ -1,8 +1,8 @@
 ---
 id: "D07"
-area: "DEV"
-type: "DIAGRAM"
-module: "RECPL_DEPLOYMENT"
+area: dev
+type: diagram
+module: recpl_deployment
 version: "1.0"
 status: ACTIVE
 tags: ["uml", "deployment-diagram", "infrastructure"]

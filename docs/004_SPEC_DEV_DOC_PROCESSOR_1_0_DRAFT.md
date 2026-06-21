@@ -1,7 +1,7 @@
 ---
 id: 004
 area: dev
-type: SPEC
+type: spec
 module: doc-processor
 version: 1.0
 status: DRAFT

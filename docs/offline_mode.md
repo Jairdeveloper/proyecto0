@@ -1,6 +1,6 @@
 ---
 area: dev
-type: GUIDE
+type: guide
 module: offline_mode
 version: 1.0
 status: ACTIVE

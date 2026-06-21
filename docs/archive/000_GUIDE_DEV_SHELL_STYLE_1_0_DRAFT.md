@@ -1,7 +1,7 @@
 ---
 id: 000
 area: dev
-type: GUIDE
+type: guide
 module: shell-style
 version: 1.0
 status: DRAFT

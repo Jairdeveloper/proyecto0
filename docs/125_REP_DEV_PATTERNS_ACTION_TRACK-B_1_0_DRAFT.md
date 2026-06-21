@@ -1,8 +1,8 @@
 ---
 id: "R09"
-area: "DEV"
-type: "REP"
-module: "PATTERNS_ACTION_TRACK_B"
+area: dev
+type: rep
+module: patterns_action_track_b
 version: "1.0"
 status: IMPLEMENTED
 tags:

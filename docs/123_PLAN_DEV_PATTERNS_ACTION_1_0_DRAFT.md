@@ -1,8 +1,8 @@
 ---
 id: "P04"
-area: "DEV"
-type: "PLAN"
-module: "RECPL_PATTERNS_ACTION"
+area: dev
+type: plan
+module: recpl_patterns_action
 version: "1.0"
 status: IMPLEMENTED
 tags:

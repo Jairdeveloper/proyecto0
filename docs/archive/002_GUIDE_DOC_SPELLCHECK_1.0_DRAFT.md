@@ -1,7 +1,7 @@
 ---
 id: 002
 area: legacy
-type: GUIDE
+type: guide
 module: spellcheck
 version: 1.0
 status: DRAFT

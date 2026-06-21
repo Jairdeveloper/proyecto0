@@ -1,8 +1,8 @@
 ---
 id: "116"
-area: "DEV"
-type: "PLAN"
-module: "BEHAVIORAL_PATTERNS_REFACTOR"
+area: dev
+type: plan
+module: behavioral_patterns_refactor
 version: "1.0"
 status: IMPLEMENTED
 tags:

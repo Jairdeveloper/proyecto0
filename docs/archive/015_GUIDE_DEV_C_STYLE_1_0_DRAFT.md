@@ -1,7 +1,7 @@
 ---
 id: 015
 area: dev
-type: GUIDE
+type: guide
 module: c-style
 version: 1.0
 status: DRAFT

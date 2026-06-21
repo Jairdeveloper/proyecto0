@@ -1,8 +1,8 @@
 ---
 id: 108
 area: dev
-type: REP
-module: PROMPT_CHAIN_F2
+type: rep
+module: prompt_chain_f2
 version: 1.0
 status: IMPLEMENTED
 tags:

@@ -1,7 +1,7 @@
 ---
 id: 029
 area: doc
-type: PROP
+type: prop
 module: documentation
 version: 1.0
 status: ACTIVE

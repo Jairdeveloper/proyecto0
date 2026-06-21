@@ -1,7 +1,7 @@
 ---
 id: 040
 area: dev
-type: PROP
+type: prop
 module: compiler-bot
 version: 1.1
 status: IMPLEMENTED

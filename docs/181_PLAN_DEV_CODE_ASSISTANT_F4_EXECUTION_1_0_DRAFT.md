@@ -1,8 +1,8 @@
 ---
 id: 181
-area: DEV
-type: PLAN
-module: CODE_ASSISTANT_AGENTIC_PLATFORM
+area: dev
+type: plan
+module: code_assistant_agentic_platform
 version: 1.0
 status: DRAFT
 tags:

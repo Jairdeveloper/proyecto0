@@ -1,8 +1,8 @@
 ---
 id: 118
-area: DEV
-type: REP
-module: FASE2_COMMAND
+area: dev
+type: rep
+module: fase2_command
 version: 1.0
 status: IMPLEMENTED
 tags: [refactor, command-pattern, behavioral-patterns, fase-2]

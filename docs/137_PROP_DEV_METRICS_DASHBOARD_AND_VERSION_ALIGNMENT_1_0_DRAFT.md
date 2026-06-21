@@ -1,8 +1,8 @@
 ---
 id: 137
 area: dev
-type: PROP
-module: METRICS_DASHBOARD_VERSIONING
+type: prop
+module: metrics_dashboard_versioning
 version: 1.0
 status: IMPLEMENTED
 tags:

@@ -1,8 +1,8 @@
 ---
 id: "115"
-area: "DEV"
-type: "PLAN"
-module: "POST_F5_IMPLEMENTATION"
+area: dev
+type: plan
+module: post_f5_implementation
 version: "1.0"
 status: "DRAFT"
 tags:

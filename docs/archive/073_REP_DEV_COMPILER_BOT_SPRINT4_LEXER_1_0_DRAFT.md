@@ -1,8 +1,8 @@
 ---
 id: 073
-area: DEV
-type: REP
-module: COMPILER_BOT
+area: dev
+type: rep
+module: compiler_bot
 version: 1.0.0
 status: IMPLEMENTED
 tags:

@@ -1,7 +1,7 @@
 ---
 id: 030
 area: mgt
-type: REP
+type: rep
 module: compiler-bot
 version: 1.0
 status: DRAFT

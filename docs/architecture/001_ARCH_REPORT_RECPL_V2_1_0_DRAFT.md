@@ -1,8 +1,8 @@
 ---
 id: "A01"
-area: "DEV"
-type: "ARCH"
-module: "RECPL_V2"
+area: dev
+type: arch
+module: recpl_v2
 version: "1.0"
 status: ACTIVE
 tags: ["architecture", "review", "as-is", "to-be", "risk-assessment"]

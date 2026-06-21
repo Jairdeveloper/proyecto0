@@ -1,8 +1,8 @@
 ---
 id: 138
 area: dev
-type: PLAN
-module: METRICS_DASHBOARD_VERSIONING_EXECUTION
+type: plan
+module: metrics_dashboard_versioning_execution
 version: 1.0
 status: IMPLEMENTED
 tags:

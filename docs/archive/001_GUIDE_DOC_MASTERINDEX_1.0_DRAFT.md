@@ -1,7 +1,7 @@
 ---
 id: 001
 area: legacy
-type: GUIDE
+type: guide
 module: masterindex
 version: 1.0
 status: DRAFT

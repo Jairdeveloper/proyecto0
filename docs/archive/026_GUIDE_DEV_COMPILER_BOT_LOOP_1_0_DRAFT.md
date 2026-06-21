@@ -1,7 +1,7 @@
 ---
 id: 026
 area: dev
-type: GUIDE
+type: guide
 module: compiler-bot
 version: 1.0
 status: DRAFT

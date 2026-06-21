@@ -1,8 +1,8 @@
 ---
 id: 140
 area: dev
-type: REP
-module: VERSION_CHECK_SCRIPT
+type: rep
+module: version_check_script
 version: 1.0
 status: IMPLEMENTED
 tags:

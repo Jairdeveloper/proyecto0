@@ -1,8 +1,8 @@
 ---
 id: "114"
-area: "DEV"
-type: "REP"
-module: "ARCHITECTURAL_REVIEW_ISO12207"
+area: dev
+type: rep
+module: architectural_review_iso12207
 version: "1.0"
 status: IMPLEMENTED
 tags:

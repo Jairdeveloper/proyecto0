@@ -1,8 +1,8 @@
 ---
 id: "112"
-area: "DEV"
-type: "REP"
-module: "BUGS_FIXES"
+area: dev
+type: rep
+module: bugs_fixes
 version: "1.0"
 status: IMPLEMENTED
 tags:

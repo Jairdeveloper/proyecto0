@@ -1,8 +1,8 @@
 ---
 id: 091
-area: MGT
-type: REP
-module: COMPILER_BOT
+area: mgt
+type: rep
+module: compiler_bot
 version: 1.0
 status: IMPLEMENTED
 tags:

@@ -1,7 +1,7 @@
 ---
 area: dev
-type: DIAGRAM
-module: RECPL
+type: diagram
+module: recpl
 version: 1.0
 status: ACTIVE
 ---

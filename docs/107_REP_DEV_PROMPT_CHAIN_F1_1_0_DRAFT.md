@@ -1,8 +1,8 @@
 ---
 id: 107
 area: dev
-type: REP
-module: PROMPT_CHAIN_F1
+type: rep
+module: prompt_chain_f1
 version: 1.0
 status: IMPLEMENTED
 tags:

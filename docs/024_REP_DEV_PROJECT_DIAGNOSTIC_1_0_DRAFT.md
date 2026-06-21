@@ -1,7 +1,7 @@
 ---
 id: 024
 area: dev
-type: REP
+type: rep
 module: project-diagnostic
 version: 1.0
 status: DRAFT

@@ -1,7 +1,7 @@
 ---
 id: INDEX
 area: doc
-type: GUIDE
+type: guide
 module: documentation-index
 version: 2.0
 status: ACTIVE

@@ -1,8 +1,8 @@
 ---
 id: 087
-area: DEV
-type: PROP
-module: COMPILER_BOT
+area: dev
+type: prop
+module: compiler_bot
 version: 1.0
 status: IMPLEMENTED
 tags:

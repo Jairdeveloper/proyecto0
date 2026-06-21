@@ -1,8 +1,8 @@
 ---
 id: "R08"
-area: "DEV"
-type: "REP"
-module: "PATTERNS_ACTION_TRACK_A"
+area: dev
+type: rep
+module: patterns_action_track_a
 version: "1.0"
 status: IMPLEMENTED
 tags:

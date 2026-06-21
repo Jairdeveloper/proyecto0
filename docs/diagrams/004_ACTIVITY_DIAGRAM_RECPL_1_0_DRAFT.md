@@ -1,8 +1,8 @@
 ---
 id: "D04"
-area: "DEV"
-type: "DIAGRAM"
-module: "RECPL_ACTIVITY"
+area: dev
+type: diagram
+module: recpl_activity
 version: "1.0"
 status: ACTIVE
 tags: ["uml", "activity-diagram", "pipeline-flow"]

@@ -1,7 +1,7 @@
 ---
 id: 014
 area: dev
-type: PROP
+type: prop
 module: compiler-bot
 version: 1.0
 status: DRAFT

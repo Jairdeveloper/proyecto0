@@ -1,7 +1,7 @@
 ---
 area: dev
-type: REP
-module: PROJECT
+type: rep
+module: project
 version: 1.0
 status: IMPLEMENTED
 ---

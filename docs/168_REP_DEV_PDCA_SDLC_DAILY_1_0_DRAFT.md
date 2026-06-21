@@ -1,8 +1,8 @@
 ---
 id: "P16"
-area: "DEV"
-type: "REP"
-module: "PDCA_SDLC"
+area: dev
+type: rep
+module: pdca_sdlc
 version: "1.0"
 status: IMPLEMENTED
 tags: ["report", "execution", "iso12207", "dia10", "buffer", "documentation", "fase1-complete"]

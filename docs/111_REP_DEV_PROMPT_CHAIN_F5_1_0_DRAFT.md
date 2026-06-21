@@ -1,8 +1,8 @@
 ---
 id: 111
 area: dev
-type: REP
-module: PROMPT_CHAIN_F5
+type: rep
+module: prompt_chain_f5
 version: 1.0
 status: IMPLEMENTED
 tags:

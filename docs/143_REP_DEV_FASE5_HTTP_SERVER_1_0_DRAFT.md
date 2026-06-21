@@ -1,8 +1,8 @@
 ---
 id: 143
 area: dev
-type: REP
-module: HTTP_DASHBOARD_SERVER
+type: rep
+module: http_dashboard_server
 version: 1.0
 status: IMPLEMENTED
 tags:

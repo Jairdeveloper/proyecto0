@@ -1,8 +1,8 @@
 ---
 id: 178
 area: dev
-type: ANALYSIS
-module: RECPL_PROJECT0
+type: analysis
+module: recpl_project0
 version: 1.0
 status: IMPLEMENTED
 tags:

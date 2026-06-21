@@ -1,7 +1,7 @@
 ---
 id: 018
 area: prompts
-type: PRM
+type: prm
 module: build-agent
 version: 1.0
 status: ACTIVE

@@ -1,8 +1,8 @@
 ---
 id: "P04"
-area: "DEV"
-type: "PLAN"
-module: "PDCA_SDLC"
+area: dev
+type: plan
+module: pdca_sdlc
 version: "1.0"
 status: IMPLEMENTED
 tags: ["plan", "implementation", "iso12207", "pdca", "sdlc", "multi-agent", "event-driven", "new-module"]

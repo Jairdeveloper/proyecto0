@@ -1,8 +1,8 @@
 ---
 id: 099
-area: DEV
-type: PROP
-module: AGENT_CORE
+area: dev
+type: prop
+module: agent_core
 version: 2.0
 status: IMPLEMENTED
 tags:

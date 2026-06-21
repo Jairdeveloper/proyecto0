@@ -1,7 +1,7 @@
 ---
 id: 049
 area: dev
-type: PLAN
+type: plan
 module: compiler-bot
 version: 1.0
 status: DRAFT

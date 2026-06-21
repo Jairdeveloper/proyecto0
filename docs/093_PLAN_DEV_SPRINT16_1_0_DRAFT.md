@@ -1,8 +1,8 @@
 ---
 id: 093
-area: DEV
-type: PLAN
-module: COMPILER_BOT
+area: dev
+type: plan
+module: compiler_bot
 version: 1.0
 status: IMPLEMENTED
 tags:

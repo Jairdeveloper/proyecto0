@@ -1,8 +1,8 @@
 ---
 id: 104
 area: dev
-type: GUIDE
-module: AGENT_CORE
+type: guide
+module: agent_core
 version: 1.0
 status: ACTIVE
 tags:

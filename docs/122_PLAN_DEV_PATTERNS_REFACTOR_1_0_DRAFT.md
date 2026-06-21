@@ -1,8 +1,8 @@
 ---
 id: "P03"
-area: "DEV"
-type: "PLAN"
-module: "RECPL_PATTERNS"
+area: dev
+type: plan
+module: recpl_patterns
 version: "1.0"
 status: IMPLEMENTED
 tags: ["plan", "refactor", "patterns", "mediator", "adapter", "visitor", "gof"]

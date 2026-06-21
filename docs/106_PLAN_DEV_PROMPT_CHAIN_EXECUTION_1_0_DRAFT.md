@@ -1,8 +1,8 @@
 ---
 id: 106
 area: dev
-type: PLAN
-module: PROMPT_CHAIN_EXEC
+type: plan
+module: prompt_chain_exec
 version: 1.0
 status: IMPLEMENTED
 tags:

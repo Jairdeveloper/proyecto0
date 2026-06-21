@@ -1,8 +1,8 @@
 ---
 id: 117
-area: DEV
-type: REP
-module: FASE1_COR
+area: dev
+type: rep
+module: fase1_cor
 version: 1.0
 status: IMPLEMENTED
 tags: [refactor, chain-of-responsibility, behavioral-patterns, fase-1]
@@ -95,3 +95,52 @@ implementaciones por defecto, permitiendo que subclases implementen solo
 
 - Fase 2: Command Pattern (encapsular generadores como comandos)
 - Fase 3: Observer Pattern (eventos de pipeline)
+
+class ChainOrchestrator:
+    def _build_chain(self):
+        self._pre = PreprocessHandler(self._llm, self._debug_callback)
+        self._intent = IntentHandler(self._llm, self._debug_callback)
+        self._plan = PlanHandler(self._llm, self._debug_callback)
+        self._gen = GenerateHandler(self._llm, self._debug_callback)
+        self._verify = VerifyHandler(self._llm, self._debug_callback)
+        self._fmt = FormatHandler(self._llm, self._debug_callback)
+        self._pre.set_next(self._intent).set_next(self._plan).set_next(self._gen).set_next(self._verify).set_next(self._fmt)
+        return self._pre
+
+class ChainOrchestrator:
+    def __init__(self, llm=None, debug_callback=None, max_retries=3):
+        self._llm = llm or build_llm_backend()
+        self._debug_callback = debug_callback
+        self._max_retries = max_retries
+        self._chain = self._build_chain()
+    def _build_chain(self):
+        pre = PreprocessHandler(self._llm, self._debug_callback)
+        intent = IntentHandler(self._llm, self._debug_callback)
+        plan = PlanHandler(self._llm, self._debug_callback)
+        gen = GenerateHandler(self._llm, self._debug_callback)
+        verify = VerifyHandler(self._llm, self._debug_callback)
+        fmt = FormatHandler(self._llm, self._debug_callback)
+        pre.set_next(intent).set_next(plan).set_next(gen).set_next(verify).set_next(fmt)
+        return pre
+    async def run(self, raw_input: str) -> dict:
+        ctx = ChainContext()
+        request = PromptRequest(raw_input=raw_input, debug_callback=self._debug_callback)
+        
+        # First pass through the entire chain
+        result = await self._chain.handle(request, ctx)
+        
+        # Retry loop
+        attempt = 0
+        while attempt < self._max_retries:
+            verify_output = ctx._data.get("verify", {})
+            if not verify_output.get("should_retry", False):
+                break
+            attempt += 1
+            logger.info("Retry attempt %d/%d", attempt, self._max_retries)
+            # Re-run generate â verify
+            generate_handler = self._get_handler("generate")
+            verify_handler = self._get_handler("verify")
+            await generate_handler.handle(request, ctx)
+            await verify_handler.handle(request, ctx)
+        
+        return ctx._data.get("format", result.output)

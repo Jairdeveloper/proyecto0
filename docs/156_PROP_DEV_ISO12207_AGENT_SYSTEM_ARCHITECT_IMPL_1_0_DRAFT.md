@@ -1,8 +1,8 @@
 ---
 id: "R05"
-area: "DEV"
-type: "PROP"
-module: "ISO12207_AGENT_SYSTEM"
+area: dev
+type: prop
+module: iso12207_agent_system
 version: "1.0"
 status: IMPLEMENTED
 tags: ["proposal", "implementation", "iso12207", "event-driven", "python", "pydantic", "protocols", "swarm", "class-skeleton"]

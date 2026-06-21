@@ -1,8 +1,8 @@
 ---
 id: "D01"
-area: "DEV"
-type: "DIAGRAM"
-module: "RECPL_CLASS"
+area: dev
+type: diagram
+module: recpl_class
 version: "1.0"
 status: ACTIVE
 tags: ["uml", "class-diagram", "architecture"]

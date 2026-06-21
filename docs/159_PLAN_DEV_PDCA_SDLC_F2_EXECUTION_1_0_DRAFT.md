@@ -1,8 +1,8 @@
 ---
 id: "P06"
-area: "DEV"
-type: "PLAN"
-module: "PDCA_SDLC"
+area: dev
+type: plan
+module: pdca_sdlc
 version: "1.0"
 status: "DRAFT"
 tags: ["plan", "execution", "iso12207", "fase2", "architect", "quality-gates", "swarm", "verification"]

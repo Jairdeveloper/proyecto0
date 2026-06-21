@@ -1,8 +1,8 @@
 ---
 id: 105
 area: dev
-type: PROP
-module: PROMPT_CHAIN
+type: prop
+module: prompt_chain
 version: 1.0
 status: IMPLEMENTED
 tags:

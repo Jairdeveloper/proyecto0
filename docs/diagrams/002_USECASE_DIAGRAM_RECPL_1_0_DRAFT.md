@@ -1,8 +1,8 @@
 ---
 id: "D02"
-area: "DEV"
-type: "DIAGRAM"
-module: "RECPL_USECASE"
+area: dev
+type: diagram
+module: recpl_usecase
 version: "1.0"
 status: ACTIVE
 tags: ["uml", "usecase-diagram", "requirements"]

@@ -1,8 +1,8 @@
 ---
 id: 176
 area: ops
-type: GUIDE
-module: PDCA_SDLC_EVENTBUS_DASHBOARD
+type: guide
+module: pdca_sdlc_eventbus_dashboard
 version: 1.0
 status: ACTIVE
 tags:

@@ -1,7 +1,7 @@
 ---
 id: INDEX-legacy
 area: legacy
-type: GUIDE
+type: guide
 module: documentation-index
 version: 1.0
 status: ACTIVE

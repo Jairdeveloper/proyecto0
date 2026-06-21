@@ -1,7 +1,7 @@
 ---
 id: 043
 area: dev
-type: REP
+type: rep
 module: compiler-bot
 version: 1.0
 status: DRAFT

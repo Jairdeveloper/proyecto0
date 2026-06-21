@@ -1,8 +1,8 @@
 ---
 id: "172"
-area: "DEV"
-type: "PLAN"
-module: "PDCA_SDLC"
+area: dev
+type: plan
+module: pdca_sdlc
 version: "1.0"
 status: IMPLEMENTED
 tags: ["plan", "execution", "event-bus", "api", "dashboard", "sse", "replay"]

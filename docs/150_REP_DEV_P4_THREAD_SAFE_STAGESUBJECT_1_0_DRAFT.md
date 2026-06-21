@@ -1,8 +1,8 @@
 ---
 id: "P03.1"
-area: "DEV"
-type: "REP"
-module: "RECPL_ARCH_REMAINING"
+area: dev
+type: rep
+module: recpl_arch_remaining
 version: "1.0"
 status: IMPLEMENTED
 tags: ["report", "p4", "thread-safety", "observer", "stage-subject"]

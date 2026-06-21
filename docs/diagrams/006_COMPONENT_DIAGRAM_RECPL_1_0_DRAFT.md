@@ -1,8 +1,8 @@
 ---
 id: "D06"
-area: "DEV"
-type: "DIAGRAM"
-module: "RECPL_COMPONENT"
+area: dev
+type: diagram
+module: recpl_component
 version: "1.0"
 status: ACTIVE
 tags: ["uml", "component-diagram", "architecture"]

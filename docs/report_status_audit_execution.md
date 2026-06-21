@@ -1,8 +1,8 @@
 ---
 id: RPT-AUDIT-001
 area: dev
-type: REP
-module: DOC_STATUS_AUDIT_EXECUTION
+type: rep
+module: doc_status_audit_execution
 version: 1.0
 status: IMPLEMENTED
 tags: [audit, execution, status, report]

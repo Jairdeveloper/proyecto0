@@ -1,7 +1,7 @@
 ---
 id: 070
 area: dev
-type: GUIDE
+type: guide
 module: python-style
 version: 1.0
 status: ACTIVE

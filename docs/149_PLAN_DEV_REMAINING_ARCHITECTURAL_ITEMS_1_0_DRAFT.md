@@ -1,8 +1,8 @@
 ---
 id: "P03"
-area: "DEV"
-type: "PLAN"
-module: "RECPL_ARCH_REMAINING"
+area: dev
+type: plan
+module: recpl_arch_remaining
 version: "1.0"
 status: IMPLEMENTED
 tags: ["plan", "implementation", "refactor", "thread-safety", "event-bus", "dead-code"]
@@ -85,7 +85,7 @@ pytest tests/test_observer_pattern.py -v -k "concurrent"
 
 ---
 
-## P5 — Unificar EventBus + StageSubject (6h)
+## P5 — Unificar EventBus + StageSubject(6h) 
 
 **Problema:** `StageSubject` (prompt_chain/) y `EventBus` (agents/) son dos implementaciones de pub/sub con la misma funcion. Actualmente `StageSubject` ya importa `EventBus` y publica eventos en el (P5.2 completado), pero `StageObserver` y el sistema local de observers siguen existiendo como mecanismo paralelo.
 

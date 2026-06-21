@@ -1,8 +1,8 @@
 ---
 id: "D05"
-area: "DEV"
-type: "DIAGRAM"
-module: "RECPL_STATEMACHINE"
+area: dev
+type: diagram
+module: recpl_statemachine
 version: "1.0"
 status: ACTIVE
 tags: ["uml", "state-machine-diagram", "lifecycle"]

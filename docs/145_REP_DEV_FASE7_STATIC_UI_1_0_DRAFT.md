@@ -1,8 +1,8 @@
 ---
 id: 145
 area: dev
-type: REP
-module: STATIC_DASHBOARD_UI
+type: rep
+module: static_dashboard_ui
 version: 1.0
 status: IMPLEMENTED
 tags:

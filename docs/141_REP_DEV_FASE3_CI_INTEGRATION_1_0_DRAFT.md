@@ -1,8 +1,8 @@
 ---
 id: 141
 area: dev
-type: REP
-module: CI_INTEGRATION
+type: rep
+module: ci_integration
 version: 1.0
 status: IMPLEMENTED
 tags:

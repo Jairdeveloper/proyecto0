@@ -1,8 +1,8 @@
 ---
 id: 100
-area: DEV
-type: PLAN
-module: AGENT_CORE
+area: dev
+type: plan
+module: agent_core
 version: 1.0
 status: IMPLEMENTED
 tags:

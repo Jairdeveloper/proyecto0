@@ -1,6 +1,6 @@
 ---
 area: dev
-type: REP
+type: rep
 module: agentic_pipeline
 version: 1.0
 status: IMPLEMENTED

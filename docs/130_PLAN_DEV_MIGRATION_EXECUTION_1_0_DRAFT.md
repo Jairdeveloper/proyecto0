@@ -1,6 +1,6 @@
 ---
 area: dev
-type: PLAN
+type: plan
 module: agentic_pipeline
 version: 1.0
 status: DRAFT

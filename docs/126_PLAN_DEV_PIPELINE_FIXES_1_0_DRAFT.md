@@ -1,8 +1,8 @@
 ---
 id: "P05"
-area: "DEV"
-type: "PLAN"
-module: "PIPELINE_FIXES"
+area: dev
+type: plan
+module: pipeline_fixes
 version: "1.1"
 status: IMPLEMENTED
 tags:

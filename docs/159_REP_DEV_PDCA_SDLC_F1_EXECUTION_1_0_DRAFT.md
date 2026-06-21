@@ -1,8 +1,8 @@
 ---
 id: "P15"
-area: "DEV"
-type: "REP"
-module: "PDCA_SDLC"
+area: dev
+type: rep
+module: pdca_sdlc
 version: "1.0"
 status: IMPLEMENTED
 tags: ["report", "fase1", "iso12207", "completion", "pdca-sdlc"]

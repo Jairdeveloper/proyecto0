@@ -1,7 +1,7 @@
 ---
 id: 005
 area: dev
-type: SPEC
+type: spec
 module: compiler-theory
 version: 1.0
 status: ACTIVE

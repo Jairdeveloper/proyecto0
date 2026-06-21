@@ -1,7 +1,7 @@
 ---
 id: 019
 area: mgt
-type: REP
+type: rep
 module: framemaker
 version: 1.0
 status: DRAFT

@@ -1,8 +1,8 @@
 ---
 id: "P03.2"
-area: "DEV"
-type: "REP"
-module: "RECPL_ARCH_REMAINING"
+area: dev
+type: rep
+module: recpl_arch_remaining
 version: "1.0"
 status: IMPLEMENTED
 tags: ["report", "p5", "event-bus", "observer", "stage-subject", "unification"]

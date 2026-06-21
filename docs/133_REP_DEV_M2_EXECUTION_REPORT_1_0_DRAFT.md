@@ -1,7 +1,7 @@
 ---
 area: dev
-type: REP
-module: M2
+type: rep
+module: m2
 version: 1.0
 status: IMPLEMENTED
 ---

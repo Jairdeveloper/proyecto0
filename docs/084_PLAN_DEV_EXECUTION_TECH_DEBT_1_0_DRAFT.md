@@ -1,8 +1,8 @@
 ---
 id: 084
-area: DEV
-type: PLAN
-module: PROJECT
+area: dev
+type: plan
+module: project
 version: 1.0
 status: DRAFT
 tags:

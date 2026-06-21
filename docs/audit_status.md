@@ -1,8 +1,8 @@
 ---
 id: AUDIT-DOC-001
 area: dev
-type: ANALYSIS
-module: DOC_STATUS_AUDIT
+type: analysis
+module: doc_status_audit
 version: 1.0
 status: IMPLEMENTED
 tags: [audit, documentation, status, classification]

@@ -1,7 +1,7 @@
 ---
 id: 022
 area: dev
-type: GUIDE
+type: guide
 module: lifecycle-framework
 version: 1.0
 status: DRAFT

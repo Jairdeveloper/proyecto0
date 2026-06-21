@@ -1,8 +1,8 @@
 ---
 id: "P01"
-area: "DEV"
-type: "PROP"
-module: "RECPL_ADAPTIVE"
+area: dev
+type: prop
+module: recpl_adaptive
 version: "2.0"
 status: IMPLEMENTED
 tags: ["proposal", "adaptive", "requirement-decomposer", "pipeline"]

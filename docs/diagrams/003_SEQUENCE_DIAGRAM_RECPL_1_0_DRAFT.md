@@ -1,8 +1,8 @@
 ---
 id: "D03"
-area: "DEV"
-type: "DIAGRAM"
-module: "RECPL_SEQUENCE"
+area: dev
+type: diagram
+module: recpl_sequence
 version: "1.0"
 status: ACTIVE
 tags: ["uml", "sequence-diagram", "pipeline-flow"]

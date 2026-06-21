@@ -5,6 +5,14 @@ Todas las cambios notables de este proyecto se documentan en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es/1.0.0/),
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.8.5] — 2026-06-21
+
+### Added
+- `scripts/normalize_frontmatter_casing.py`: script para normalizar casing de frontmatter YAML.
+
+### Changed
+- Frontmatter normalizado en 211 archivos .md: area, type y module en lowercase (e.g. `area: dev`, `type: rep`, `module: my_module`), quotes eliminadas.
+
 ## [2.8.4] — 2026-06-19
 
 ### Added

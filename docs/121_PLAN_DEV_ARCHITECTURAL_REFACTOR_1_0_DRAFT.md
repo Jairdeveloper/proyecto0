@@ -1,8 +1,8 @@
 ---
 id: "P02"
-area: "DEV"
-type: "PLAN"
-module: "RECPL_REFACTOR"
+area: dev
+type: plan
+module: recpl_refactor
 version: "1.0"
 status: IMPLEMENTED
 tags: ["plan", "implementation", "refactor", "debt", "quality"]

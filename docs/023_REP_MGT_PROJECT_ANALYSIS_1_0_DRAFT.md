@@ -1,7 +1,7 @@
 ---
 id: 023
 area: mgt
-type: REP
+type: rep
 module: project-analysis
 version: 1.0
 status: DRAFT

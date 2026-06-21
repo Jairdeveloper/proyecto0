@@ -1,8 +1,8 @@
 ---
 id: 177
 area: dev
-type: REP
-module: PDCA_SDLC_EVENTBUS_DASHBOARD
+type: rep
+module: pdca_sdlc_eventbus_dashboard
 version: 1.0
 status: IMPLEMENTED
 tags:

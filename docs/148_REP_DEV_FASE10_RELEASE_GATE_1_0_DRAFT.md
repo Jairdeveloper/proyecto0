@@ -1,8 +1,8 @@
 ---
 id: 148
 area: dev
-type: REP
-module: RELEASE_GATE
+type: rep
+module: release_gate
 version: 1.0
 status: IMPLEMENTED
 tags:

@@ -1,8 +1,8 @@
 ---
 id: "P17"
-area: "DEV"
-type: "PLAN"
-module: "PDCA_SDLC"
+area: dev
+type: plan
+module: pdca_sdlc
 version: "1.0"
 status: IMPLEMENTED
 tags: ["plan", "dashboard", "sdlc-visualization", "real-time", "zero-dependency"]

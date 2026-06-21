@@ -1,8 +1,8 @@
 ---
 id: 109
 area: dev
-type: REP
-module: PROMPT_CHAIN_F3
+type: rep
+module: prompt_chain_f3
 version: 1.0
 status: IMPLEMENTED
 tags:

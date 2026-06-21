@@ -1,8 +1,8 @@
 ---
 id: "171"
-area: "DEV"
-type: "ANALYSIS"
-module: "PDCA_SDLC"
+area: dev
+type: analysis
+module: pdca_sdlc
 version: "1.0"
 status: IMPLEMENTED
 tags: ["analysis", "event-bus", "api", "dashboard", "async-event-bus", "replay"]

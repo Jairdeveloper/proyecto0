@@ -1,8 +1,8 @@
 ---
 id: 102
 area: dev
-type: REP
-module: AGENT_CORE
+type: rep
+module: agent_core
 version: 1.0
 status: IMPLEMENTED
 tags:

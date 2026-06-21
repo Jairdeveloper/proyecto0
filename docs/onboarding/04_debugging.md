@@ -1,8 +1,8 @@
 ---
 id: ONB-004
-area: DEV
-type: GUIDE
-module: ONBOARDING
+area: dev
+type: guide
+module: onboarding
 version: 1.0
 status: ACTIVE
 tags:

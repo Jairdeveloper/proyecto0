@@ -1,8 +1,8 @@
 ---
 id: "113"
-area: "DEV"
-type: "REP"
-module: "STATE_VS_LESSONS"
+area: dev
+type: rep
+module: state_vs_lessons
 version: "1.0"
 status: IMPLEMENTED
 tags:

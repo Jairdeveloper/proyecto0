@@ -1,7 +1,7 @@
 ---
 id: INDEX-mgt
 area: mgt
-type: GUIDE
+type: guide
 module: documentation-index
 version: 1.0
 status: ACTIVE

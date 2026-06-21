@@ -1,7 +1,7 @@
 ---
 id: 003
 area: doc
-type: PROP
+type: prop
 module: doc-processor
 version: 1.0
 status: DRAFT
