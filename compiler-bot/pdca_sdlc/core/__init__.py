@@ -5,6 +5,7 @@ from .capability_registry import CapabilityManifest, CapabilityRegistry
 from .event_bus import AsyncEventBus, Event, TopicMatcher
 from .knowledge_graph import Edge, EdgeType, KnowledgeGraph, Node, NodeType
 from .llm_client import LLMClient, LLMError
+from .swarm_coordinator import SwarmDetector
 
 __all__ = [
     "AgentContext",
@@ -20,5 +21,6 @@ __all__ = [
     "LLMError",
     "Node",
     "NodeType",
+    "SwarmDetector",
     "TopicMatcher",
 ]
