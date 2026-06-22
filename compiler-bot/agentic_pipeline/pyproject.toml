@@ -33,7 +33,7 @@ dev = [
 ]
 
 [tool.setuptools.packages.find]
-include = ["agentic_pipeline", "agentic_pipeline.*"]
+include = ["agentic_pipeline", "agentic_pipeline.*", "user_request", "user_request.*"]
 
 [build-system]
 requires = ["setuptools>=68.0"]
