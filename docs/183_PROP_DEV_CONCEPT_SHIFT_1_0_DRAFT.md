@@ -163,7 +163,7 @@ concepto. No tocar codigo.
 
 **Criterio de exito:** `grep -r "Compilador de lenguaje natural a codigo" docs/`
 ya no muestra la definicion antigua (excepto en documentos historicos
-donde sea apropiado conservarla).
+donde sea apropiado conservarla).(**Obviar excepcion**)
 
 ### Fase 2 — Codigo (1-2 sesiones)
 

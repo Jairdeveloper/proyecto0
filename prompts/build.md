@@ -883,3 +883,12 @@ Analiza el archivo: '/home/john/proyects/proyect0/docs/123_PLAN_DEV_PATTERNS_ACT
 ### B10 — Agregar `build_from_agents()` en Orchestrator
 ### B11 — Tests de Adapter
 Escribe reporte en un archivo .md de las acciones realizadas.
+
+La descripcion y/o concepto del proyecto Proyecto0 tendra un cambio. Actualmente el proyecto esta deinido como: "Compilador de lenguaje natural a codigo NestJs, Prisma, React..." El concepto/descripcion que utilizaremos sera "Compilador de lenguaje natural a codigo IR". Escribe Propuesta en un archivo .md para cambiar/ Reescribir la documentacion y posteriormente el codigo que esten escrito bajo este concepto. La decision de este cambio de concepto es que se esta invirtiendo un esfuerzo muy grande para los resultados respecto a la utilidad que puede tener el sistema. Actualmente el codigo hace literalmente lo que el concepto dice, compilar de lenguaje natural a codigo nestjs, prisma, etc..., Lo cual es poco util o inutil para personas que quieran utilizar otras tecnologias... La intencion de reescribir el concepto es alinear la concepciÃ³n del sistema hacia como fue concebida la idea, el cambio de concepto a "Compilador de lenguaje natural a IR) nos ayuda abrir el abanido de utilidad que le podemos dar al sistema partiendo desde la concepciÃ³n del mismo. Aunque el sistema se esta redirigiendo hacia una concepcion de Code Assistant Agentic Platform, nos parece importante sentar las bases reales la cual se inicio la idea del sistema en cuanto a la funcionalidad esperada.
+
+
+ invalid [tool=glob, error=Model tried to call unavailable tool 'glob'. Available tools: invalid, question, bash, read, edit, write, task, webfetch, todowrite, websearch, codesearch, skill, session_list, session_read, session_search, session_info, background_output, background_cancel, look_at, skill_mcp, interactive_bash, lsp_status, lsp_diagnostics, lsp_goto_definition, lsp_find_references, lsp_symbols, lsp_prepare_rename, lsp_rename, lsp_install_decision, websearch_web_search_exa, grep_app_searchGitHub, context7_resolve-library-id, context7_query-docs.]
+Thinking: Let me use bash to list the docs directory to understand naming conventions.
+# List recent docs files for conventions
+$ ls docs/*.md | tail -30
+docs/163_REP_DEV_PDCA_SDLC_DAILY_1_0_DRAFT.md
