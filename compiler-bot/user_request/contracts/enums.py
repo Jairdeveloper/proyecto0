@@ -50,6 +50,14 @@ class IntentType(str, Enum):
 # Mapeo de alias definido fuera de la clase para evitar colisiones
 # con el mecanismo de miembros del Enum (Python 3.11).
 _ALIAS_MAP: dict[str, IntentType] = {
+    # Canonico a si mismo
+    "create": IntentType.CREATE,
+    "read": IntentType.READ,
+    "update": IntentType.UPDATE,
+    "delete": IntentType.DELETE,
+    "explain": IntentType.EXPLAIN,
+    "configure": IntentType.CONFIGURE,
+    # Alias legacy
     "scaffold": IntentType.CREATE,
     "generate": IntentType.CREATE,
     "new": IntentType.CREATE,
@@ -61,6 +69,7 @@ _ALIAS_MAP: dict[str, IntentType] = {
     "change": IntentType.UPDATE,
     "remove": IntentType.DELETE,
     "help": IntentType.EXPLAIN,
+    "clarify": IntentType.READ,
     "set": IntentType.CONFIGURE,
     "config": IntentType.CONFIGURE,
 }

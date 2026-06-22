@@ -18,13 +18,13 @@ from user_request.contracts.request import (
     Slots,
 )
 from user_request.contracts.response import ResponseObject
+from user_request.nlu.classifiers.rule import RuleIntentClassifier as IntentClassifier
+from user_request.nlu.extractors.rule import RuleEntityExtractor as NERExtractor
 from user_request.nlu.slot_filler import SlotFiller
 
 # Legacy re-exports — maintained for backward compatibility.
 from agentic_pipeline.nlp.ambiguity_detector import AmbiguityDetector
 from agentic_pipeline.nlp.enriched_input import ContextState, EnrichedInput
-from agentic_pipeline.nlp.intent_classifier import IntentClassifier
-from agentic_pipeline.nlp.ner_extractor import NERExtractor
 
 __all__ = [
     "AmbiguityDetector",
