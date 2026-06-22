@@ -1,7 +1,12 @@
 """ArchitectAgent — designs component architecture from requirements.
 
-Trigger: ``requirement.created``
-Output: ``architecture.proposed``
+Triggers:
+  - ``requirement.created`` — design high-level architecture
+  - ``architecture.review.approved`` — design detailed interfaces/schemas (HITL)
+
+Outputs:
+  - ``architecture.proposed`` — high-level component architecture
+  - ``design.detailed.complete`` — detailed interfaces, schemas, dependencies
 """
 
 from __future__ import annotations
@@ -59,17 +64,29 @@ class ArchitectAgent(BaseAgent):
             agent_id=self._ctx.agent_id,
             agent_name="ArchitectAgent",
             description=("Designs component architecture from requirements following ISO 12207"),
-            iso_12207={"process": "6.2", "activities": ["6.2.1", "6.2.2", "6.2.3"]},
-            triggers=["requirement.created"],
-            output_events=["architecture.proposed"],
+            iso_12207={"process": "6.2", "activities": ["6.2.1", "6.2.2", "6.2.3", "6.2.4"]},
+            triggers=["requirement.created", "architecture.review.approved"],
+            output_events=["architecture.proposed", "design.detailed.complete"],
         )
 
     async def handle_event(self, event: Event) -> None:
+        """Route incoming events to the appropriate handler.
+
+        - ``requirement.created`` → high-level architecture + detailed design
+        - ``architecture.review.approved`` → detailed design only (HITL path)
+        """
+        if event.topic == "architecture.review.approved":
+            await self._handle_review_approved(event)
+        else:
+            await self._handle_requirement_created(event)
+
+    async def _handle_requirement_created(self, event: Event) -> None:
         """Process a ``requirement.created`` event.
 
         Reads requirements from the KG, classifies project complexity,
-        and generates component architecture with ADRs.
-        Emits ``architecture.proposed`` on success.
+        generates component architecture with ADRs, then proceeds to
+        detailed design automatically (non-HITL path).
+        Emits ``architecture.proposed`` and ``design.detailed.complete``.
         """
         project_id: str = event.project_id
         requirement_ids: list[str] = event.data.get("requirement_ids", [])
@@ -85,10 +102,7 @@ class ArchitectAgent(BaseAgent):
 
         # SIMPLE projects: fast-path skip, no architecture needed
         if complexity == "simple":
-            logger.debug(
-                "SIMPLE project %s — architect fast-path skip",
-                project_id,
-            )
+            logger.debug("SIMPLE project %s — architect fast-path skip", project_id)
             return
 
         requirements = self._read_requirements(requirement_ids)
@@ -114,6 +128,35 @@ class ArchitectAgent(BaseAgent):
                 "requirement_ids": requirement_ids,
             },
         )
+
+        # Non-HITL path: proceed directly to detailed design
+        await self._detailed_design(project_id, component_ids, components)
+
+    async def _handle_review_approved(self, event: Event) -> None:
+        """Process an ``architecture.review.approved`` event (HITL path).
+
+        Reads the approved components from the KG and generates
+        detailed interfaces, schemas, and dependency edges.
+        Emits ``design.detailed.complete``.
+        """
+        project_id: str = event.project_id
+        component_ids: list[str] = event.data.get("component_ids", [])
+
+        if not component_ids:
+            logger.warning("No component IDs in review.approved for %s", project_id)
+            return
+
+        components: list[dict[str, Any]] = []
+        for cid in component_ids:
+            node = self.read_graph(cid)
+            if node is not None:
+                components.append(node.properties)
+
+        if not components:
+            logger.warning("No components found in KG for %s", project_id)
+            return
+
+        await self._detailed_design(project_id, component_ids, components)
 
     def _read_complexity(self, project_id: str) -> str | None:
         """Read project complexity from the goal node in the KG.
@@ -420,3 +463,220 @@ class ArchitectAgent(BaseAgent):
             self.write_graph(node)
             decision_ids.append(adr_id)
         return decision_ids
+
+    # ------------------------------------------------------------------
+    # Detailed Design (Dia 12)
+    # ------------------------------------------------------------------
+
+    async def _detailed_design(
+        self,
+        project_id: str,
+        component_ids: list[str],
+        components: list[dict[str, Any]],
+    ) -> None:
+        """Generate detailed design for each component.
+
+        For each component:
+          - Expands interfaces with typed methods and parameters
+          - Generates data schemas (entities, fields, relations) when applicable
+          - Determines DEPENDS_ON edges between components
+
+        Args:
+            project_id: Project identifier.
+            component_ids: List of KG node IDs for the components.
+            components: List of component property dicts.
+        """
+        detailed: list[dict[str, Any]] = []
+        for cid, comp in zip(component_ids, components):
+            comp_detail = self._generate_interfaces(cid, comp)
+            if self._has_data_schema(comp):
+                comp_detail["schema"] = self._generate_schema(comp)
+            detailed.append(comp_detail)
+            self._ctx.knowledge_graph.update_node(
+                cid,
+                properties={"interfaces": comp_detail["interfaces"]},
+            )
+            if "schema" in comp_detail:
+                self._ctx.knowledge_graph.update_node(
+                    cid,
+                    properties={"schema": comp_detail["schema"]},
+                )
+
+        self._generate_dependencies(project_id, component_ids, components)
+
+        await self.emit(
+            "design.detailed.complete",
+            project_id,
+            {
+                "component_ids": component_ids,
+                "components": detailed,
+            },
+        )
+
+    @staticmethod
+    def _generate_interfaces(
+        comp_id: str,
+        comp: dict[str, Any],
+    ) -> dict[str, Any]:
+        """Expand component interfaces with typed methods and parameters.
+
+        Converts a list of interface names into structured definitions
+        with CRUD-like methods and standard parameter types.
+
+        Args:
+            comp_id: Component node ID.
+            comp: Component property dict with ``name`` and ``interfaces``.
+
+        Returns:
+            Dict with ``name`` and ``interfaces`` (list of method defs).
+        """
+        raw_interfaces: list[str] = comp.get("interfaces", [])
+        expanded: list[dict[str, Any]] = []
+
+        if not raw_interfaces:
+            raw_interfaces = ["default"]
+
+        for iface in raw_interfaces:
+            expanded.append(
+                {
+                    "name": iface,
+                    "methods": [
+                        {
+                            "name": "create",
+                            "params": [{"name": "data", "type": "object"}],
+                            "returns": "object",
+                        },
+                        {
+                            "name": "read",
+                            "params": [{"name": "id", "type": "string"}],
+                            "returns": "object | null",
+                        },
+                        {
+                            "name": "update",
+                            "params": [
+                                {"name": "id", "type": "string"},
+                                {"name": "data", "type": "object"},
+                            ],
+                            "returns": "object",
+                        },
+                        {
+                            "name": "delete",
+                            "params": [{"name": "id", "type": "string"}],
+                            "returns": "boolean",
+                        },
+                    ],
+                },
+            )
+
+        return {
+            "name": comp.get("name", comp_id),
+            "interfaces": expanded,
+        }
+
+    @staticmethod
+    def _has_data_schema(comp: dict[str, Any]) -> bool:
+        """Check whether a component needs a data schema.
+
+        Components with DB-related tech stacks or names suggesting
+        data management (entities, models, repos) get a schema.
+        Name matching splits on camelCase and checks substrings.
+
+        Args:
+            comp: Component property dict with ``tech_stack`` and ``name``.
+
+        Returns:
+            True if a schema should be generated.
+        """
+        tech_stack: list[str] = comp.get("tech_stack", [])
+        name: str = comp.get("name", "")
+        schema_keywords = {"entity", "model", "schema", "db", "database", "repo", "prisma"}
+        tech_keywords: set[str] = {"prisma", "sql", "database", "postgresql", "mongodb", "mysql"}
+
+        # Check tech_stack directly
+        tech_lower = set(t.lower() for t in tech_stack)
+        if tech_lower & tech_keywords:
+            return True
+
+        # Check name — split camelCase and check substrings
+        name_lower = name.lower()
+        # Split on uppercase boundaries
+        parts = []
+        current = ""
+        for ch in name:
+            if ch.isupper() and current:
+                parts.append(current.lower())
+                current = ch.lower()
+            else:
+                current += ch
+        if current:
+            parts.append(current.lower())
+        name_parts = set(parts)
+
+        # Also include the full name
+        name_parts.add(name_lower)
+
+        return bool(name_parts & schema_keywords) or bool(
+            any(kw in name_lower for kw in schema_keywords),
+        )
+
+    @staticmethod
+    def _generate_schema(comp: dict[str, Any]) -> dict[str, Any]:
+        """Generate a data schema for a component.
+
+        Creates an entity schema based on the component name,
+        with standard fields and a relationship to the project.
+
+        Args:
+            comp: Component property dict with ``name``.
+
+        Returns:
+            Schema dict with entity name, fields, and relations.
+        """
+        entity_name = comp.get("name", "Entity")
+        return {
+            "entity": entity_name,
+            "fields": [
+                {"name": "id", "type": "String", "primary": True},
+                {"name": "createdAt", "type": "DateTime", "default": "now()"},
+                {"name": "updatedAt", "type": "DateTime", "updated": True},
+                {"name": entity_name.lower() + "Field", "type": "String", "optional": True},
+            ],
+            "relations": [
+                {"type": "belongsTo", "target": "Project", "field": "projectId"},
+            ],
+        }
+
+    def _generate_dependencies(
+        self,
+        project_id: str,
+        component_ids: list[str],
+        components: list[dict[str, Any]],
+    ) -> None:
+        """Determine DEPENDS_ON edges between components.
+
+        Components that implement shared requirements depend on
+        each other. For each pair sharing at least one requirement,
+        a directed DEPENDS_ON edge is added from the later-listed
+        component to the earlier one.
+
+        Args:
+            project_id: Project identifier.
+            component_ids: List of KG node IDs for the components.
+            components: List of component property dicts.
+        """
+        for i, comp_i in enumerate(components):
+            reqs_i = set(comp_i.get("implements_requirements", []))
+            if not reqs_i:
+                continue
+            for j in range(i):
+                comp_j = components[j]
+                reqs_j = set(comp_j.get("implements_requirements", []))
+                if reqs_i & reqs_j:
+                    self._ctx.knowledge_graph.add_edge(
+                        Edge(
+                            source_id=component_ids[i],
+                            target_id=component_ids[j],
+                            edge_type=EdgeType.depends_on,
+                            properties={"reason": "shared_requirement"},
+                        ),
+                    )
