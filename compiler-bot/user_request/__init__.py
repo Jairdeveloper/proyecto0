@@ -11,6 +11,7 @@ from user_request.contracts.request import (
     Slots,
 )
 from user_request.contracts.response import ResponseObject
+from user_request.layer import UserRequestLayer
 
 __all__ = [
     "AmbiguityResult",
@@ -23,4 +24,5 @@ __all__ = [
     "RequestObject",
     "ResponseObject",
     "Slots",
+    "UserRequestLayer",
 ]

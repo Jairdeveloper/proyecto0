@@ -13,6 +13,9 @@ from agentic_pipeline.debugger import PipelineDebugger
 from agentic_pipeline.feedback_loop import get_global_feedback
 from agentic_pipeline.orchestrator import PipelineOrchestrator
 from agentic_pipeline.prompt_chain.cli import add_chain_args, run_chain
+from user_request.contracts.enums import RequestChannel
+from user_request.contracts.response import ResponseObject
+from user_request.layer import UserRequestLayer
 
 
 def _stream_callback(stage: str, output: object) -> None:
@@ -62,6 +65,23 @@ async def main() -> None:
         "--dialog",
         action="store_true",
         help="Enable interactive dialog mode for ambiguous prompts",
+    )
+    parser.add_argument(
+        "--no-dialog",
+        action="store_true",
+        help="Disable interactive dialog for ambiguous prompts",
+    )
+    parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Output as JSON (machine-readable, forces --output-format json)",
+    )
+    parser.add_argument(
+        "--output-format",
+        type=str,
+        choices=["text", "json"],
+        default="text",
+        help="Output format: text (human-readable) or json (machine-readable)",
     )
     parser.add_argument(
         "--offline",
@@ -159,6 +179,25 @@ async def main() -> None:
         parser.print_help()
         sys.exit(1)
 
+    # Dialog mode: resolver ambiguedades antes de ejecutar el pipeline
+    if not args.no_dialog:
+        try:
+            _layer = UserRequestLayer()
+            _request = _layer.process_input(prompt)
+            _questions = _layer.resolve_ambiguity(_request)
+            if _questions:
+                print("[dialog] Se detectaron ambiguedades en la solicitud:",
+                      file=sys.stderr)
+                for _q in _questions:
+                    print(f"? {_q}", file=sys.stderr)
+                    _answer = sys.stdin.readline().strip()
+                    if _answer:
+                        prompt = f"{prompt} {_answer}"
+                print(file=sys.stderr)
+        except Exception:
+            logger = __import__("logging").getLogger(__name__)
+            logger.debug("Dialog mode error (non-fatal)", exc_info=True)
+
     if args.chain:
         result = await run_chain(
             prompt=prompt,
@@ -180,7 +219,22 @@ async def main() -> None:
             output_dir=args.output,
         )
         result = await orchestrator.run(prompt)
-    print(json.dumps(result, indent=2, default=str))
+
+    # NLG output formatting
+    output_format = "json" if args.json else args.output_format
+    channel = RequestChannel.API if output_format == "json" else RequestChannel.CLI
+    nlg_layer = UserRequestLayer(channel=channel)
+    response_obj = ResponseObject(
+        success=result.get("success", True),
+        data=result.get("output", {}),
+        channel=channel,
+    )
+    output = nlg_layer.format_output(
+        response_obj,
+        channel=channel,
+        force_ir=args.ir_only,
+    )
+    print(output)
 
 
 if __name__ == "__main__":
