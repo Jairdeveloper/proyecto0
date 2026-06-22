@@ -27,7 +27,7 @@ agents:
     enabled: true
     mode: "hybrid"  # llm | synthesis | hybrid
   architect_agent:
-    enabled: false  # Fase 2
+    enabled: true  # Fase 2 — Dia 11
   verification_agent:
     enabled: false  # Fase 2
   project_tracker:
