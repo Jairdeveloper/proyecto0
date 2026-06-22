@@ -329,3 +329,54 @@ class TestVerificationAgent:
         payload = received[0]
         assert payload["trace_ok"] is False
         await agent.stop()
+
+    # ── Dia 18: Casos borde ─────────────────────────────────────────
+
+    async def test_verification_missing_trace(
+        self,
+        agent: VerificationAgent,
+    ) -> None:
+        """Modulo sin componente en KG -> FAILED con mensaje claro."""
+        # Seed module-only (no component, no edges)
+        agent.write_graph(
+            Node(
+                id="mod-missing-comp",
+                node_type=NodeType.code_module,
+                properties={"name": "missing.trace.module"},
+            ),
+        )
+
+        received: list[dict[str, object]] = []
+
+        async def collector(topic: str, data: object) -> None:
+            if isinstance(data, Event):
+                received.append(data.data)
+
+        await agent._ctx.event_bus.subscribe("verification.complete", collector)
+        await agent.start()
+
+        event = Event(
+            topic="code.committed",
+            source="coder-agent",
+            project_id="p-01",
+            data={
+                "module_id": "mod-missing-comp",
+                "component": "orphan",
+                "files": [],
+                "tests_passed": True,
+            },
+        )
+        await agent._handle_event_wrapper("code.committed", event)
+
+        assert len(received) == 1
+        payload = received[0]
+        assert payload["trace_ok"] is False
+        # The detail must contain a clear message referencing the missing trace
+        detail = payload.get("detail", "")
+        assert isinstance(detail, str) and len(detail) > 0, (
+            "Missing trace must include a descriptive detail message"
+        )
+        assert (
+            "IMPLEMENTS" in detail or "not found" in detail.lower() or "trace" in detail.lower()
+        ), f"Detail must mention the missing trace: {detail}"
+        await agent.stop()

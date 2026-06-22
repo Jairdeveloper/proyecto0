@@ -123,6 +123,7 @@ class SwarmDetector:
                 req_id,
                 exp["completion_topic"],
             )
+            del self._expectations[req_id]
             await self.event_bus.publish(
                 Event(
                     topic=exp["completion_topic"],
@@ -134,7 +135,6 @@ class SwarmDetector:
                     },
                 ),
             )
-            del self._expectations[req_id]
 
     async def check_timeouts(self) -> None:
         """Barrer expectativas y emitir ``risk.identified`` si expiraron.

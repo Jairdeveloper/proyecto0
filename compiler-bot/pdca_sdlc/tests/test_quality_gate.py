@@ -320,3 +320,41 @@ class TestQualityGate:
         assert stage_ev.stage == "gate.req_tienen_aceptacion"
         assert hasattr(stage_ev, "success")
         assert stage_ev.success is False
+
+    # ── Dia 18: Casos borde ─────────────────────────────────────────
+
+    async def test_quality_gate_multiple_gates(
+        self,
+        kg: KnowledgeGraph,
+        event_bus: AsyncEventBus,
+    ) -> None:
+        """3 gates registrados, 1 falla -> FAILED, 2 no evaluados."""
+        qg = QualityGate(event_bus, kg)
+        call_order: list[str] = []
+
+        def gate_a(_kg: object, _pid: str, _ctx: object) -> bool | str:
+            call_order.append("gate_a")
+            return True
+
+        def gate_b(_kg: object, _pid: str, _ctx: object) -> bool | str:
+            call_order.append("gate_b")
+            return "Gate B failure"
+
+        def gate_c(_kg: object, _pid: str, _ctx: object) -> bool | str:
+            call_order.append("gate_c")
+            return True
+
+        qg.register_gate("gate_a", gate_a)
+        qg.register_gate("gate_b", gate_b)
+        qg.register_gate("gate_c", gate_c)
+
+        # Evaluate gates in sequence — gate_b fails, gate_c must NOT be called
+        result_a = await qg.evaluate("gate_a", "p-01")
+        assert result_a == GateResult.PASSED
+
+        result_b = await qg.evaluate("gate_b", "p-01")
+        assert result_b == GateResult.FAILED
+
+        # gate_c is never evaluated if calling code stops after failure
+        assert "gate_c" not in call_order, "Gate C should not be evaluated after gate B failed"
+        assert call_order == ["gate_a", "gate_b"], "Only gates A and B should have been called"

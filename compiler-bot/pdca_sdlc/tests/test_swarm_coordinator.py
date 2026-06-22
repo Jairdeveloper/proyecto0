@@ -232,3 +232,46 @@ class TestSwarmDetector:
 
         assert len(received_020) == 1
         assert received_020[0].data["req_id"] == "req-020"
+
+    # ── Dia 18: Casos borde ─────────────────────────────────────────
+
+    async def test_swarm_timeout_during_deep_path(
+        self,
+        event_bus: AsyncEventBus,
+    ) -> None:
+        """Architect tarda mas del timeout -> risk.identified."""
+        detector = SwarmDetector(event_bus, KnowledgeGraph())
+        detector.expect(
+            "req-deep-timeout",
+            ["architecture.proposed", "security.review.completed"],
+            "design.complete",
+            timeout=-1.0,
+        )
+
+        received: list[Event] = []
+
+        async def collector(topic: str, data: object) -> None:
+            if isinstance(data, Event):
+                received.append(data)
+
+        await event_bus.subscribe("proyecto.p-01.risk.identified", collector)
+
+        await detector.on_event(
+            Event(
+                topic="architecture.proposed",
+                source="architect",
+                project_id="p-01",
+                data={"requirement_id": "req-deep-timeout"},
+            ),
+        )
+
+        exp = detector.active_expectations["req-deep-timeout"]
+        assert exp["expected"]["security.review.completed"] is False
+
+        await detector.check_timeouts()
+
+        assert len(received) == 1
+        payload = received[0].data
+        assert payload["type"] == "swarm_timeout"
+        assert payload["req_id"] == "req-deep-timeout"
+        assert "security.review.completed" in payload["pending"]

@@ -187,6 +187,42 @@ class TestProjectTracker:
 
     # ── test_tracker_no_events ──────────────────────────────────────
 
+    # ── Dia 18: Casos borde ─────────────────────────────────────────
+
+    async def test_project_tracker_persistence(
+        self,
+        context: AgentContext,
+    ) -> None:
+        """Eventos fuera de orden -> contadores consistentes."""
+        tracker = ProjectTracker(context, report_interval=100)
+
+        # Interleave events for the same project
+        events = [
+            ("proyecto.p-01.requirement.created", "pending"),
+            ("proyecto.p-01.design.complete", "completed"),
+            ("proyecto.p-01.quality.gate.failed", "failed"),
+            ("proyecto.p-01.architecture.proposed", "pending"),
+            ("proyecto.p-01.verification.complete", "completed"),
+            ("proyecto.p-01.requirement.created", "pending"),
+        ]
+        for topic, expected_category in events:
+            await tracker.handle_event(
+                Event(
+                    topic=topic,
+                    source="test",
+                    project_id="p-01",
+                    data={"seq": 0},
+                ),
+            )
+
+        report = await tracker.get_report("p-01")
+        assert report is not None
+        assert report["project_id"] == "p-01"
+        assert report["total_events"] == 6
+        assert report["counters"]["pending"] == 3
+        assert report["counters"]["completed"] == 2
+        assert report["counters"]["failed"] == 1
+
     async def test_tracker_no_events(
         self,
         tracker: ProjectTracker,

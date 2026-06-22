@@ -12,15 +12,26 @@ import argparse
 import asyncio
 import logging
 import threading
+from typing import Any
 
 from pdca_sdlc.agents.adaptation_agent import AdaptationAgent
+from pdca_sdlc.agents.architect_agent import ArchitectAgent
 from pdca_sdlc.agents.coder_agent import CoderAgent
+from pdca_sdlc.agents.project_tracker import ProjectTracker
 from pdca_sdlc.agents.requirements_analyst import RequirementsAnalystAgent
+from pdca_sdlc.agents.verification_agent import VerificationAgent
 from pdca_sdlc.core.base_agent import AgentContext
 from pdca_sdlc.core.capability_registry import CapabilityRegistry
 from pdca_sdlc.core.event_bus import AsyncEventBus, Event
 from pdca_sdlc.core.knowledge_graph import KnowledgeGraph
 from pdca_sdlc.core.llm_client import LLMClient
+from pdca_sdlc.core.quality_gate import (
+    QualityGate,
+    gate_componentes_tienen_trazabilidad,
+    gate_modulos_tienen_trazabilidad,
+    gate_requisitos_tienen_aceptacion,
+)
+from pdca_sdlc.core.swarm_coordinator import SwarmDetector
 
 logger = logging.getLogger(__name__)
 
@@ -90,38 +101,37 @@ async def main() -> None:
     registry = CapabilityRegistry()
     llm = LLMClient()
 
-    agents = [
-        AdaptationAgent(
-            AgentContext(
-                event_bus=bus,
-                knowledge_graph=kg,
-                capability_registry=registry,
-                agent_id="adaptation-agent",
-            ),
-            llm_client=llm,
-        ),
-        RequirementsAnalystAgent(
-            AgentContext(
-                event_bus=bus,
-                knowledge_graph=kg,
-                capability_registry=registry,
-                agent_id="requirements-analyst",
-            ),
-            llm_client=llm,
-        ),
-        CoderAgent(
-            AgentContext(
-                event_bus=bus,
-                knowledge_graph=kg,
-                capability_registry=registry,
-                agent_id="coder-agent",
-            ),
-        ),
+    qg = QualityGate(bus, kg)
+    for name, gate_fn in [
+        ("requisitos_tienen_aceptacion", gate_requisitos_tienen_aceptacion),
+        ("componentes_tienen_trazabilidad", gate_componentes_tienen_trazabilidad),
+        ("modulos_tienen_trazabilidad", gate_modulos_tienen_trazabilidad),
+    ]:
+        qg.register_gate(name, gate_fn)
+
+    swarm = SwarmDetector(bus, kg)
+
+    def _make_ctx(agent_id: str) -> AgentContext:
+        return AgentContext(bus, kg, registry, agent_id)
+
+    agents: list[Any] = [
+        AdaptationAgent(_make_ctx("adaptation-agent"), llm_client=llm),
+        RequirementsAnalystAgent(_make_ctx("requirements-analyst"), llm_client=llm),
+        CoderAgent(_make_ctx("coder-agent")),
+        ArchitectAgent(_make_ctx("architect-agent"), llm_client=llm),
+        VerificationAgent(_make_ctx("verification-agent"), llm_client=llm, quality_gate=qg),
+        ProjectTracker(_make_ctx("project-tracker")),
     ]
 
     for agent in agents:
         await agent.start()
         logger.info("Agente iniciado: %s", agent._ctx.agent_id)
+
+    async def _swarm_handler(topic: str, data: object) -> None:
+        if isinstance(data, Event):
+            await swarm.on_event(data)
+
+    await bus.subscribe(">", _swarm_handler)
 
     await bus.publish(
         Event(
@@ -133,7 +143,9 @@ async def main() -> None:
     )
     logger.info("Evento project.initialized publicado para %s", project_id)
 
-    await asyncio.sleep(5)
+    for _ in range(5):
+        await asyncio.sleep(1)
+        await swarm.check_timeouts()
 
     print("\n===== Knowledge Graph Summary =====")
     print(f"Total nodos: {kg.node_count()}, aristas: {kg.edge_count()}")

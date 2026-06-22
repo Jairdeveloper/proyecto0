@@ -3,7 +3,7 @@ id: 199
 area: dev
 type: rep
 module: pdca-sdlc
-version: 1.1
+version: 1.2
 status: DRAFT
 tags:
   - report
@@ -15,8 +15,10 @@ tags:
   - quality-gate
   - verification
   - swarm
+  - project-tracker
+  - integration
   - complete
-summary: "Reporte completo de Fase 2 del modulo PDCA-sdlc: implementacion del Deep-Path con ArchitectAgent, QualityGate, VerificationAgent, SwarmCoordinator y ProjectTracker. 6 componentes, 53 tests, 0 errores ruff."
+summary: "Reporte completo de Fase 2 del modulo PDCA-sdlc: implementacion del Deep-Path con ArchitectAgent, QualityGate, VerificationAgent, SwarmCoordinator, ProjectTracker e integracion F2 (Dia 17). 7 componentes, 59 tests, 283 tests PDCA totales, 0 errores ruff."
 keywords:
   - pdca-sdlc
   - fase-2
@@ -32,6 +34,10 @@ keywords:
   - ruff
   - iso-12207
 changelog:
+  - version: 1.2
+    date: 2026-06-22
+    author: sisyphus
+    description: "Actualizado con integracion F2 (Dia 17): +1 test suite (6 tests), +1 archivo main.py, bugs en swarm_coordinator y project_tracker corregidos, total 59 tests F2 / 283 PDCA total"
   - version: 1.1
     date: 2026-06-22
     author: sisyphus
@@ -56,12 +62,13 @@ que extiende el Fast-Path de Fase 1.
 | QualityGate | `core/quality_gate.py` | ~222 | 13 |
 | VerificationAgent | `agents/verification_agent.py` | ~337 | 10 |
 | SwarmCoordinator | `core/swarm_coordinator.py` | ~188 | 5 |
-| ProjectTracker | `agents/project_tracker.py` | ~230 | 5 |
+| ProjectTracker | `agents/project_tracker.py` | ~265 | 5 |
+| Integracion F2 | `main.py` + `tests/test_integration_f2.py` | ~205 + ~479 | 6 |
 | Architect detailed | `tests/test_architect_detailed.py` | ~300 | (incl.) |
-| **Total Fase 2** | **6 archivos nuevos** | **~1,864** | **53** |
+| **Total Fase 2** | **7 componentes** | **~2,278** | **59** |
 
 **Resultados:** `ruff check .` 0 errores, `ruff format . --check` OK,
-53/53 tests pasando en 0.33s.
+59/59 tests F2 pasando, 283/283 tests PDCA totales.
 
 ---
 
@@ -101,7 +108,7 @@ Adaptation -> Req -> Architect -> Coder -> Verification -> OUTPUT
 | `validation.complete` | VerificationAgent | ProjectTracker |
 | `quality.gate.failed` | QualityGate | ProjectTracker, Agents |
 | `design.complete` | SwarmDetector | ProjectTracker |
-| `proyecto.{id}.risk.identified` | Cualquiera | ProjectTracker |
+| `risk.identified` | Cualquiera | ProjectTracker |
 | `project.progress.report` | ProjectTracker | Dashboard, UI |
 
 ### 1.3 Arquitectura de Componentes
@@ -174,7 +181,7 @@ Adaptation -> Req -> Architect -> Coder -> Verification -> OUTPUT
 - Gates predefinidos: `gate_requisitos_tienen_aceptacion`, `gate_componentes_tienen_trazabilidad`, `gate_modulos_tienen_trazabilidad`
 
 **Eventos emitidos:**
-- `proyecto.{project_id}.quality.gate.failed` — cuando un gate falla
+- `quality.gate.failed` (con project_id en evento) — cuando un gate falla
 
 **Tests (13):** en `test_quality_gate.py`
 - 3 gates predefinidos (pasa, falla sin criterios, falla sin trazabilidad)
@@ -228,7 +235,7 @@ Adaptation -> Req -> Architect -> Coder -> Verification -> OUTPUT
 
 **Eventos emitidos:**
 - `design.complete` (configurable) — cuando todos los sub-eventos han llegado
-- `proyecto.{id}.risk.identified` — cuando expira el timeout
+- `risk.identified` — cuando expira el timeout
 
 **Tests (5):** en `test_swarm_coordinator.py`
 - Completitud 2/2 eventos, parcial 1/2, timeout, evento no relacionado, multi-request
@@ -241,7 +248,7 @@ Adaptation -> Req -> Architect -> Coder -> Verification -> OUTPUT
 
 **Archivo:** `agents/project_tracker.py` (~230 lines)
 
-**Suscripcion:** `proyecto.>` (wildcard — todos los eventos del proyecto)
+**Suscripcion:** `>` (wildcard global — todos los eventos del sistema)
 
 **Funcionalidad:**
 - Clasifica eventos en categorias: pending (created/proposed), completed (passed/complete), failed
@@ -287,8 +294,9 @@ Adaptation -> Req -> Architect -> Coder -> Verification -> OUTPUT
 | VerificationAgent (Dia 14) | 10 | ✅ PASS |
 | SwarmCoordinator (Dia 15) | 5 | ✅ PASS |
 | ProjectTracker (Dia 16) | 5 | ✅ PASS |
-| Otros F1 | ~38 | ✅ PASS |
-| **Total PDCA-sdlc** | **~91** | ✅ |
+| Integracion F2 (Dia 17) | 6 | ✅ PASS |
+| Otros F1 + F2 | ~225 | ✅ PASS |
+| **Total PDCA-sdlc** | **~283** | ✅ |
 
 ### 4.2 Calidad de Codigo
 
@@ -301,9 +309,10 @@ ruff format --check → 0 changes needed ✅
 
 | Categoria | LOC |
 |-----------|-----|
-| Codigo nuevo F2 | ~1,864 |
-| Tests F2 | ~1,380 |
-| Total F2 (codigo + tests) | ~3,244 |
+| Codigo nuevo F2 | ~2,069 |
+| Tests F2 | ~1,859 |
+| Integracion (main.py + tests) | ~684 |
+| Total F2 (codigo + tests) | ~4,612 |
 
 ---
 
@@ -317,7 +326,8 @@ ruff format --check → 0 changes needed ✅
 | `core/quality_gate.py` | ~222 | Puntos de control de calidad |
 | `agents/verification_agent.py` | ~337 | Verificacion + LLM-as-a-Judge |
 | `core/swarm_coordinator.py` | ~188 | Deteccion de completitud |
-| `agents/project_tracker.py` | ~230 | Monitoreo y metricas |
+| `agents/project_tracker.py` | ~265 | Monitoreo y metricas |
+| `main.py` | ~205 | Entrypoint con integracion F1+F2 |
 
 ### 5.2 Tests
 
@@ -329,6 +339,7 @@ ruff format --check → 0 changes needed ✅
 | `tests/test_verification_agent.py` | 10 | ~340 |
 | `tests/test_swarm_coordinator.py` | 5 | ~230 |
 | `tests/test_project_tracker.py` | 5 | ~180 |
+| `tests/test_integration_f2.py` | 6 | ~479 |
 
 ### 5.3 Documentacion
 
@@ -340,6 +351,7 @@ ruff format --check → 0 changes needed ✅
 | `docs/197_REP_DEV_PDCA_SDLC_F2_VERIFICATION_AGENT_1_0_DRAFT.md` | Reporte VerificationAgent (Dia 14) |
 | `docs/198_REP_DEV_PDCA_SDLC_F2_SWARM_COORDINATOR_1_0_DRAFT.md` | Reporte SwarmCoordinator (Dia 15) |
 | `docs/200_REP_DEV_PDCA_SDLC_F2_PROJECT_TRACKER_1_0_DRAFT.md` | Reporte ProjectTracker (Dia 16) |
+| `docs/201_REP_DEV_PDCA_SDLC_F2_INTEGRATION_1_0_DRAFT.md` | Reporte Integracion F2 (Dia 17) |
 | `docs/159_PLAN_DEV_PDCA_SDLC_F2_EXECUTION_1_0_DRAFT.md` | Plan de ejecucion F2 |
 
 ---
@@ -417,7 +429,6 @@ async def main():
 |-------------|-------------|--------------|
 | Dia 17: Integracion F2 | Deep-Path baseline + tests de integracion | Dias 11-16 |
 | Dia 18: Cobertura y bordes | Tests de casos borde y robustez | F2 integrado |
-| Dia 18: Cobertura y bordes | Tests de casos borde y robustez | F2 integrado |
 | Dia 19: Documentacion | Ruff cleanup final, docstrings | F2 completo |
 | Fase 3: Robustez | Persistencia Neo4j, auth, secretos, dashboard | F2 estabilizado |
 
@@ -455,12 +466,26 @@ async def main():
    de `agentic_pipeline.prompt_chain.observer_base`, demostrando
    que los componentes de F1 pueden integrarse en F2 sin duplicacion.
 
+4. **Del antes que publish para evitar loops**: SwarmDetector publicaba
+   el completion event antes de eliminar la expectativa. Con suscripcion
+   wildcard `>`, el evento se realimentaba creando un loop infinito.
+   La leccion: mutar estado interno ANTES de publicar eventos al bus.
+
+5. **Prefijo de eventos inconsistente**: Los eventos del sistema
+   (`architecture.proposed`, `code.committed`) no usan el prefijo
+   `proyecto.`, excepto `quality.gate.failed` y `risk.identified`.
+   La suscripcion global debe ser `">"` en lugar de `"proyecto.>"`.
+
+6. **CoderAgent crea `artifact` no `code_module`**: Los nodos de codigo
+   generado son `NodeType.artifact`. Consultas de trazabilidad deben
+   usar este tipo en lugar de `code_module`.
+
 ---
 
 ## 9. Referencias
 
 - Plan de Fase 2: `docs/159_PLAN_DEV_PDCA_SDLC_F2_EXECUTION_1_0_DRAFT.md`
 - Plan general PDCA: `docs/157_PLAN_DEV_PDCA_SDLC_IMPLEMENTATION_1_0_DRAFT.md`
-- Reportes individuales: `docs/194_REP_*` a `docs/198_REP_*`
+- Reportes individuales: `docs/194_REP_*` a `docs/201_REP_*`
 - Fase 1 (Fundacion): `docs/158_PLAN_DEV_PDCA_SDLC_EXECUTION_1_0_DRAFT.md`
 - Fase 3 (Robustez): `docs/160_PLAN_DEV_PDCA_SDLC_F3_EXECUTION_1_0_DRAFT.md`

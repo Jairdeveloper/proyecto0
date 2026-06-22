@@ -81,7 +81,7 @@ class ProjectTracker(BaseAgent):
                 "Monitors project events, classifies them, emits progress reports and detects risks"
             ),
             iso_12207={"process": "6.4", "activities": ["6.4.9"]},
-            triggers=["proyecto.>"],
+            triggers=[">"],
             output_events=[
                 "project.progress.report",
                 "risk.identified",

@@ -416,3 +416,34 @@ class TestArchitectAgent:
         assert len(payload["component_ids"]) >= 1
         assert len(payload["decision_ids"]) >= 1
         await agent.stop()
+
+    # ── Dia 18: Casos borde ─────────────────────────────────────────
+
+    async def test_architect_empty_requirements(
+        self,
+        agent: ArchitectAgent,
+    ) -> None:
+        """0 requisitos -> architect no emite architecture.proposed."""
+        self._seed_goal(agent, "p-empty", "moderate")
+
+        received: list[dict[str, object]] = []
+
+        async def collector(topic: str, data: object) -> None:
+            if isinstance(data, Event):
+                received.append(data.data)
+
+        await agent._ctx.event_bus.subscribe("architecture.proposed", collector)
+        await agent.start()
+        event = Event(
+            topic="requirement.created",
+            source="requirements-analyst",
+            project_id="p-empty",
+            data={"requirement_ids": []},
+        )
+        await agent._handle_event_wrapper("requirement.created", event)
+        assert len(received) == 0, (
+            "Architect must not emit architecture.proposed with empty requirements"
+        )
+        components = agent.query_graph(node_type=NodeType.component)
+        assert len(components) == 0, "No components should be created for empty requirements"
+        await agent.stop()
