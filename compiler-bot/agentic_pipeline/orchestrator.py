@@ -307,10 +307,10 @@ class PipelineMacroCommand(Command):
     def _stage_to_enum(stage_cls: type[PipelineStage]) -> Stage:
         """Mapea clase PipelineStage a su enum Stage."""
         from agentic_pipeline.nodes.action_executor import ActionExecutor
-        from agentic_pipeline.nodes.intent_stage import IntentStage
         from agentic_pipeline.nodes.ir_generator import IRGenerator
         from agentic_pipeline.nodes.lexer import Lexer
         from agentic_pipeline.nodes.parser import LarkParser
+        from agentic_pipeline.nodes.perception_unit import PerceptionUnit
         from agentic_pipeline.nodes.preprocessor import Preprocessor
         from agentic_pipeline.nodes.reasoning_engine import ReasoningEngine
         from agentic_pipeline.nodes.semantic_analyzer import SemanticAnalyzer
@@ -319,7 +319,7 @@ class PipelineMacroCommand(Command):
         from agentic_pipeline.state_models import Stage
 
         mapping: dict[type[PipelineStage], Stage] = {
-            IntentStage: Stage.INTENT,
+            PerceptionUnit: Stage.INTENT,
             Preprocessor: Stage.PREPROCESSOR,
             Lexer: Stage.LEXER,
             LarkParser: Stage.PARSER,

@@ -8,9 +8,9 @@ from __future__ import annotations
 
 import pytest
 
-from agentic_pipeline.nodes.intent_stage import IntentStage
 from agentic_pipeline.nodes.lexer import Lexer
 from agentic_pipeline.nodes.parser import LarkParser
+from agentic_pipeline.nodes.perception_unit import PerceptionUnit
 from agentic_pipeline.nodes.planner import HybridPlanner
 from agentic_pipeline.nodes.preprocessor import Preprocessor
 from agentic_pipeline.nodes.synthesis import SynthesisOrchestrator
@@ -86,7 +86,7 @@ def test_pipeline_long(benchmark):
 @pytest.mark.benchmark
 def test_nlp_only(benchmark):
     ctx = _make_ctx(Stage.INTENT)
-    stage = IntentStage(ctx)
+    stage = PerceptionUnit(ctx)
 
     def run():
         stage.receive_mission(SHORT_PROMPT)

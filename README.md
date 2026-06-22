@@ -96,9 +96,16 @@ docker run recpl --prompt "crea un modulo" --output /app/modules  # flags explic
 ```
 compiler-bot/
 ├── agentic                          # CLI entrypoint
+├── user_request/                    # User Request Layer (NLU + NLG)
+│   ├── contracts/                   # Modelos Pydantic compartidos
+│   ├── nlu/                         # Pipeline NLU (normalizer → classifier → extractor → slots → ambiguity)
+│   ├── nlg/                         # Pipeline NLG (formatter → translator → adapter)
+│   ├── api/                         # Servidor HTTP (/api/nlu, /api/chat)
+│   ├── layer.py                     # UserRequestLayer facade
+│   └── tests/                       # 192 tests
 ├── agentic_pipeline/
 │   ├── nodes/                       # 10 PipelineStages (StateGraph)
-│   │   ├── intent_stage.py          # NLP: clasificador + NER + slots
+│   │   ├── perception_unit.py       # NLP: clasificador + NER + slots (legacy, via user_request.nlu)
 │   │   ├── preprocessor.py          # Filtros en cadena (Chain of Responsibility)
 │   │   ├── lexer.py                 # DFA tokenizer + trie multi-word
 │   │   ├── parser.py                # Lark parser + AST builders
