@@ -4,7 +4,7 @@ area: legacy
 type: guide
 module: masterindex
 version: 1.0
-status: DRAFT
+status: OBSOLETE
 tags:
   - legacy
   - reference
